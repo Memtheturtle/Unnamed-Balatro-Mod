@@ -130,6 +130,78 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'dave',
+    loc_txt = {
+        name = 'Dxv3d',
+        text = {
+          '{X:mult,C:white}X#1#{} Mult',
+          '{C:green}#2# in 2{} chance to Debuff',
+          'all Jokers',
+        },
+    },
+    
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 6, y = 0},
+    config = { 
+        extra = {
+            Xmult = 10,
+        }
+    },
+
+    loc_vars = function(self, info_queue, center)
+        -- Fixed: combined both vars into one return
+        return {vars = {center.ability.extra.Xmult, G.GAME.probabilities.normal}}
+    end,
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self)
+    end,
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+             if pseudorandom('dave') < G.GAME.probabilities.normal / 2 then
+            for _, joker in ipairs(G.jokers.cards) do
+                joker.debuff = true
+                card_eval_status_text(joker, 'extra', nil, nil, nil, {
+                    message = 'Debuffed!',
+                    colour = G.C.RED
+                })
+            end
+        end
+        end
+        
+        if context.joker_main then
+            return {
+                card = card,
+                Xmult_mod = card.ability.extra.Xmult,
+                message = 'X' .. card.ability.extra.Xmult,
+                colour = G.C.MULT
+            }
+        end
+
+        if context.end_of_round and context.game_over == false then
+            for _, joker in ipairs(G.jokers.cards) do
+                joker.debuff = false
+            end
+        end
+    end,
+
+    in_pool = function(self, wawa, wawa2)
+        return true
+    end,
+}  -- <-- closing parenthesis added here
+
+SMODS.Joker{
     key = 'leg',
     loc_txt = {
         name = 'Legacy5',
@@ -176,6 +248,84 @@ SMODS.Joker{
         elseif context.end_of_round then
             -- Reset the flag at the end of the round
             card.ability.triggered_this_blind = false
+        end
+    end,
+
+    in_pool = function(self)
+        return true
+    end
+}
+
+SMODS.Joker{
+    key = 'lud',
+    loc_txt = {
+        name = 'Ludtropolis',
+        text = {
+            'Spawns 10 Gooby!',
+            'Kills iteself',
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
+
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            G.E_MANAGER:add_event(Event({ 
+                trigger = 'after',
+                delay = 0.1,
+                func = function()
+                    card:start_dissolve({G.C.RED}, nil, 1.6)
+                    return true
+                end
+            }))
         end
     end,
 
@@ -277,7 +427,7 @@ SMODS.Joker{
 SMODS.Joker{
     key = 'pig',
     loc_txt = {
-        name = 'Piggomoo',
+        name = 'Raindear',
         text = {
             'Its Heckling Time'
         }

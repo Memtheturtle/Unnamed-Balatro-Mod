@@ -36,7 +36,7 @@ SMODS.Sound({
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
-        name = 'A09',
+        name = 'A03',
         text = {
           'When blind is selected,',
           'create a Negative Joker of the top 1 TM2 Lagoon Maryland player'

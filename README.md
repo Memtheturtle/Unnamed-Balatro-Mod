@@ -15,7 +15,9 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.1.0.9 - Added info about renaming
+0.1.1.0 - Added Dxv3d Joker, DJ Lefave Joker, Ludtropolis Joker, Renamed A09 Joker to A03 Joker and Piggomoo Joker to Raindear Joker, Fixed Typos in Readme
+
+0.1.0.9 - Added Info About Renaming
 
 0.1.0.8 - Fixed Typos in Readme
 
@@ -40,7 +42,7 @@ CURRENT FEATURES:
 
 4 New Types of Jokers: Backyardigans, Cat, Unhinged, and Uh Oh
 
-29 Total New Jokers
+30 Total New Jokers
 
 1 Tarot Card 
 
@@ -65,9 +67,11 @@ PLANNED FEATURES:
 
 30+ Consumable Cards Themed Around Upcoming Geometry Dash Levels on Our List, The Unnamed List
 
-70+ Consumable Cards Themed Around Popular Albums
+85+ Consumable Cards Themed Around Popular Albums
 
 15+ Consumable Cards Themed Around SingularityXVI's Muscore Creations
+
+10+ Consumable Cards Themed Around Movies We Watched Together
 
 Custom Art for All Cards!
 
@@ -80,5 +84,5 @@ THERE ARE JUMPSCARES and if you have a heart attack you cant sue me
 INSTALLATION:
 Mod your game via Steammodded/Lovely, and then put the entire folder in your Mods folder (Works on Windows, Mac, and Linux)
 
-YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds tyhe version number to the downlaod and I can't disable it, I'm looking for workarounds but for now just do that please
+YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds the version number to the downlaod and I can't disable it, I'm looking for workarounds but for now just do that please
 

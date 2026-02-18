@@ -37,3 +37,4 @@ THERE ARE JUMPSCARES and if you have a heart attack you cant sue me
 
 INSTALLATION:
 Mod your game via Steammodded/Lovely, and then put the entire folder in your Mods folder (Works on Windows, Mac, and Linux)
+

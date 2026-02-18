@@ -15,7 +15,7 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.1.0.9 - Fixed Typos in Readme
+0.1.0.9 - Added info about renaming
 
 0.1.0.8 - Fixed Typos in Readme
 
@@ -79,4 +79,6 @@ THERE ARE JUMPSCARES and if you have a heart attack you cant sue me
 
 INSTALLATION:
 Mod your game via Steammodded/Lovely, and then put the entire folder in your Mods folder (Works on Windows, Mac, and Linux)
+
+YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds tyhe version number to the downlaod and I can't disable it, I'm looking for workarounds but for now just do that please
 

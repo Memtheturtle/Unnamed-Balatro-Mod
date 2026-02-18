@@ -18,9 +18,10 @@ jobs:
 
       - name: Create mod zip
         run: |
-          cd ..
-          zip -r "UnnamedBalatroMod-${GITHUB_REF_NAME}.zip" "Unnamed Balatro Mod" \
-            -x "Unnamed Balatro Mod/.git/*" "Unnamed Balatro Mod/.github/*"
+          mkdir "Unnamed Balatro Mod"
+          cp -R . "Unnamed Balatro Mod"/
+          rm -rf "Unnamed Balatro Mod/.git" "Unnamed Balatro Mod/.github"
+          zip -r "UnnamedBalatroMod-${GITHUB_REF_NAME}.zip" "Unnamed Balatro Mod"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1

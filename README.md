@@ -6,7 +6,7 @@ CONTRIBUTORS:
 
 Coding: Memtheturtle
 
-Art: Theskycrusher6 and SingularityXVI
+Art: Memtheturtle, Theskycrusher6, and SingularityXVI
 
 Ideas/Inspiration: Memtheturtle, Theskycrusher6, SingularityXVI, Whiskers11, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, and Legacy5
 
@@ -14,6 +14,7 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 
 VERSION HISTORY:
+0.1.2.0 - Added Ligshu Joker and Tick Tock Joker, Updated Criminal Joker to Include all Members in the Collab, Fixed Typos, Updated Future Plans and Current Features, Updated Mod Authors
 
 0.1.1.0 - Added Dxv3d Joker, DJ Lefave Joker, Ludtropolis Joker, Renamed A09 Joker to A03 Joker and Piggomoo Joker to Raindear Joker, Fixed Typos in Readme
 
@@ -42,7 +43,7 @@ CURRENT FEATURES:
 
 4 New Types of Jokers: Backyardigans, Cat, Unhinged, and Uh Oh
 
-30 Total New Jokers
+34 Total New Jokers
 
 1 Tarot Card 
 
@@ -55,7 +56,13 @@ Custom Music and SFX!
 
 PLANNED FEATURES:
 
-15+ Additional Jokers (Likely to be way more but this is what we have planned for now)
+10+ Steam Jokers Themed Around Steam Emojis
+
+10+ Additional Backyardigan Jokers Themed Around Group Chat Members
+
+10+ Additional Legendary Jokers Themed Around Popular GD Players/Creators
+
+Nightmare Freddy Joker
 
 2 Additional Tarot Cards
 

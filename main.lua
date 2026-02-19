@@ -1,7 +1,7 @@
 --- STEAMODDED HEADER
 --- MOD_NAME: Unnamed Balatro Mod
 --- MOD_ID: UNBM
---- MOD_AUTHOR: [Code: Memtheturtle Art: SingularityXVI and Theskycrusher6 Ideas: Mem, Single, Sky, Stayreal, and Whiskers11]
+--- MOD_AUTHOR: [The Great Backyard]
 --- MOD_DESCRIPTION: A massive grab bag of random ideas we've had over the past year or so.
 --- PREFIX: gcbm
 ----------------------------------------------

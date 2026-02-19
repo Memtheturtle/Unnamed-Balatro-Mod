@@ -391,6 +391,84 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'lig',
+    loc_txt = {
+        name = 'Ligshu',
+        text = {
+            'Spawns 10 Ludtropolis',
+            'Kills itself',
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
+
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+            G.E_MANAGER:add_event(Event({ 
+                trigger = 'after',
+                delay = 0.1,
+                func = function()
+                    card:start_dissolve({G.C.RED}, nil, 1.6)
+                    return true
+                end
+            }))
+        end
+    end,
+
+    in_pool = function(self)
+        return true
+    end
+}
+
+SMODS.Joker{
     key = 'bone',
     loc_txt = {
         name = 'Mr. Weak Bones',
@@ -495,6 +573,97 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'ticktock', --joker key
+    loc_txt = { -- local text
+        name = 'Tick Tock',
+        text = {
+          'At the end of each blind, gain {C:money}$50{}',
+          'Decrerases by 1 every second spent in blind',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 8, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+        -- Track time when the blind starts
+calculate = function(self, card, context)
+
+        -- Blind entered: record start time and reset paid flag
+        if context.setting_blind then
+            card.ability.miser_start = love.timer.getTime()
+            card.ability.miser_last_tick = 0
+            card.ability.miser_paid = false
+            return
+        end
+
+        -- End of round payout — only fire once per round
+        if context.end_of_round and context.main_eval and not card.ability.miser_paid then
+            card.ability.miser_paid = true
+
+            local payout = 50
+            if card.ability.miser_start then
+                local elapsed = math.floor(love.timer.getTime() - card.ability.miser_start)
+                payout = math.max(0, 50 - elapsed)
+                card.ability.miser_start = nil
+                card.ability.miser_last_tick = nil
+            end
+
+            if payout > 0 then
+                ease_dollars(payout)
+                card_eval_status_text(card, "extra", nil, nil, nil, {
+                    message = "+" .. payout .. "$",
+                    colour = G.C.MONEY,
+                })
+            else
+                card_eval_status_text(card, "extra", nil, nil, nil, {
+                    message = "Too slow!",
+                    colour = G.C.RED,
+                })
+            end
+        end
+    end,
+
+    -- Real-time tick: runs every frame, shows -$1 each new second while in blind
+    update = function(self, card, dt)
+        if not card.ability.miser_start then return end
+
+        -- Only tick during active play states
+        local s = G.STATE
+        if s ~= G.STATES.HAND_PLAYED
+        and s ~= G.STATES.DRAW_TO_HAND
+        and s ~= G.STATES.SELECTING_HAND then return end
+
+        local elapsed = math.floor(love.timer.getTime() - card.ability.miser_start)
+        local last = card.ability.miser_last_tick or 0
+
+        if elapsed > last and elapsed <= 50 then
+            card.ability.miser_last_tick = elapsed
+            card_eval_status_text(card, "extra", nil, nil, nil, {
+                message = "-$1",
+                colour = G.C.RED,
+            })
+        end
     end,
 }
 

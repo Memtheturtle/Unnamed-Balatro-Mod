@@ -262,7 +262,7 @@ SMODS.Joker{
         name = 'Ludtropolis',
         text = {
             'Spawns 10 Gooby!',
-            'Kills iteself',
+            'Kills itself',
         }
     },
     atlas = 'Backyardigans_jokers',

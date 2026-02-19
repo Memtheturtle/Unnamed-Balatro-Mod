@@ -95,6 +95,10 @@ SMODS.Joker{
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dave')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
         end
     end,
     in_pool = function(self,wawa,wawa2)

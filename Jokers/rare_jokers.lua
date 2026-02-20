@@ -95,7 +95,7 @@ SMODS.Joker{
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 5, y = 0},
+    pos = {x = 1, y = 0},
     config = { 
         extra = {
             chips = 500,
@@ -153,7 +153,7 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 0, y = 0},
+    pos = {x = 3, y = 0},
 
     calculate = function(self, card, context) 
         if context.setting_blind and not context.blueprint then
@@ -486,7 +486,7 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 1, y = 5},
+    pos = {x = 2, y = 0},
 
     calculate = function(self, card, context)
         if context.game_over and not context.blueprint then
@@ -783,7 +783,7 @@ SMODS.Joker{
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 6, y = 0},
+    pos = {x = 4, y = 0},
     config = { 
         extra = {
             Xmult = 3

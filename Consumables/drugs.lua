@@ -39,7 +39,7 @@ SMODS.Consumable{
     key = 'bor', --key
     set = 'Drugs', --the set of the card: corresponds to a consumable type
     atlas = 'Drugs', --atlas
-    pos = {x = 1, y = 0}, --position in atlas
+    pos = {x = 2, y = 0}, --position in atlas
     loc_txt = {
         name = 'Boron', --name of card
         text = { --text of card
@@ -85,7 +85,7 @@ SMODS.Consumable{
     key = 'est', --key
     set = 'Drugs', --the set of the card: corresponds to a consumable type
     atlas = 'Drugs', --atlas
-    pos = {x = 2, y = 0}, --position in atlas
+    pos = {x = 1, y = 0}, --position in atlas
     loc_txt = {
         name = 'Estrogen', --name of card
         text = { --text of card
@@ -131,7 +131,7 @@ SMODS.Consumable{
     key = 'tes', --key
     set = 'Drugs', --the set of the card: corresponds to a consumable type
     atlas = 'Drugs', --atlas
-    pos = {x = 3, y = 0}, --position in atlas
+    pos = {x = 0, y = 0}, --position in atlas
     loc_txt = {
         name = 'Testosterone', --name of card
         text = { --text of card
@@ -177,7 +177,7 @@ SMODS.Consumable{
     key = 'crack',
     set = 'Drugs',
     atlas = 'Drugs',
-    pos = {x = 2, y = 0}, -- Adjust position based on your atlas
+    pos = {x = 3, y = 0}, -- Adjust position based on your atlas
     loc_txt = {
         name = 'Crack',
         text = {
@@ -335,7 +335,7 @@ SMODS.Consumable{
     key = 'crack2',
     set = 'Drugs',
     atlas = 'Drugs',
-    pos = {x = 3, y = 0}, -- Adjust position based on your atlas
+    pos = {x = 4, y = 0}, -- Adjust position based on your atlas
     loc_txt = {
         name = 'Crack2',
         text = {
@@ -500,7 +500,7 @@ SMODS.Consumable{
     key = 'meth', --key
     set = 'Drugs', --the set of the card: corresponds to a consumable type
     atlas = 'Drugs', --atlas
-    pos = {x = 1, y = 0}, --position in atlas
+    pos = {x = 0, y = 1}, --position in atlas
     loc_txt = {
         name = 'Methamphetamine', --name of card
         text = { --text of card

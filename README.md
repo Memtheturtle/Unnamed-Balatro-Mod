@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.2.0.0 - CUSTOM ART FOR (most) CARDS IS NOW IN GAME
+
 0.1.2.1 - Fixed Joker Art Atlas Locations in Preperation for Adding the Art in
 
 0.1.2.0 - Added Ligshu Joker and Tick Tock Joker, Updated Criminal Joker to Include all Members in the Collab, Fixed Typos, Updated Future Plans and Current Features, Updated Mod Authors

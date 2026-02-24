@@ -440,7 +440,7 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = false,
-    pos = {x = 0, y = 0},
+    pos = {x = 0, y = 1},
     
     add_to_deck = function(self, card, from_debuff)
         G.GAME.stop_use_and_sell = true

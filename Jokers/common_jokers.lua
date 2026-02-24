@@ -1,9 +1,45 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
+GCBM_pointer_dt = 0
+GCBM_jimball2_dt = 0
+
+local Game_update_ref = Game.update
+function Game:update(dt)
+	Game_update_ref(self, dt)
+
+	GCBM_pointer_dt = GCBM_pointer_dt + dt
+	GCBM_jimball2_dt = GCBM_jimball2_dt + dt
+
+	if G.P_CENTERS and G.P_CENTERS.c_gcbm_pointer and GCBM_pointer_dt > 0.5 then
+		GCBM_pointer_dt = 0
+		local pointerobj = G.P_CENTERS.c_gcbm_pointer
+		pointerobj.pos.x = (pointerobj.pos.x == 4) and 5 or 4
+	end
+	if G.P_CENTERS and G.P_CENTERS.j_gcbm_jimball2 and GCBM_jimball2_dt > 0.1 then
+		GCBM_jimball2_dt = 0
+		local jimball2obj = G.P_CENTERS.j_gcbm_jimball2
+		if jimball2obj.pos.x == 5 and jimball2obj.pos.y == 6 then
+			jimball2obj.pos.x = 0
+			jimball2obj.pos.y = 0
+		elseif jimball2obj.pos.x < 8 then
+			jimball2obj.pos.x = jimball2obj.pos.x + 1
+		elseif jimball2obj.pos.y < 6 then
+			jimball2obj.pos.x = 0
+			jimball2obj.pos.y = jimball2obj.pos.y + 1
+		end
+	end
+end
 
 SMODS.Atlas{
     key = 'Common_jokers', --atlas key
     path = 'Common_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
+    px = 71, --width of one card
+    py = 95 -- height of one card
+}
+
+SMODS.Atlas{
+    key = 'Jimball', --atlas key
+    path = 'Jimball.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
     px = 71, --width of one card
     py = 95 -- height of one card
 }
@@ -41,7 +77,7 @@ SMODS.Joker{
             'Be {C:legendary}cool{}',
         }]]
     },
-    atlas = 'Common_jokers', --atlas' key
+    atlas = 'Jimball', --atlas' key
     rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
     --soul_pos = { x = 0, y = 0 },
     cost = 0, --cost

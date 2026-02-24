@@ -30,7 +30,7 @@ SMODS.ConsumableType{
 
 SMODS.UndiscoveredSprite{
     key = 'Drugs', --must be the same key as the consumabletype
-    atlas = 'Jokers',
+    atlas = 'Drugs',
     pos = {x = 10, y = 0}
 }
 

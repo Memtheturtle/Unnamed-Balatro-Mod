@@ -110,17 +110,10 @@ SMODS.Joker{
         if context.joker_main then
             -- 1/19 crash chance on each hand
             if pseudorandom('crash_trigger') < (G.GAME.probabilities.normal or 1) / 19 then
-                G.STATE = G.STATES.GAME_OVER
-                G.STATE_COMPLETE = false
-
-                -- Flood jokers with negative copies
-                for i = 1, 25 do
-                    local new_card = create_card('Joker', G.jokers, nil, nil, nil, nil, 'j_gcbm_blue')
-                    new_card:set_edition({negative = true}, true)
-                    G.jokers:emplace(new_card)
-                end
-
-                return {calculated = true}
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_blue')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
             end
 
             return {

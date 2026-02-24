@@ -48,8 +48,7 @@ SMODS.Joker{
     eternal_compat = true, --can it be eternal
     perishable_compat = true, --can it be perishable
     pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
-
+            
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then 
             unlock_card(self)
@@ -61,7 +60,31 @@ SMODS.Joker{
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
-        
+         local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_ovk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
     end,
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not

@@ -129,6 +129,109 @@ SMODS.Joker{
     end,
 }
 
+
+SMODS.Joker{
+    key = 'bday',
+    loc_txt = {
+        name = 'Birthday Bot',
+        text = {
+            'If it is anyone in The Backyardigans\' birthday,',
+            '{C:attention}Spawn 1 of that card{}every blind',
+        },
+    },
+   atlas = 'Backyardigans_jokers', --atlas' key
+    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = false,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+   
+
+
+     calculate = function(self, card, context)
+        if context.setting_blind then
+
+        local month = tonumber(os.date('%m'))
+        local day   = tonumber(os.date('%d'))
+
+        if month == 10 and day == 15 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_real')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+  
+        elseif month == 8 and day == 11 then
+             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+    
+        elseif month == 2 and day == 18 then
+         local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_pig')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 6 and day == 9 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sin')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 7 and day == 4 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_whisk')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 5 and day == 25 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 1 and day == 27 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dave')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 6 and day == 15 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sky')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+        
+        elseif month == 12 and day == 4 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 2 and day == 27 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+        
+        elseif month == 9 and day == 6 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+        end
+    end
+    end,
+
+    in_pool = function(self, wawa, wawa2)
+        return true
+    end,
+}
+
 SMODS.Joker{
     key = 'dave',
     loc_txt = {
@@ -199,7 +302,7 @@ SMODS.Joker{
     in_pool = function(self, wawa, wawa2)
         return true
     end,
-}  -- <-- closing parenthesis added here
+} 
 
 SMODS.Joker{
     key = 'leg',

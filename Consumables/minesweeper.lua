@@ -12,8 +12,8 @@ SMODS.ConsumableType{
     key = 'minesweep', --consumable type key
 
     collection_rows = {5,6}, --amount of cards in one page
-    primary_colour = G.C.BLUE, --first color
-    secondary_colour = G.C.RED, --second color
+    primary_colour = G.C.WHITE, --first color
+    secondary_colour = G.C.GREY, --second color
     loc_txt = {
         collection = 'Minesweeper', --name displayed in collection
         name = 'Minesweeper', --name displayed in badge

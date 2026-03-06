@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.0.0 - New CMD Consumables With Art
+
 0.2.0.0 - CUSTOM ART FOR (most) CARDS IS NOW IN GAME
 
 0.1.2.1 - Fixed Joker Art Atlas Locations in Preperation for Adding the Art in
@@ -53,6 +55,8 @@ CURRENT FEATURES:
 1 Tarot Card 
 
 10 Minesweeper Consumable Cards (With Art!)
+
+17 CMD Consumable Cards (With Art!)
 
 6 Drug Consumable Cards (1 Not yet functional)
 

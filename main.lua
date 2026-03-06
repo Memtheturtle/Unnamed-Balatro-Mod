@@ -18,6 +18,7 @@ end
 load("mods/Unnamed-Balatro-Mod/Consumables/minesweeper.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/drugs.lua")
+load("mods/Unnamed-Balatro-Mod/Consumables/cmd.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/tarots.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/muscore.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/levels.lua")

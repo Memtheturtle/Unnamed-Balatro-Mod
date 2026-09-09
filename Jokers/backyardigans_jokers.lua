@@ -55,6 +55,16 @@ SMODS.Sound({
 	end,
 })
 
+SMODS.Sound({
+	key = "music_choppa",
+	path = "music_choppa.mp3",
+	sync = false,
+	pitch = 1,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_tts")) 
+	end,
+})
+
 
 SMODS.Sound({
     key = "legacymoneygain",
@@ -136,7 +146,7 @@ SMODS.Joker{
         name = 'Birthday Bot',
         text = {
             'If it is anyone in The Backyardigans\' birthday,',
-            '{C:attention}Spawn 1 of that card{}every blind',
+            '{C:attention}Spawn 1 of that card{} every blind',
         },
     },
    atlas = 'Backyardigans_jokers', --atlas' key
@@ -146,7 +156,7 @@ SMODS.Joker{
     unlocked = true,
     discovered = true,
     blueprint_compat = true,
-    eternal_compat = false,
+    eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 1},
    
@@ -498,8 +508,8 @@ SMODS.Joker{
     cost = 50,
     unlocked = true,
     discovered = true,
-    blueprint_compat = true,
-    eternal_compat = true,
+    blueprint_compat = false,
+    eternal_compat = false,
     perishable_compat = true,
     pos = {x = 6, y = 0},
 
@@ -738,6 +748,123 @@ SMODS.Joker{
     
     in_pool = function(self, wawa, wawa2)
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'tts',
+    loc_txt = {
+        name = 'TTS Bot',
+        text = {
+            'CHOPPA'
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = false,
+    config = {eternal = true},
+    pos = {x = 7, y = 1},
+    
+    
+    add_to_deck = function(self, card, from_debuff)
+        card:set_eternal(true)
+        select_music_track = "music_choppa"
+    end,
+
+}
+
+local https = require "SMODS.https"
+
+-- Cache file path
+local cache_path = SMODS.current_mod.path .. "waterbound_rank_cache.txt"
+
+-- Try to read cached rank from file
+local function read_cache()
+    local file = io.open(cache_path, "r")
+    if file then
+        local val = file:read("*n")
+        file:close()
+        if val and val > 0 then return val end
+    end
+    return nil
+end
+
+-- Write rank to cache file
+local function write_cache(rank)
+    local file = io.open(cache_path, "w")
+    if file then
+        file:write(tostring(rank))
+        file:close()
+    end
+end
+
+-- Fetch rank from AREDL, fall back to cache on failure
+local waterbound_xmult = read_cache() or 1
+
+local code, body = https.request("https://aredl.net/profile/user/waterbound")
+if code == 200 and body then
+    -- Extract "Points Rank (with packs)#NNN" from the page HTML
+    local rank = body:match("Points Rank %(with packs%).-#(%d+)")
+    if rank then
+        waterbound_xmult = tonumber(rank)
+        write_cache(waterbound_xmult)
+    end
+end
+
+SMODS.Joker{
+    key = 'water',
+    loc_txt = {
+        name = 'Waterbound',
+        text = {
+            'Reduce hand size to {C:attention}1{}',
+            '{X:mult,C:white}X' .. tostring(waterbound_xmult) .. '{} Mult',
+            '{C:inactive}[AREDL Rank]{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+    config = { extra = { h_size = 0, xmult = waterbound_xmult } },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    add_to_deck = function(self, card, from_debuff)
+        local delta = 1 - G.hand.config.card_limit
+        card.ability.extra.h_size = delta
+        G.hand:change_size(delta)
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        G.hand:change_size(-card.ability.extra.h_size)
+        card.ability.extra.h_size = 0
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                xmult = card.ability.extra.xmult,
+                message = localize{type='variable', key='a_xmult', vars={card.ability.extra.xmult}}
+            }
+        end
     end,
 }
 

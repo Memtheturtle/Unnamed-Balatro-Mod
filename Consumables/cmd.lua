@@ -15,6 +15,104 @@ function Card:use_consumeable(area, copier)
     return use_ref(self, area, copier)
 end
 
+local tracert_state = { rank = "Ace", suit = "Spades" }
+local ranks = {"2","3","4","5","6","7","8","9","10","Jack","Queen","King","Ace"}
+local suits = {"Spades","Hearts","Clubs","Diamonds"}
+local suit_colours = {
+    Spades   = G.C.WHITE,
+    Hearts   = {0.95,0.2,0.2,1},
+    Clubs    = G.C.WHITE,
+    Diamonds = {0.95,0.2,0.2,1},
+}
+
+for _, r in ipairs(ranks) do
+    local rank_ref = r
+    G.FUNCS["tracert_rank_" .. r] = function(e)
+        tracert_state.rank = rank_ref
+    end
+end
+
+for _, s in ipairs(suits) do
+    local suit_ref = s
+    G.FUNCS["tracert_suit_" .. s] = function(e)
+        tracert_state.suit = suit_ref
+    end
+end
+
+G.FUNCS.tracert_search = function(e)
+    -- Close selection menu
+    if G.OVERLAY_MENU then
+        G.OVERLAY_MENU:remove()
+        G.OVERLAY_MENU = nil
+    end
+
+    local deck = G.deck and G.deck.cards
+    if not deck then return end
+
+    local found = {}
+    for i = #deck, 1, -1 do
+        local c = deck[i]
+        if c.base.value == tracert_state.rank and c.base.suit == tracert_state.suit then
+            table.insert(found, (#deck - i + 1))
+        end
+    end
+
+    local result_line
+    if #found == 0 then
+        result_line = tracert_state.rank .. " of " .. tracert_state.suit .. "  --  not in deck"
+    else
+        local positions = {}
+        for _, p in ipairs(found) do
+            positions[#positions+1] = "#" .. p
+        end
+        result_line = tracert_state.rank .. " of " .. tracert_state.suit .. "  --  " .. table.concat(positions, ", ")
+    end
+
+    -- Open results popup
+    G.E_MANAGER:add_event(Event({
+        trigger = 'after',
+        delay = 0.15,
+        func = function()
+            G.FUNCS.overlay_menu({
+                definition = {
+                    n = G.UIT.ROOT,
+                    config = {
+                        align = "cm",
+                        colour = {0.04,0.04,0.04,0.97},
+                        r = 0.1,
+                        padding = 0.5,
+                        minw = 6.0,
+                        minh = 2.0
+                    },
+                    nodes = {
+                        {
+                            n = G.UIT.R,
+                            config = { align = "cm", padding = 0.15 },
+                            nodes = {{
+                                n = G.UIT.T,
+                                config = { text = "C:\\_tracert  output:", scale = 0.42, colour = G.C.GREEN }
+                            }}
+                        },
+                        {
+                            n = G.UIT.R,
+                            config = { align = "cm", padding = 0.15 },
+                            nodes = {{
+                                n = G.UIT.T,
+                                config = { text = result_line, scale = 0.38, colour = G.C.WHITE }
+                            }}
+                        },
+                        {
+                            n = G.UIT.R,
+                            config = { align = "cm", padding = 0.1 },
+                            nodes = {{ n = G.UIT.T, config = { text = "[ ESC ] to close", scale = 0.28, colour = {0.5,0.5,0.5,1} } }}
+                        },
+                    }
+                }
+            })
+            return true
+        end
+    }))
+end
 
 SMODS.ConsumableType{
     key = 'CMD', --consumable type key
@@ -540,7 +638,7 @@ SMODS.Consumable {
     set = "CMD",
     cost = 4,
     atlas = 'CMD',
-    pos = {x = 4, y = 0},
+    pos = {x = 6, y = 0},
     loc_txt = {
         name = "C:\\_chkdsk",
         text = {
@@ -595,11 +693,88 @@ SMODS.Consumable {
 }
 
 SMODS.Consumable {
+    key = "tasklist",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 7, y = 0},
+    loc_txt = {
+        name = "C:\\_tasklist",
+        text = {
+            'Summons the negative planet cards',
+            'associated with your top 3',
+            'most played hand types',
+        }
+    },
+    can_use = function(self, card)
+        return #G.consumeables.cards < G.consumeables.config.card_limit
+    end,
+    use = function(self, card, area, copier)
+        -- Map hand types to their planet card keys
+        local hand_to_planet = {
+            ["High Card"]       = "c_pluto",
+            ["Pair"]            = "c_mercury",
+            ["Two Pair"]        = "c_uranus",
+            ["Three of a Kind"] = "c_venus",
+            ["Straight"]        = "c_saturn",
+            ["Flush"]           = "c_jupiter",
+            ["Full House"]      = "c_earth",
+            ["Four of a Kind"]  = "c_mars",
+            ["Straight Flush"]  = "c_neptune",
+            ["Five of a Kind"]  = "c_planet_x",
+            ["Flush House"]     = "c_ceres",
+            ["Flush Five"]      = "c_eris",
+        }
+
+        -- Sort hand types by most played
+        local played = {}
+        for hand, data in pairs(G.GAME.hands) do
+            if data.played and data.played > 0 then
+                played[#played + 1] = { hand = hand, count = data.played }
+            end
+        end
+        table.sort(played, function(a, b) return a.count > b.count end)
+
+        -- Take top 3
+        local top3 = {}
+        for i = 1, math.min(3, #played) do
+            top3[#top3 + 1] = played[i].hand
+        end
+
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                play_sound('tarot2', 0.76, 0.4)
+                card:juice_up(0.3, 0.5)
+                return true
+            end
+        }))
+
+        for i, hand in ipairs(top3) do
+            local planet_key = hand_to_planet[hand]
+            if planet_key then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = i * 0.3,
+                    func = function()
+                        local planet = create_card('Planet', G.consumeables, nil, nil, nil, nil, planet_key)
+                        planet:set_edition({ negative = true }, true)
+                        planet:add_to_deck()
+                        G.consumeables:emplace(planet)
+                        play_sound('card1', 1, 0.8)
+                        return true
+                    end
+                }))
+            end
+        end
+    end,
+}
+
+SMODS.Consumable {
     key = "taskkill",
     set = "CMD",
     cost = 4,
     atlas = 'CMD',
-    pos = {x = 6, y = 0},
+    pos = {x = 8, y = 0},
     loc_txt = {
         name = "C:\\_taskkill",
         text = {
@@ -652,11 +827,337 @@ SMODS.Consumable {
 }
 
 SMODS.Consumable {
+    key = "tracert",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 0, y = 1},
+    loc_txt = {
+        name = "C:\\_tracert",
+        text = {
+            'Search the deck for a card',
+            'by rank and suit',
+        }
+    },
+    can_use = function(self, card)
+        return G.deck and #G.deck.cards > 0
+    end,
+    use = function(self, card, area, copier)
+        tracert_state.rank = "Ace"
+        tracert_state.suit = "Spades"
+
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                play_sound('tarot2', 0.76, 0.4)
+                card:juice_up(0.3, 0.5)
+                return true
+            end
+        }))
+
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.2,
+            func = function()
+                local rank_nodes = {}
+                for _, r in ipairs(ranks) do
+                    table.insert(rank_nodes, {
+                        n = G.UIT.C,
+                        config = {
+                            button = "tracert_rank_" .. r,
+                            align = "cm",
+                            padding = 0.05,
+                            colour = {0.15,0.15,0.15,1},
+                            r = 0.05,
+                            hover = true,
+                            shadow = true,
+                        },
+                        nodes = {{
+                            n = G.UIT.T,
+                            config = { text = r, scale = 0.28, colour = G.C.WHITE }
+                        }}
+                    })
+                end
+
+                local suit_nodes = {}
+                for _, s in ipairs(suits) do
+                    table.insert(suit_nodes, {
+                        n = G.UIT.C,
+                        config = {
+                            button = "tracert_suit_" .. s,
+                            align = "cm",
+                            padding = 0.12,
+                            colour = {0.15,0.15,0.15,1},
+                            r = 0.05,
+                            hover = true,
+                            shadow = true,
+                            minw = 1.5,
+                        },
+                        nodes = {{
+                            n = G.UIT.T,
+                            config = { text = s, scale = 0.32, colour = suit_colours[s] }
+                        }}
+                    })
+                end
+
+                G.FUNCS.overlay_menu({
+                    definition = {
+                        n = G.UIT.ROOT,
+                        config = {
+                            align = "cm",
+                            colour = {0.04,0.04,0.04,0.97},
+                            r = 0.1,
+                            padding = 0.5,
+                            minw = 7.0,
+                            minh = 3.0
+                        },
+                        nodes = {
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.15 },
+                                nodes = {{
+                                    n = G.UIT.T,
+                                    config = { text = "C:\\_tracert", scale = 0.5, colour = G.C.GREEN }
+                                }}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.06 },
+                                nodes = {{ n = G.UIT.T, config = { text = "rank:", scale = 0.32, colour = {0.4,0.8,0.4,1} } }}
+                            },
+                            { n = G.UIT.R, config = { align = "cm", padding = 0.06 }, nodes = rank_nodes },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.1 },
+                                nodes = {{ n = G.UIT.T, config = { text = "suit:", scale = 0.32, colour = {0.4,0.8,0.4,1} } }}
+                            },
+                            { n = G.UIT.R, config = { align = "cm", padding = 0.08 }, nodes = suit_nodes },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.15 },
+                                nodes = {{
+                                    n = G.UIT.C,
+                                    config = {
+                                        button = "tracert_search",
+                                        align = "cm",
+                                        padding = 0.12,
+                                        colour = G.C.GREEN,
+                                        r = 0.05,
+                                        hover = true,
+                                        shadow = true,
+                                        minw = 2.0,
+                                    },
+                                    nodes = {{ n = G.UIT.T, config = { text = "[ SEARCH ]", scale = 0.4, colour = G.C.BLACK } }}
+                                }}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.06 },
+                                nodes = {{ n = G.UIT.T, config = { text = "[ ESC ] to close", scale = 0.28, colour = {0.5,0.5,0.5,1} } }}
+                            },
+                        }
+                    }
+                })
+                return true
+            end
+        }))
+    end,
+}
+
+GCBM = GCBM or {}
+GCBM.rmdir_state = GCBM.rmdir_state or {
+    current_blind_used = {},
+    last_5_blinds = {},
+    next_uid = 1
+}
+
+local function rmdir_ensure_uid(c)
+    if not c then return nil end
+
+    c.ability = c.ability or {}
+    if not c.ability.gcbm_rmdir_uid then
+        c.ability.gcbm_rmdir_uid = GCBM.rmdir_state.next_uid
+        GCBM.rmdir_state.next_uid = GCBM.rmdir_state.next_uid + 1
+    end
+
+    return c.ability.gcbm_rmdir_uid
+end
+
+local function rmdir_mark_used(cards)
+    if not cards then return end
+    for _, c in ipairs(cards) do
+        local uid = rmdir_ensure_uid(c)
+        if uid then
+            GCBM.rmdir_state.current_blind_used[uid] = true
+        end
+    end
+end
+
+local function rmdir_push_blind_history()
+    local snapshot = {}
+    local has_any = false
+
+    for uid, used in pairs(GCBM.rmdir_state.current_blind_used) do
+        if used then
+            snapshot[uid] = true
+            has_any = true
+        end
+    end
+
+    if has_any then
+        table.insert(GCBM.rmdir_state.last_5_blinds, 1, snapshot)
+        while #GCBM.rmdir_state.last_5_blinds > 5 do
+            table.remove(GCBM.rmdir_state.last_5_blinds)
+        end
+    end
+
+    GCBM.rmdir_state.current_blind_used = {}
+end
+
+local function rmdir_recent_used_lookup()
+    local used = {}
+
+    for _, blind_data in ipairs(GCBM.rmdir_state.last_5_blinds) do
+        for uid, v in pairs(blind_data) do
+            if v then used[uid] = true end
+        end
+    end
+
+    return used
+end
+
+local function rmdir_get_unused_playing_cards()
+    local unused = {}
+    local used_lookup = rmdir_recent_used_lookup()
+
+    for _, c in ipairs(G.playing_cards or {}) do
+        local uid = rmdir_ensure_uid(c)
+        if uid and not used_lookup[uid] then
+            unused[#unused + 1] = c
+        end
+    end
+
+    return unused
+end
+
+SMODS.Joker {
+    key = "rmdir_tracker",
+    atlas = "CMD",
+    pos = { x = 0, y = 0 },
+    rarity = 1,
+    cost = 0,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = false,
+    no_collection = true,
+
+    in_pool = function()
+        return false
+    end,
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            GCBM.rmdir_state.current_blind_used = {}
+            return
+        end
+
+        if context.before and context.cardarea == G.jokers and context.full_hand then
+            rmdir_mark_used(context.full_hand)
+            return
+        end
+
+        if context.end_of_round and context.cardarea == G.jokers and not context.individual and not context.repetition then
+            rmdir_push_blind_history()
+            return
+        end
+    end
+}
+
+SMODS.Consumable {
+    key = "rmdir",
+    set = "CMD",
+    cost = 4,
+    atlas = "CMD",
+    pos = { x = 2, y = 1 },
+
+    loc_txt = {
+        name = "C:\\_rmdir",
+        text = {
+            "Destroys all cards not used",
+            "in the past 5 blinds"
+        }
+    },
+
+    can_use = function(self, card)
+        return #rmdir_get_unused_playing_cards() > 0
+    end,
+
+    use = function(self, card, area, copier)
+        local targets = rmdir_get_unused_playing_cards()
+
+        for _, target in ipairs(targets) do
+            if target.start_dissolve then
+                target:start_dissolve()
+            end
+        end
+
+        return {
+            message = "Deleted!",
+            colour = G.C.RED
+        }
+    end
+}
+SMODS.Consumable {
+    key = "cd",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 3, y = 1},
+    loc_txt = {
+        name = [[C:\_cd]],
+        text = {
+            'Changes blind to the previous one',
+            'without losing any chip value',            
+        }
+    },
+use = function(self, card, area, copier)
+    local chips = G.GAME.chips
+
+    if G.GAME.blind_on_deck == 'Small' then
+        G.GAME.round_resets.ante = math.max(1, G.GAME.round_resets.ante - 1)
+        G.GAME.blind_on_deck = 'Boss'
+    elseif G.GAME.blind_on_deck == 'Big' then
+        G.GAME.blind_on_deck = 'Small'
+    elseif G.GAME.blind_on_deck == 'Boss' then
+        G.GAME.blind_on_deck = 'Big'
+    end
+
+    local prev_key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
+    local prev = G.P_BLINDS[prev_key]
+
+    G.GAME.blind.name = prev.name
+    G.GAME.blind.mult = prev.mult
+    G.GAME.blind.boss = prev.boss
+    G.GAME.blind.dollars = prev.dollars
+    G.GAME.blind.loc_name = prev.name
+    G.GAME.blind.key = prev_key
+    G.GAME.blind.chips = math.floor(G.GAME.blind.chips * prev.mult)
+    G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
+
+    G.GAME.chips = chips
+end,
+can_use = function(self, card)
+    return true
+end,
+}
+
+SMODS.Consumable {
     key = "help",
     set = "CMD",
     cost = 4,
     atlas = 'CMD',
-    pos = {x = 4, y = 0},
+    pos = {x = 9, y = 0},
     loc_txt = {
         name = "C:\\_help",
         text = {
@@ -667,7 +1168,7 @@ SMODS.Consumable {
     can_use = function(self, card)
         return G.GAME and G.GAME.blind and G.GAME.blind.chips
     end,
-use = function(self, card, area, copier)
+    use = function(self, card, area, copier)
     local half = math.floor(G.GAME.blind.chips / 2)
 
     G.E_MANAGER:add_event(Event({
@@ -681,7 +1182,7 @@ use = function(self, card, area, copier)
             return true
         end
     }))
-end,
+    end,
 }
 
 SMODS.Consumable {
@@ -689,34 +1190,29 @@ SMODS.Consumable {
     set = "CMD",
     cost = 4,
     atlas = 'CMD',
-    pos = {x = 4, y = 0},
+    pos = {x = 0, y = 1},
     loc_txt = {
         name = "C:\\_shutdown",
         text = {
-            'Immediately wins the blind',          
+            'Gives all required chips to win the blind',          
         }
     },
-    can_use = function(self, card)
+     can_use = function(self, card)
         return G.GAME and G.GAME.blind and G.GAME.blind.chips
     end,
-use = function(self, card, area, copier)
-    local half = math.floor(G.GAME.blind.chips)
-
+    use = function(self, card, area, copier)
+    local all = math.floor(G.GAME.blind.chips)
 
     G.E_MANAGER:add_event(Event({
         func = function()
             play_sound('tarot2', 0.76, 0.4)
             card:juice_up(0.3, 0.5)
-            G.GAME.chips = (G.GAME.chips or 0) + half
+            G.GAME.chips = (G.GAME.chips or 0) + all
             if G.hand_text_area and G.hand_text_area.game_chips then
                 G.hand_text_area.game_chips:update_text()
-            end
-            -- Trigger win check
-            if G.GAME.chips >= G.GAME.blind.chips then
-                G.FUNCS.win_round()
             end
             return true
         end
     }))
-end,
+    end,
 }

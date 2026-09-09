@@ -1,4 +1,4 @@
-# GCBM
+# Unnamed Balatro Mod
 This mod is a random grab bag of ideas we have had over the past year or so.
 
 
@@ -6,16 +6,18 @@ CONTRIBUTORS:
 
 Coding: Memtheturtle
 
-Art: Memtheturtle, Theskycrusher6, and SingularityXVI
+Art: Memtheturtle, Theskycrusher6, StayReal, and SingularityXVI
 
-Ideas/Inspiration: Memtheturtle, Theskycrusher6, SingularityXVI, Whiskers11, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, and Legacy5
+Ideas/Inspiration: Memtheturtle, Theskycrusher6, SingularityXVI, Whiskers11, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, and Legacy5
 
-This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Most art is not implemented yet and is merely placeholders for now
+This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Some art is not implemented yet but will be for the final release.
 
 
 VERSION HISTORY:
 
-0.3.0.0 - New CMD Consumables With Art
+0.3.1.0 - Birthday Bot Joker and Waterbound Joker, Renamed Unnamed List Joker to Stats Viewer Joker, Fixed blueprint errors, Changed Mod Name
+
+0.3.0.0 - New CMD Consumables (Not all functional yet)
 
 0.2.0.0 - CUSTOM ART FOR (most) CARDS IS NOW IN GAME
 

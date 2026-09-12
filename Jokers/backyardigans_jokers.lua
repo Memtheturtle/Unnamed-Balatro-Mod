@@ -97,6 +97,46 @@ SMODS.Rarity{
 
 
 
+local https = require "SMODS.https"
+
+-- Cache file path
+local cache_path = SMODS.current_mod.path .. "waterbound_rank_cache.txt"
+
+-- Try to read cached rank from file
+local function read_cache()
+    local file = io.open(cache_path, "r")
+    if file then
+        local val = file:read("*n")
+        file:close()
+        if val and val > 0 then return val end
+    end
+    return nil
+end
+
+-- Write rank to cache file
+local function write_cache(rank)
+    local file = io.open(cache_path, "w")
+    if file then
+        file:write(tostring(rank))
+        file:close()
+    end
+end
+
+-- Fetch rank from AREDL, fall back to cache on failure
+local waterbound_xmult = read_cache() or 1
+
+local code, body = https.request("https://aredl.net/profile/user/waterbound")
+if code == 200 and body then
+    -- Extract "Points Rank (with packs)#NNN" from the page HTML
+    local rank = body:match("Points Rank %(with packs%).-#(%d+)")
+    if rank then
+        waterbound_xmult = tonumber(rank)
+        write_cache(waterbound_xmult)
+    end
+end
+
+
+
 SMODS.Joker{
     key = 'avo', --joker key
     loc_txt = { -- local text
@@ -858,44 +898,6 @@ SMODS.Joker{
 
 }
 
-local https = require "SMODS.https"
-
--- Cache file path
-local cache_path = SMODS.current_mod.path .. "waterbound_rank_cache.txt"
-
--- Try to read cached rank from file
-local function read_cache()
-    local file = io.open(cache_path, "r")
-    if file then
-        local val = file:read("*n")
-        file:close()
-        if val and val > 0 then return val end
-    end
-    return nil
-end
-
--- Write rank to cache file
-local function write_cache(rank)
-    local file = io.open(cache_path, "w")
-    if file then
-        file:write(tostring(rank))
-        file:close()
-    end
-end
-
--- Fetch rank from AREDL, fall back to cache on failure
-local waterbound_xmult = read_cache() or 1
-
-local code, body = https.request("https://aredl.net/profile/user/waterbound")
-if code == 200 and body then
-    -- Extract "Points Rank (with packs)#NNN" from the page HTML
-    local rank = body:match("Points Rank %(with packs%).-#(%d+)")
-    if rank then
-        waterbound_xmult = tonumber(rank)
-        write_cache(waterbound_xmult)
-    end
-end
-
 SMODS.Joker{
     key = 'water',
     loc_txt = {
@@ -968,7 +970,7 @@ SMODS.Joker{
     cost = 50, --cost
     unlocked = true, --where it is unlocked or not: if true, 
     discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
     eternal_compat = true, --can it be eternal
     perishable_compat = true, --can it be perishable
     pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right

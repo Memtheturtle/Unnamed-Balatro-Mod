@@ -826,6 +826,37 @@ SMODS.Consumable {
     end,
 }
 
+SMODS.Consumable {    
+    key = "ping",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 0, y = 1},
+    loc_txt = {
+        name = "C:\\_ping",
+        text = {
+            'holder',
+            'of place',
+        }
+    },
+    can_use = function(self, card)
+        return true
+    end,
+     use = function(self, card, area, copier)
+        local last = G.GAME.prev_used_consumable
+        if not last then return end
+
+        local new_card = create_card(last.set, G.hand, nil, nil, nil, nil, last.key)
+        new_card:add_to_deck()
+        G.consumeables:emplace(new_card)
+    end,
+    loc_vars = function(self, info_queue, card)
+        return {
+            vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
+        }
+    end,
+}
+
 SMODS.Consumable {
     key = "tracert",
     set = "CMD",
@@ -960,6 +991,37 @@ SMODS.Consumable {
                 return true
             end
         }))
+    end,
+}
+
+SMODS.Consumable {
+    key = "netstat",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 0, y = 1},
+    loc_txt = {
+        name = "C:\\_netstat",
+        text = {
+            'holder',
+            'of place',
+        }
+    },
+    can_use = function(self, card)
+        return true
+    end,
+     use = function(self, card, area, copier)
+        local last = G.GAME.prev_used_consumable
+        if not last then return end
+
+        local new_card = create_card(last.set, G.hand, nil, nil, nil, nil, last.key)
+        new_card:add_to_deck()
+        G.consumeables:emplace(new_card)
+    end,
+    loc_vars = function(self, info_queue, card)
+        return {
+            vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
+        }
     end,
 }
 

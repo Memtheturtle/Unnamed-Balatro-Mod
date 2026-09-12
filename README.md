@@ -15,7 +15,7 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.3.2.0 - Echofallenn Joker, Wushady Joker,  Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions
+0.3.2.0 - Echofallenn Joker, Wushady Joker, Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions, cleaned up some code
 
 0.3.1.0 - Birthday Bot Joker and Waterbound Joker, Renamed Unnamed List Joker to Stats Viewer Joker, Fixed blueprint errors, Changed Mod Name
 
@@ -54,7 +54,7 @@ CURRENT FEATURES:
 
 4 New Types of Jokers: Backyardigans, Cat, Unhinged, and Uh Oh
 
-34 Total New Jokers
+39 Total New Jokers
 
 1 Tarot Card 
 

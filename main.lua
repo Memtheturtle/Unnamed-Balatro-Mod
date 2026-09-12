@@ -15,8 +15,12 @@ local function load(path)
     chunk()
 end
 
+local has_albums_mod = love.filesystem.getInfo("mods/Albums", "directory") ~= nil
+
 load("mods/Unnamed-Balatro-Mod/Consumables/minesweeper.lua")
-load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")
+if not has_albums_mod then
+    load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")
+end
 load("mods/Unnamed-Balatro-Mod/Consumables/drugs.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/cmd.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/tarots.lua")

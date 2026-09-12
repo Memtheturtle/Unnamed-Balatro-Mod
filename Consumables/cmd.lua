@@ -965,24 +965,44 @@ SMODS.Consumable {
 
 GCBM = GCBM or {}
 GCBM.rmdir_state = GCBM.rmdir_state or {
-    current_blind_used = {},
-    last_5_blinds = {},
-    next_uid = 1
+    current_blind_used = {}, -- uids used so far in the in-progress round
+    history = {},            -- up to 5 snapshots of completed rounds, newest first
+    last_round = nil,
+    next_uid = 1,
 }
 
 local function rmdir_ensure_uid(c)
     if not c then return nil end
-
     c.ability = c.ability or {}
     if not c.ability.gcbm_rmdir_uid then
         c.ability.gcbm_rmdir_uid = GCBM.rmdir_state.next_uid
         GCBM.rmdir_state.next_uid = GCBM.rmdir_state.next_uid + 1
     end
-
     return c.ability.gcbm_rmdir_uid
 end
 
+-- Rolls current_blind_used into history whenever G.GAME.round has moved on
+local function rmdir_sync_round()
+    local round = G.GAME and G.GAME.round
+    if round == nil then return end
+
+    if GCBM.rmdir_state.last_round == nil then
+        GCBM.rmdir_state.last_round = round
+        return
+    end
+
+    if round ~= GCBM.rmdir_state.last_round then
+        table.insert(GCBM.rmdir_state.history, 1, GCBM.rmdir_state.current_blind_used)
+        while #GCBM.rmdir_state.history > 5 do
+            table.remove(GCBM.rmdir_state.history)
+        end
+        GCBM.rmdir_state.current_blind_used = {}
+        GCBM.rmdir_state.last_round = round
+    end
+end
+
 local function rmdir_mark_used(cards)
+    rmdir_sync_round()
     if not cards then return end
     for _, c in ipairs(cards) do
         local uid = rmdir_ensure_uid(c)
@@ -992,87 +1012,40 @@ local function rmdir_mark_used(cards)
     end
 end
 
-local function rmdir_push_blind_history()
-    local snapshot = {}
-    local has_any = false
-
-    for uid, used in pairs(GCBM.rmdir_state.current_blind_used) do
-        if used then
-            snapshot[uid] = true
-            has_any = true
-        end
-    end
-
-    if has_any then
-        table.insert(GCBM.rmdir_state.last_5_blinds, 1, snapshot)
-        while #GCBM.rmdir_state.last_5_blinds > 5 do
-            table.remove(GCBM.rmdir_state.last_5_blinds)
-        end
-    end
-
-    GCBM.rmdir_state.current_blind_used = {}
-end
-
 local function rmdir_recent_used_lookup()
+    rmdir_sync_round()
     local used = {}
-
-    for _, blind_data in ipairs(GCBM.rmdir_state.last_5_blinds) do
-        for uid, v in pairs(blind_data) do
-            if v then used[uid] = true end
+    for _, snapshot in ipairs(GCBM.rmdir_state.history) do
+        for uid in pairs(snapshot) do
+            used[uid] = true
         end
     end
-
     return used
 end
 
 local function rmdir_get_unused_playing_cards()
-    local unused = {}
     local used_lookup = rmdir_recent_used_lookup()
-
+    local unused = {}
     for _, c in ipairs(G.playing_cards or {}) do
         local uid = rmdir_ensure_uid(c)
         if uid and not used_lookup[uid] then
             unused[#unused + 1] = c
         end
     end
-
     return unused
 end
 
-SMODS.Joker {
-    key = "rmdir_tracker",
-    atlas = "CMD",
-    pos = { x = 0, y = 0 },
-    rarity = 1,
-    cost = 0,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = false,
-    perishable_compat = false,
-    no_collection = true,
-
-    in_pool = function()
-        return false
-    end,
-
-    calculate = function(self, card, context)
-        if context.setting_blind then
-            GCBM.rmdir_state.current_blind_used = {}
-            return
-        end
-
-        if context.before and context.cardarea == G.jokers and context.full_hand then
-            rmdir_mark_used(context.full_hand)
-            return
-        end
-
-        if context.end_of_round and context.cardarea == G.jokers and not context.individual and not context.repetition then
-            rmdir_push_blind_history()
-            return
-        end
+-- Hook the real "play hand" callback so we know which cards were used,
+-- without needing a phantom joker sitting in G.jokers.
+local rmdir_play_ref = G.FUNCS.play_cards_from_highlighted
+G.FUNCS.play_cards_from_highlighted = function(e)
+    local played = {}
+    for _, c in ipairs(G.hand.highlighted) do
+        played[#played + 1] = c
     end
-}
+    rmdir_mark_used(played)
+    return rmdir_play_ref(e)
+end
 
 SMODS.Consumable {
     key = "rmdir",
@@ -1085,7 +1058,7 @@ SMODS.Consumable {
         name = "C:\\_rmdir",
         text = {
             "Destroys all cards not used",
-            "in the past 5 blinds"
+            "in the past 5 blinds",
         }
     },
 
@@ -1095,7 +1068,6 @@ SMODS.Consumable {
 
     use = function(self, card, area, copier)
         local targets = rmdir_get_unused_playing_cards()
-
         for _, target in ipairs(targets) do
             if target.start_dissolve then
                 target:start_dissolve()
@@ -1108,6 +1080,27 @@ SMODS.Consumable {
         }
     end
 }
+
+GCBM = GCBM or {}
+GCBM.cd_state = GCBM.cd_state or { history = {} }
+
+-- Every time a blind actually starts, remember it (ante + slot + P_BLINDS key).
+-- We keep our own history because Balatro overwrites blind_choices.Boss on
+-- each ante-up, so there's no native way to recover a past ante's boss.
+local cd_new_round_ref = new_round
+function new_round()
+    local key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
+    table.insert(GCBM.cd_state.history, {
+        ante = G.GAME.round_resets.ante,
+        blind_on_deck = G.GAME.blind_on_deck,
+        key = key,
+    })
+    while #GCBM.cd_state.history > 10 do
+        table.remove(GCBM.cd_state.history, 1)
+    end
+    return cd_new_round_ref()
+end
+
 SMODS.Consumable {
     key = "cd",
     set = "CMD",
@@ -1118,38 +1111,39 @@ SMODS.Consumable {
         name = [[C:\_cd]],
         text = {
             'Changes blind to the previous one',
-            'without losing any chip value',            
+            'without losing any chip value',
         }
     },
-use = function(self, card, area, copier)
-    local chips = G.GAME.chips
 
-    if G.GAME.blind_on_deck == 'Small' then
-        G.GAME.round_resets.ante = math.max(1, G.GAME.round_resets.ante - 1)
-        G.GAME.blind_on_deck = 'Boss'
-    elseif G.GAME.blind_on_deck == 'Big' then
-        G.GAME.blind_on_deck = 'Small'
-    elseif G.GAME.blind_on_deck == 'Boss' then
-        G.GAME.blind_on_deck = 'Big'
-    end
+    can_use = function(self, card)
+        return #GCBM.cd_state.history >= 2
+    end,
 
-    local prev_key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
-    local prev = G.P_BLINDS[prev_key]
+    use = function(self, card, area, copier)
+        local chips = G.GAME.chips
 
-    G.GAME.blind.name = prev.name
-    G.GAME.blind.mult = prev.mult
-    G.GAME.blind.boss = prev.boss
-    G.GAME.blind.dollars = prev.dollars
-    G.GAME.blind.loc_name = prev.name
-    G.GAME.blind.key = prev_key
-    G.GAME.blind.chips = math.floor(G.GAME.blind.chips * prev.mult)
-    G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
+        -- Drop the entry for the blind we're currently on
+        table.remove(GCBM.cd_state.history)
+        local prev = GCBM.cd_state.history[#GCBM.cd_state.history]
+        if not prev then return end
 
-    G.GAME.chips = chips
-end,
-can_use = function(self, card)
-    return true
-end,
+        local prev_blind_data = G.P_BLINDS[prev.key]
+        if not prev_blind_data then return end
+
+        G.GAME.round_resets.ante = prev.ante
+        G.GAME.blind_on_deck = prev.blind_on_deck
+        G.GAME.round_resets.blind_choices[prev.blind_on_deck] = prev.key
+        G.GAME.round_resets.blind = prev_blind_data
+
+        G.GAME.round_resets.blind_states.Small = (prev.blind_on_deck == 'Small') and 'Current' or G.GAME.round_resets.blind_states.Small
+        G.GAME.round_resets.blind_states.Big = (prev.blind_on_deck == 'Big') and 'Current' or G.GAME.round_resets.blind_states.Big
+        G.GAME.round_resets.blind_states.Boss = (prev.blind_on_deck == 'Boss') and 'Current' or G.GAME.round_resets.blind_states.Boss
+
+        -- Fully rebuilds art, colours, name and chip requirement (silent = skip fanfare)
+        G.GAME.blind:set_blind(prev_blind_data, nil, true)
+
+        G.GAME.chips = chips
+    end,
 }
 
 SMODS.Consumable {

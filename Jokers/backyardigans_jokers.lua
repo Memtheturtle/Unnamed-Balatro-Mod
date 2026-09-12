@@ -72,6 +72,11 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+    key = "1984",
+    path = "1984.mp3",
+})
+
+SMODS.Sound({
     key = "legacymoneylost",
     path = "legacymoneylost.mp3",
 })
@@ -227,7 +232,13 @@ SMODS.Joker{
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
-        
+
+        elseif month == 5 and day == 24 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_limitz')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
         elseif month == 9 and day == 6 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
             new_card:set_edition({negative = true}, true)
@@ -313,6 +324,45 @@ SMODS.Joker{
         return true
     end,
 } 
+
+SMODS.Joker{
+    key = 'echo', --joker key
+    loc_txt = { -- local text
+        name = 'Echofallenn',
+        text = {
+          'When blind is selected,',
+          'create {C:attention}1{} {C:attention}CMD Card{}',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Backyardigans_jokers', --atlas' key
+    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 50, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self,card,context) 
+        if context.setting_blind then
+            SMODS.add_card({ set = "CMD", area = G.consumeables})
+        end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
 
 SMODS.Joker{
     key = 'leg',
@@ -451,6 +501,54 @@ SMODS.Joker{
     key = 'mem', --joker key
     loc_txt = { -- local text
         name = 'Memtheturtle',
+        text = {
+          'When blind is selected,',
+          '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Backyardigans_jokers', --atlas' key
+    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 50, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
+    end,
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self,card,context) 
+        if context.setting_blind then
+            if pseudorandom('gamble') < G.GAME.probabilities.normal / 8 then
+                ease_dollars(9 * G.GAME.dollars)
+            else
+                ease_dollars(-G.GAME.dollars)
+            end
+        end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'limitz', --joker key
+    loc_txt = { -- local text
+        name = 'Mrhumanlimitz',
         text = {
           'When blind is selected,',
           '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',
@@ -692,61 +790,43 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'real',
-    loc_txt = {
-        name = 'Stayreal',
+    key = 'whisk', --joker key
+    loc_txt = { -- local text
+        name = 'Starlightlillie',
         text = {
-          'When blind is selected, destroy 1 card from deck',
-          'and gain +{C:chips}100{} Chips (Currently +{C:chips}#1#{} Chips)'
+          'When blind is selected,',
+          'create {C:attention}3{} Negative {C:attention}Estrogen{}',
         },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
     },
-    atlas = 'Backyardigans_jokers',
-    rarity = 'gcbm_yard',
-    cost = 50,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = true,
-    perishable_compat = true,
-    pos = {x = 2, y = 0},
-    
-    config = { 
-        extra = {
-            chips = 100,
-        }
-    },
-    
-    loc_vars = function(self, info_queue, center)
-        return {vars = {center.ability.extra.chips}}
+    atlas = 'Backyardigans_jokers', --atlas' key
+    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 50, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 3, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
     end,
-
-    calculate = function(self, card, context) 
+    calculate = function(self,card,context) 
+        select_music_track = "music_whiskers"
         if context.setting_blind then
-            -- Destroy a random card from deck
-            if #G.playing_cards > 0 then
-                local destroyed_card = pseudorandom_element(G.playing_cards, pseudoseed('stayreal'))
-                destroyed_card:start_dissolve()
-                
-                -- Increase chip bonus
-                card.ability.extra.chips = card.ability.extra.chips + 100
-                
-                return {
-                    message = 'Card Consumed',
-                    colour = G.C.CHIPS,
-                    card = card
-                }
-            end
-        end
-        
-        if context.joker_main then
-            return {
-                message = localize{type='variable',key='a_chips',vars={card.ability.extra.chips}},
-                chip_mod = card.ability.extra.chips
-            }
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
         end
     end,
-    
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -868,14 +948,16 @@ SMODS.Joker{
     end,
 }
 
+
 SMODS.Joker{
-    key = 'whisk', --joker key
+    key = 'wushady', --joker key
     loc_txt = { -- local text
-        name = 'Whiskers',
+        name = 'Wushady',
         text = {
           'When blind is selected,',
-          'create {C:attention}3{} Negative {C:attention}Estrogen{}',
-        },
+          '{C:green}#1# in 2{} chance to play 1984,',
+          'otherwise lose all money',
+        }
         --[[unlock = {
             'Be {C:legendary}cool{}',
         }]]
@@ -886,10 +968,15 @@ SMODS.Joker{
     cost = 50, --cost
     unlocked = true, --where it is unlocked or not: if true, 
     discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    blueprint_compat = false, --can it be blueprinted/brainstormed/other
     eternal_compat = true, --can it be eternal
     perishable_compat = true, --can it be perishable
-    pos = {x = 3, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
+    end,
+   
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then 
             unlock_card(self)
@@ -897,11 +984,13 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-        select_music_track = "music_whiskers"
         if context.setting_blind then
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+            if pseudorandom('nineteeneightyfour') < G.GAME.probabilities.normal / 2 then
+             local opened = love.system.openURL("https://www.youtube.com/watch?v=5jjnIBITmbg")
+                    play_sound('gcbm_1984')
+            else
+                ease_dollars(-G.GAME.dollars)
+            end
         end
     end,
     in_pool = function(self,wawa,wawa2)
@@ -909,6 +998,5 @@ SMODS.Joker{
         return true
     end,
 }
-
 ----------------------------------------------
 ------------MOD CODE END----------------------

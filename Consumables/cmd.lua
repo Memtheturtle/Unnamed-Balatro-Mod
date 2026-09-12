@@ -826,7 +826,7 @@ SMODS.Consumable {
     end,
 }
 
-SMODS.Consumable {    
+SMODS.Consumable {
     key = "ping",
     set = "CMD",
     cost = 4,
@@ -1270,5 +1270,125 @@ SMODS.Consumable {
             return true
         end
     }))
+    end,
+}
+
+SMODS.Consumable {
+    key = "findstr",
+    set = "CMD",
+    cost = 4,
+    atlas = 'CMD',
+    pos = {x = 0, y = 1},
+    loc_txt = {
+        name = "C:\\_findstr",
+        text = {
+            'Choose to create',
+            'any other {C:attention}CMD{} card',
+        }
+    },
+
+    can_use = function(self, card)
+        for _, c in pairs(G.P_CENTERS) do
+            if c.set == "CMD" and c.key ~= self.key then
+                return true
+            end
+        end
+        return false
+    end,
+
+    use = function(self, card, area, copier)
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                play_sound('tarot2', 0.76, 0.4)
+                card:juice_up(0.3, 0.5)
+                return true
+            end
+        }))
+
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.2,
+            func = function()
+                local options = {}
+                for _, c in pairs(G.P_CENTERS) do
+                    if c.set == "CMD" and c.key ~= self.key then
+                        table.insert(options, c)
+                    end
+                end
+                table.sort(options, function(a, b)
+                    local a_name = localize{type = 'name_text', key = a.key, set = a.set}
+                    local b_name = localize{type = 'name_text', key = b.key, set = b.set}
+                    return a_name < b_name
+                end)
+
+                -- One button function per card, same pattern as tracert's rank/suit buttons
+                for _, c in ipairs(options) do
+                    local set_ref, key_ref = c.set, c.key
+                    G.FUNCS["findstr_pick_" .. c.key] = function(e)
+                        G.FUNCS.exit_overlay_menu()
+                        SMODS.add_card({ set = set_ref, key = key_ref, area = G.consumeables })
+                    end
+                end
+
+                -- Lay options out as a grid (3 per row) so it doesn't run off-screen
+                local COLS = 3
+                local grid_rows = {}
+                local current_row = {}
+
+                for i, c in ipairs(options) do
+                    local display_name = localize{type = 'name_text', key = c.key, set = c.set}
+                    table.insert(current_row, {
+                        n = G.UIT.C,
+                        config = {
+                            align = "cm", minw = 2.2, minh = 0.8, padding = 0.08, r = 0.1,
+                            hover = true, colour = G.C.L_BLACK, shadow = true,
+                            button = "findstr_pick_" .. c.key,
+                        },
+                        nodes = {{
+                            n = G.UIT.T,
+                            config = { text = display_name, scale = 0.28, colour = G.C.WHITE }
+                        }}
+                    })
+
+                    if #current_row == COLS or i == #options then
+                        table.insert(grid_rows, {
+                            n = G.UIT.R,
+                            config = { align = "cm", padding = 0.05 },
+                            nodes = current_row
+                        })
+                        current_row = {}
+                    end
+                end
+
+                table.insert(grid_rows, {
+                    n = G.UIT.R,
+                    config = { align = "cm", padding = 0.1 },
+                    nodes = {{
+                        n = G.UIT.T,
+                        config = { text = "[ ESC ] to cancel", scale = 0.3, colour = { 0.5, 0.5, 0.5, 1 } }
+                    }}
+                })
+
+                G.FUNCS.overlay_menu({
+                    definition = {
+                        n = G.UIT.ROOT,
+                        config = { align = "cm", colour = { 0.04, 0.04, 0.04, 0.97 }, r = 0.1, padding = 0.5, minw = 8.0 },
+                        nodes = {
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.15 },
+                                nodes = {{ n = G.UIT.T, config = { text = "C:\\_findstr", scale = 0.5, colour = G.C.GREEN } }}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm" },
+                                nodes = {{ n = G.UIT.C, config = { align = "tl", padding = 0.25 }, nodes = grid_rows }}
+                            }
+                        }
+                    }
+                })
+                return true
+            end
+        }))
     end,
 }

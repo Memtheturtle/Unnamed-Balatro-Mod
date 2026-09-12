@@ -8,7 +8,21 @@ SMODS.Atlas{
     py = 95 -- height of one card
 }
 
-
+if not GCBM_screen_flip_installed then
+    GCBM_screen_flip_installed = true
+    local gcbm_draw_ref = love.draw
+    function love.draw()
+        if GCBM.screen_flipped then
+            love.graphics.push()
+            love.graphics.translate(love.graphics.getWidth(), 0)
+            love.graphics.scale(-1, 1)
+        end
+        gcbm_draw_ref()
+        if GCBM.screen_flipped then
+            love.graphics.pop()
+        end
+    end
+end
 
 SMODS.Sound({
 	key = "music_animal",
@@ -18,6 +32,17 @@ SMODS.Sound({
 	volume = 6,
 	select_music_track = function()
 		return next(find_joker("j_gcbm_per")) 
+	end,
+})
+
+SMODS.Sound({
+	key = "music_season",
+	path = "music_season.mp3",
+	sync = false,
+	pitch = 1,
+	volume = 6,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_mak")) 
 	end,
 })
 
@@ -634,6 +659,51 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'mak',
+    loc_txt = {
+        name = 'Makzu',
+        text = {
+            '{C:money}$2{}'
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = false,
+    config = {eternal = true},
+    pos = {x = 6, y = 0},
+
+    loc_vars = function(self, info_queue, center)
+        return {vars = {G.GAME.probabilities.normal}} 
+    end,
+
+      add_to_deck = function(self, card, from_debuff)
+        GCBM.screen_flipped = true
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        GCBM.screen_flipped = false
+    end,
+
+
+    calculate = function(self, card, context)
+        select_music_track = "music_season"
+        if context.setting_blind then
+            ease_dollars(2)
+             card_eval_status_text(card, 'dollars', 2)
+        end
+    end,
+
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'per',
     loc_txt = {
         name = 'PerfectLKM',
@@ -659,6 +729,7 @@ SMODS.Joker{
         select_music_track = "music_animal"
         if context.setting_blind then
             ease_dollars(1)
+            card_eval_status_text(card, 'dollars', 1)
             G.E_MANAGER:add_event(Event({ 
                 trigger = 'after',
                 delay = 0.1,
@@ -950,7 +1021,6 @@ SMODS.Joker{
     end,
 }
 
-
 SMODS.Joker{
     key = 'wushady', --joker key
     loc_txt = { -- local text
@@ -972,7 +1042,8 @@ SMODS.Joker{
     discovered = true, --whether or not it starts discovered
     blueprint_compat = true, --can it be blueprinted/brainstormed/other
     eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
+    perishable_compat = false, --can it be perishable
+    config = {eternal = true},
     pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
     
     loc_vars = function(self,info_queue,center)

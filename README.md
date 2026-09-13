@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.3.0 - RNGdle joker, Updated Makzu, Fixed Craig
+
 0.3.2.9 - Fixed Craig
 
 0.3.2.8 - Fixed Craig
@@ -72,7 +74,7 @@ CURRENT FEATURES:
 
 4 New Types of Jokers: Backyardigans, Cat, Unhinged, and Uh Oh
 
-39 Total New Jokers
+44 Total New Jokers
 
 1 Tarot Card 
 
@@ -91,6 +93,8 @@ PLANNED FEATURES:
 
 10+ Additional Backyardigan Jokers Themed Around Group Chat Members
 
+5+ Legendary Jokers Themed Around Famous Jesters
+
 10+ Additional Legendary Jokers Themed Around Popular GD Players/Creators
 
 Nightmare Freddy Joker
@@ -99,13 +103,15 @@ Nightmare Freddy Joker
 
 15+ Additional Drug Consumable Cards
 
+15+ Consumable Cards Themed Around Popular Geometry Dash Community Members
+
 40+ Consumable Cards Themed Around Popular Geometry Dash Levels
 
-35+ Consumable Cards Themed Around Geometry Dash Levels on Our List, The Unnamed List
+35+ Consumable Cards Themed Around Geometry Dash Levels on Our List, The Peanut Butter List
 
-30+ Consumable Cards Themed Around Upcoming Geometry Dash Levels on Our List, The Unnamed List
+30+ Consumable Cards Themed Around Upcoming Geometry Dash Levels on Our List, The Peanut Butter List
 
-85+ Consumable Cards Themed Around Popular Albums
+45+ Consumable Cards Themed Around Popular Albums
 
 15+ Consumable Cards Themed Around SingularityXVI's Muscore Creations
 
@@ -119,7 +125,7 @@ The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We h
 
 THERE ARE JUMPSCARES and if you have a heart attack you cant sue me.
 
-Some cards may open certain things.
+Some cards may open certain things. There is a streamer mode to prevent this.
 
 
 INSTALLATION:

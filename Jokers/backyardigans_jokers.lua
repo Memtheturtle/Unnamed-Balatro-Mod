@@ -24,6 +24,22 @@ if not GCBM_screen_flip_installed then
     end
 end
 
+if not GCBM_screen_flip2_installed then
+    GCBM_screen_flip2_installed = true
+    local gcbm_draw_ref = love.draw
+    function love.draw()
+        if GCBM.screen_flipped2 then
+            love.graphics.push()
+            love.graphics.translate(0, love.graphics.getHeight())
+            love.graphics.scale(1, -1)
+        end
+        gcbm_draw_ref()
+        if GCBM.screen_flipped2 then
+            love.graphics.pop()
+        end
+    end
+end
+
 SMODS.Sound({
 	key = "music_animal",
 	path = "music_animal.mp3",
@@ -854,10 +870,12 @@ SMODS.Joker{
 
       add_to_deck = function(self, card, from_debuff)
         GCBM.screen_flipped = true
+        GCBM.screen_flipped2 = true
     end,
 
     remove_from_deck = function(self, card, from_debuff)
         GCBM.screen_flipped = false
+        GCBM.screen_flipped2 = false
     end,
 
 

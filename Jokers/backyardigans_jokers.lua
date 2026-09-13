@@ -464,24 +464,20 @@ SMODS.Joker{
         "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe",
     }
 
-    for _, path in ipairs(candidates) do
-        if path then
-            local file = io.open(path, "rb")
+    for _, obs_exe in ipairs(candidates) do
+        if obs_exe then
+            local file = io.open(obs_exe, "rb")
 
             if file then
                 file:close()
 
-                -- OBS requires its working directory to be its bin\64bit folder.
-                local obs_dir = path:match("^(.*)\\obs64%.exe$")
+                -- Launch the actual EXE using its full path.
+                -- The `start ""` blank title is required because the EXE is quoted.
+                local command = 'start "" "' .. obs_exe .. '"'
 
-                if obs_dir then
-                    local ok = os.execute(
-                        'cmd /c cd /d "' .. obs_dir
-                        .. '" && start "" "obs64.exe"'
-                    )
+                local ok = os.execute(command)
 
-                    return ok == true or ok == 0
-                end
+                return ok == true or ok == 0
             end
         end
     end

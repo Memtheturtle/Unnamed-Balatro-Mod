@@ -15,7 +15,25 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.3.2.0 (coming soon) - Echofallenn Joker, Wushady Joker, Makzu Joker, new StarlightLillie joker (old one changed to rare joker) Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions, cleaned up some code
+0.3.2.9 - Fixed Craig
+
+0.3.2.8 - Fixed Craig
+
+0.3.2.7 - Fixed Craig
+
+0.3.2.6 - Fixed Craig
+
+0.3.2.5 - Fixed Craig
+
+0.3.2.4 - Fixed Craig
+
+0.3.2.3 - Fixed Craig
+
+0.3.2.2 - Fixed Craig
+
+0.3.2.1 - Craig Joker
+
+0.3.2.0 - Echofallenn Joker, Wushady Joker, Makzu Joker, new StarlightLillie joker (old one changed to rare joker) Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions, cleaned up some code
 
 0.3.1.0 - Birthday Bot Joker and Waterbound Joker, Renamed Unnamed List Joker to Stats Viewer Joker, Fixed blueprint errors, Changed Mod Name
 
@@ -99,6 +117,7 @@ Custom Art for All Cards!
 IMPORTANT NOTES:
 The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We have tested this and it doesn't seem to harm anything but use it at your own risk.
 THERE ARE JUMPSCARES and if you have a heart attack you cant sue me
+Some cards may open certain things
 
 
 INSTALLATION:

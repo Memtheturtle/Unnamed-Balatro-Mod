@@ -435,7 +435,6 @@ SMODS.Joker{
 
     unlocked = true,
     discovered = true,
-
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
@@ -474,6 +473,14 @@ SMODS.Joker{
                 -- Optional debug message:
                 -- send("Could not open the camera app")
             end
+            G.E_MANAGER:add_event(Event({ 
+                trigger = 'after',
+                delay = 0.1,
+                func = function()
+                    card:start_dissolve({G.C.RED}, nil, 1.6)
+                    return true
+                end
+            }))
         end
     end,
 

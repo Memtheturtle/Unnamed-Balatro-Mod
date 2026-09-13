@@ -8,14 +8,14 @@ Coding: Memtheturtle
 
 Art: Memtheturtle, Theskycrusher6, StayReal, and SingularityXVI
 
-Ideas/Inspiration: Memtheturtle, Theskycrusher6, SingularityXVI, Whiskers11, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, and Legacy5
+Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, and Legacy5
 
 This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Some art is not implemented yet but will be for the final release.
 
 
 VERSION HISTORY:
 
-0.3.2.0 (coming soon) - Echofallenn Joker, Wushady Joker, Makzu Joker, Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions, cleaned up some code
+0.3.2.0 (coming soon) - Echofallenn Joker, Wushady Joker, Makzu Joker, new StarlightLillie joker (old one changed to rare joker) Changed the way a future consumable loads to prevent issues, Finished/fixed CMD card funtions, cleaned up some code
 
 0.3.1.0 - Birthday Bot Joker and Waterbound Joker, Renamed Unnamed List Joker to Stats Viewer Joker, Fixed blueprint errors, Changed Mod Name
 

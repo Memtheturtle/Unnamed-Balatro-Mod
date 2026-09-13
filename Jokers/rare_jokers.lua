@@ -20,6 +20,15 @@ SMODS.Sound({
 	end,
 })
 
+SMODS.Sound({
+	key = "music_whiskers",
+	path = "music_whiskers.mp3",
+	sync = false,
+	pitch = 1,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_whisk")) 
+	end,
+})
 
 SMODS.Sound({
     key = "watchmen",
@@ -922,4 +931,62 @@ SMODS.Joker{
     in_pool = function(self)
         return true
     end
+}
+
+SMODS.Joker{
+    key = 'whisk', --joker key
+    loc_txt = { -- local text
+        name = 'Whiskers11',
+        text = {
+          'When blind is selected,',
+          'create {C:attention}3{} Negative {C:attention}Estrogen{}',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 10, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self,card,context) 
+        select_music_track = "music_whiskers"
+        if context.setting_blind then
+            if next(find_joker("j_gcbm_lille")) then
+                card_eval_status_text(card, 'extra', nil, nil, nil, {
+                            message = 'i was legally forced to say something when i die so this is what i say',
+                            colour = {0.9, 0.1, 0.8, 1}, -- hot pink
+                })
+                G.E_MANAGER:add_event(Event({ 
+                  trigger = 'after',
+                    delay = 0.1,
+                    func = function()
+                    card:start_dissolve({G.C.RED}, nil, 1.6)
+                    return true
+                 end
+                  }))
+           
+             else
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+             end
+        end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }

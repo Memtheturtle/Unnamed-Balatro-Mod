@@ -70,15 +70,6 @@ SMODS.Sound({
     end,
 })
 
-SMODS.Sound({
-	key = "music_whiskers",
-	path = "music_whiskers.mp3",
-	sync = false,
-	pitch = 1,
-	select_music_track = function()
-		return next(find_joker("j_gcbm_whisk")) 
-	end,
-})
 
 SMODS.Sound({
 	key = "music_choppa",
@@ -901,12 +892,13 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'whisk', --joker key
+    key = 'lille', --joker key
     loc_txt = { -- local text
         name = 'Starlightlillie',
         text = {
-          'When blind is selected,',
-          'create {C:attention}3{} Negative {C:attention}Estrogen{}',
+          'Played Queen of Hearts give',
+          '{X:mult,C:white}X#1#{} Mult, {C:green}#2# in 5{}',
+          'chance of giving {C:attention}Estrogen{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -922,6 +914,16 @@ SMODS.Joker{
     eternal_compat = true, --can it be eternal
     perishable_compat = true, --can it be perishable
     pos = {x = 3, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    config = { 
+        extra = {
+            Xmult = 1.25,
+        }
+    },
+    loc_vars = function(self, info_queue, center)
+        -- Fixed: combined both vars into one return
+        return {vars = {center.ability.extra.Xmult, G.GAME.probabilities.normal}}
+    end,
+
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then 
             unlock_card(self)
@@ -929,11 +931,20 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-        select_music_track = "music_whiskers"
         if context.setting_blind then
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+          if pseudorandom('lillieest') < G.GAME.probabilities.normal / 5 then
+            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables})
+          end
+        end
+       if context.individual and context.cardarea == G.play and context.other_card then
+            if context.other_card:get_id() == 12 and context.other_card:is_suit('Hearts') then -- Queen of Hearts
+                return {
+                card = card,
+                Xmult_mod = card.ability.extra.Xmult,
+                message = 'X' .. card.ability.extra.Xmult,
+                colour = G.C.MULT
+             }
+            end
         end
     end,
     in_pool = function(self,wawa,wawa2)
@@ -941,6 +952,7 @@ SMODS.Joker{
         return true
     end,
 }
+
 
 SMODS.Joker{
     key = 'tts',

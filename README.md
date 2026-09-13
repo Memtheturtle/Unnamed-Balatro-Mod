@@ -116,8 +116,10 @@ Custom Art for All Cards!
 
 IMPORTANT NOTES:
 The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We have tested this and it doesn't seem to harm anything but use it at your own risk.
-THERE ARE JUMPSCARES and if you have a heart attack you cant sue me
-Some cards may open certain things
+
+THERE ARE JUMPSCARES and if you have a heart attack you cant sue me.
+
+Some cards may open certain things.
 
 
 INSTALLATION:

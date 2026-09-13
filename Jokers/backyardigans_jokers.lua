@@ -151,7 +151,113 @@ if code == 200 and body then
     end
 end
 
+local https = require "SMODS.https"
 
+-- One file, one number: the combined SendDB total for all listed creators.
+local cache_path = SMODS.current_mod.path .. "senddb_combined_sends_cache.txt"
+
+local function read_cache()
+    local file = io.open(cache_path, "r")
+
+    if not file then
+        return nil
+    end
+
+    local value = tonumber(file:read("*a"))
+    file:close()
+
+    -- 0 is valid, so only reject invalid or negative cache values.
+    if value and value >= 0 then
+        return value
+    end
+
+    return nil
+end
+
+local function write_cache(total_sends)
+    local file, err = io.open(cache_path, "w")
+
+    if not file then
+        send("Could not write combined SendDB cache: " .. tostring(err))
+        return false
+    end
+
+    file:write(tostring(total_sends))
+    file:close()
+
+    return true
+end
+
+-- Gets ONLY the creator-wide SendDB total.
+-- This excludes the send_count fields inside "levels".
+local function get_creator_total_sends(creator_id)
+    local code, body = https.request(
+        "https://api.senddb.dev/api/v1/creator/" .. tostring(creator_id)
+    )
+
+    if code ~= 200 or not body then
+        return nil
+    end
+
+    -- Matches this part of the response:
+    --
+    -- ],
+    -- "send_count": 16,
+    -- "points": 0,
+    --
+    -- Because it starts immediately after the complete levels array,
+    -- it cannot use an individual level's send_count.
+    local sends = body:match(
+        '"levels"%s*:%s*%b[]%s*,%s*"send_count"%s*:%s*(%d+)%s*,%s*"points"'
+    )
+
+    if sends then
+        return tonumber(sends)
+    end
+
+    return nil
+end
+
+-- The creators included in the combined total.
+local creator_ids = {
+    120151711, -- makzuisbad
+    276735696, -- Ludtropolis
+    133466003,  -- Perfect
+    93438679,  -- Waterbound
+    53310466,  -- Theskycrusher
+    115847777,  -- Raindear
+    95502357,  -- AVRG
+    236798208,  -- Tryingdino7
+    57118545,  -- Chaken
+    182577111 -- Simarlet
+}
+
+-- Start with the previous combined value in case SendDB is unreachable.
+local senddb_combined_sends = read_cache() or 0
+
+-- Only overwrite the cache if EVERY creator succeeds.
+-- This prevents replacing a good cached total with a partial total.
+local fresh_total = 0
+local all_requests_succeeded = true
+
+for _, creator_id in ipairs(creator_ids) do
+    local creator_sends = get_creator_total_sends(creator_id)
+
+    if creator_sends == nil then
+        all_requests_succeeded = false
+        send(
+            "SendDB request/match failed for creator ID "
+            .. tostring(creator_id)
+        )
+    else
+        fresh_total = fresh_total + creator_sends
+    end
+end
+
+if all_requests_succeeded then
+    senddb_combined_sends = fresh_total
+    write_cache(senddb_combined_sends)
+end
 
 SMODS.Joker{
     key = 'avo', --joker key
@@ -305,6 +411,86 @@ SMODS.Joker{
     end,
 
     in_pool = function(self, wawa, wawa2)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'craig',
+    loc_txt = {
+        name = 'Craig',
+        text = {
+            'NOW RECORDING'
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = true,
+    pos = {x = 6, y = 0},
+
+    calculate = function(self, card, context)
+    if context.setting_blind then
+
+        local function gcbm_open_obs()
+            local os_name = love.system.getOS()
+
+            if os_name == "OS X" then
+                local ok = os.execute('open -a "OBS"')
+                return ok == true or ok == 0
+
+            elseif os_name == "Windows" then
+                local program_files = os.getenv("ProgramFiles")
+                local program_files_x86 = os.getenv("ProgramFiles(x86)")
+
+                local candidates = {
+                    program_files and (
+                        program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+                    ),
+                    program_files_x86 and (
+                        program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+                    ),
+                }
+
+                for _, path in ipairs(candidates) do
+                    if path then
+                        local file = io.open(path, "rb")
+
+                        if file then
+                            file:close()
+
+                            -- `start ""` prevents the quoted EXE path from
+                            -- being interpreted as the command-window title.
+                            local ok = os.execute(
+                                'start "" "' .. path .. '"'
+                            )
+
+                            return ok == true or ok == 0
+                        end
+                    end
+                end
+
+                return false
+            end
+
+            -- Linux, unsupported operating systems, etc.
+            return false
+        end
+
+        local opened = gcbm_open_obs()
+
+        if not opened then
+            -- Optional fallback behavior.
+            -- send("Could not open OBS")
+        end
+    end
+end,
+
+    in_pool = function(self)
         return true
     end,
 }
@@ -813,6 +999,51 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'senddb',
+    loc_txt = {
+        name = 'SendDB',
+        text = {
+            '{X:mult,C:white}X' .. tostring(senddb_combined_sends) .. '{} Mult',
+            '{C:inactive}[Combined SendDB sends]{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+
+    config = {
+        extra = {
+            h_size = 0,
+            xmult = senddb_combined_sends
+        }
+    },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                xmult = card.ability.extra.xmult,
+            }
+        end
+    end,
+}
+
+SMODS.Joker{
     key = 'sin', --joker key
     loc_txt = { -- local text
         name = 'Singularity',
@@ -1027,7 +1258,6 @@ SMODS.Joker{
         if context.joker_main then
             return {
                 xmult = card.ability.extra.xmult,
-                message = localize{type='variable', key='a_xmult', vars={card.ability.extra.xmult}}
             }
         end
     end,

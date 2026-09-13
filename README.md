@@ -15,7 +15,7 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.3.3.0 - RNGdle joker, Fixed Craig
+0.3.3.0 - RNGdle joker, Updated Makzu, Fixed Craig
 
 0.3.2.9 - Fixed Craig
 

@@ -1,5 +1,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
+local config = SMODS.current_mod.config
 
 SMODS.Atlas{
     key = 'Backyardigans_jokers', --atlas key
@@ -463,20 +464,22 @@ SMODS.Joker{
 
             local function gcbm_open_camera()
                 local os_name = love.system.getOS()
+                local streamer_mode_enabled = config.streamer_mode
 
-                if os_name == "OS X" then
-                    -- Opens macOS's built-in camera application.
-                    local ok = os.execute('open -a "Photo Booth"')
-                    return ok == true or ok == 0
+                if not streamer_mode_enabled then
+                    if os_name == "OS X" then
+                        -- Opens macOS's built-in camera application.
+                        local ok = os.execute('open -a "Photo Booth"')
+                        return ok == true or ok == 0
+                    elseif os_name == "Windows" then
+                        -- Opens the Windows Camera app through its URI protocol.
+                        -- The blank "" after start is the required window title.
+                        local ok = os.execute(
+                            'start "" "microsoft.windows.camera:"'
+                        )
 
-                elseif os_name == "Windows" then
-                    -- Opens the Windows Camera app through its URI protocol.
-                    -- The blank "" after start is the required window title.
-                    local ok = os.execute(
-                        'start "" "microsoft.windows.camera:"'
-                    )
-
-                    return ok == true or ok == 0
+                        return ok == true or ok == 0
+                    end
                 end
 
                 -- Linux / unsupported operating system.
@@ -1319,8 +1322,12 @@ SMODS.Joker{
     calculate = function(self,card,context) 
         if context.setting_blind then
             if pseudorandom('nineteeneightyfour') < G.GAME.probabilities.normal / 2 then
-             local opened = love.system.openURL("https://www.youtube.com/watch?v=5jjnIBITmbg")
-                    play_sound('gcbm_1984')
+                play_sound('gcbm_1984')
+                
+                local streamer_mode_enabled = config.streamer_mode
+                if not streamer_mode_enabled then
+                    local opened = love.system.openURL("https://www.youtube.com/watch?v=5jjnIBITmbg")
+                end
             else
                 ease_dollars(-G.GAME.dollars)
             end

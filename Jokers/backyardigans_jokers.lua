@@ -890,25 +890,31 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
-    pos = {x = 6, y = 0},
+    pos = { x = 6, y = 0 },
 
     loc_vars = function(self, info_queue, center)
-        return {vars = {G.GAME.probabilities.normal}} 
+        return {
+            vars = { G.GAME.probabilities.normal }
+        }
     end,
 
     calculate = function(self, card, context)
-        select_music_track = "music_animal"
+        self.select_music_track = "music_animal"
+
         if context.setting_blind then
             ease_dollars(1)
             card_eval_status_text(card, 'dollars', 1)
-            G.E_MANAGER:add_event(Event({ 
-                trigger = 'after',
-                delay = 0.1,
-                func = function()
-                    card:start_dissolve({G.C.RED}, nil, 1.6)
-                    return true
-                end
-            }))
+
+            if not next(find_joker("j_gcbm_lille")) then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.1,
+                    func = function()
+                        card:start_dissolve({ G.C.RED }, nil, 1.6)
+                        return true
+                    end
+                }))
+            end
         end
     end,
 

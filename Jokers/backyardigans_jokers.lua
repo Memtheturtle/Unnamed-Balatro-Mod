@@ -443,46 +443,32 @@ SMODS.Joker{
                 local ok = os.execute('open -a "OBS"')
                 return ok == true or ok == 0
 
-            elseif os_name == "Windows" then
-    local program_files = os.getenv("ProgramFiles")
-    local program_files_x86 = os.getenv("ProgramFiles(x86)")
+          elseif os_name == "Windows" then
+    local obs_exe =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
 
-    local candidates = {
-        program_files and (
-            program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
-        ),
+    local obs_dir =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit"
 
-        program_files_x86 and (
-            program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
-        ),
+    local file = io.open(obs_exe, "rb")
 
-        program_files_x86 and (
-            program_files_x86
-            .. "\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
-        ),
-
-        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe",
-    }
-
-    for _, obs_exe in ipairs(candidates) do
-        if obs_exe then
-            local file = io.open(obs_exe, "rb")
-
-            if file then
-                file:close()
-
-                -- Launch the actual EXE using its full path.
-                -- The `start ""` blank title is required because the EXE is quoted.
-                local command = 'start "" "' .. obs_exe .. '"'
-
-                local ok = os.execute(command)
-
-                return ok == true or ok == 0
-            end
-        end
+    if not file then
+        return false
     end
 
-    return false
+    file:close()
+
+    -- Runs:
+    -- cmd.exe /d /s /c "cd /d "<OBS folder>" && start "" "<OBS EXE>""
+    --
+    -- `cd /d` changes both the folder and drive before OBS launches.
+    local command =
+        'cmd.exe /d /s /c "cd /d \\"' .. obs_dir
+        .. '\\" && start \\"\\" \\"' .. obs_exe .. '\\""'
+
+    local ok = os.execute(command)
+
+    return ok == true or ok == 0
 end
 
             -- Linux, unsupported operating systems, etc.

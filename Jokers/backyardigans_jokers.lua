@@ -444,46 +444,50 @@ SMODS.Joker{
                 return ok == true or ok == 0
 
             elseif os_name == "Windows" then
-                local program_files = os.getenv("ProgramFiles")
-                local program_files_x86 = os.getenv("ProgramFiles(x86)")
+    local program_files = os.getenv("ProgramFiles")
+    local program_files_x86 = os.getenv("ProgramFiles(x86)")
 
-                local candidates = {
-                program_files and (
-                    program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
-                     ),
+    local candidates = {
+        program_files and (
+            program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+        ),
 
-                program_files_x86 and (
-                      program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
-                     ),
+        program_files_x86 and (
+            program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+        ),
 
-                program_files_x86 and (
-                 program_files_x86
-              .. "\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
-                    ),
+        program_files_x86 and (
+            program_files_x86
+            .. "\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
+        ),
 
-                 "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe",
-                }
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe",
+    }
 
-                for _, path in ipairs(candidates) do
-                    if path then
-                        local file = io.open(path, "rb")
+    for _, path in ipairs(candidates) do
+        if path then
+            local file = io.open(path, "rb")
 
-                        if file then
-                            file:close()
+            if file then
+                file:close()
 
-                            -- `start ""` prevents the quoted EXE path from
-                            -- being interpreted as the command-window title.
-                            local ok = os.execute(
-                                'start "" "' .. path .. '"'
-                            )
+                -- OBS requires its working directory to be its bin\64bit folder.
+                local obs_dir = path:match("^(.*)\\obs64%.exe$")
 
-                            return ok == true or ok == 0
-                        end
-                    end
+                if obs_dir then
+                    local ok = os.execute(
+                        'cmd /c cd /d "' .. obs_dir
+                        .. '" && start "" "obs64.exe"'
+                    )
+
+                    return ok == true or ok == 0
                 end
-
-                return false
             end
+        end
+    end
+
+    return false
+end
 
             -- Linux, unsupported operating systems, etc.
             return false

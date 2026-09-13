@@ -269,6 +269,54 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'dogh',
+    loc_txt = {
+        name = 'Hot Dogh',
+        text = {
+            '+{C:chips}#1#{} Chips',
+            'If current song is',
+            'not the default',
+        }
+    },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
+    config = { 
+        extra = {
+            chips = 500,
+        }
+    },
+
+    loc_vars = function(self, info_queue, center)
+        return {vars = {center.ability.extra.chips, G.GAME.probabilities.normal or 1}}
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+           local current = SMODS.Sound:get_current_music()
+           local is_vanilla = current and current:match("^music%d$")
+
+            if current and not is_vanilla then
+            return {
+                chips = card.ability.extra.chips,
+            }
+            end
+        end
+        return {calculated = true}
+    end,
+
+    in_pool = function(self)
+        return true
+    end
+}
+
+SMODS.Joker{
     key = 'king', --joker key
     loc_txt = { -- local text
         name = 'King Whale',
@@ -620,6 +668,45 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'rngdle',
+    loc_txt = {
+        name = 'RNGdle',
+        text = {
+            '{C:mult}+' .. tostring(rngdle_ep) .. '{} Mult',
+            '{C:inactive}[Total RNGdle EP]{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 3,
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+    config = { extra = { mult = rngdle_ep } },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                mult = card.ability.extra.mult,
+            }
+        end
     end,
 }
 
@@ -976,45 +1063,6 @@ SMODS.Joker{
     in_pool = function(self)
         return true
     end
-}
-
-SMODS.Joker{
-    key = 'rngdle',
-    loc_txt = {
-        name = 'RNGdle',
-        text = {
-            '{C:mult}+' .. tostring(rngdle_ep) .. '{} Mult',
-            '{C:inactive}[Total RNGdle EP]{}',
-        },
-    },
-    atlas = 'Backyardigans_jokers',
-    rarity = 'gcbm_yard',
-    cost = 50,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = true,
-    perishable_compat = true,
-    pos = {x = 3, y = 0},
-    config = { extra = { mult = rngdle_ep } },
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-    end,
-
-    in_pool = function(self, args)
-        return true
-    end,
-
-    calculate = function(self, card, context)
-        if context.joker_main then
-            return {
-                mult = card.ability.extra.mult,
-            }
-        end
-    end,
 }
 
 SMODS.Joker{

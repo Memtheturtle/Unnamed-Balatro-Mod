@@ -97,6 +97,11 @@ SMODS.Sound({
     path = "legacymoneylost.mp3",
 })
 
+SMODS.Sound({
+    key = "craig",
+    path = "craig.mp3",
+})
+
 
 
 SMODS.Rarity{
@@ -440,6 +445,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
         if context.setting_blind then
+             play_sound('craig')
 
             local function gcbm_open_camera()
                 local os_name = love.system.getOS()

@@ -40,8 +40,53 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
+local https = require "SMODS.https"
 
+-- Captured once, at file-load time, when SMODS.current_mod is actually valid.
+-- Do NOT call SMODS.current_mod again inside functions used at runtime (e.g. add_to_deck/calculate).
+local gcbm_mod_path = SMODS.current_mod.path
 
+local function rngdle_cache_path(username)
+    return gcbm_mod_path .. "rngdle_" .. tostring(username) .. "_cache.txt"
+end
+
+local function read_cache(username)
+    local file = io.open(rngdle_cache_path(username), "r")
+    if file then
+        local val = file:read("*n")
+        file:close()
+        if val and val > 0 then return val end
+    end
+    return nil
+end
+
+local function write_cache(username, ep)
+    local file = io.open(rngdle_cache_path(username), "w")
+    if file then
+        file:write(tostring(ep))
+        file:close()
+    end
+end
+
+local function gcbm_get_rngdle_ep(username)
+    local ep_total = read_cache(username) or 0
+
+    local code, body = https.request("https://www.rngdle.com/u/" .. tostring(username))
+    if code == 200 and body then
+        local ep_str = body:match('<meta name="description" content="([%d,]+) EP')
+        if ep_str then
+            local ep = tonumber((ep_str:gsub(",", "")))
+            if ep then
+                ep_total = ep
+                write_cache(username, ep_total)
+            end
+        end
+    end
+
+    return ep_total
+end
+local memturtle_ep = gcbm_get_rngdle_ep("memtheturtle")
+local rngdle_ep = gcbm_get_rngdle_ep("memtheturtle")
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -931,6 +976,45 @@ SMODS.Joker{
     in_pool = function(self)
         return true
     end
+}
+
+SMODS.Joker{
+    key = 'rngdle',
+    loc_txt = {
+        name = 'RNGdle',
+        text = {
+            '{C:mult}+' .. tostring(rngdle_ep) .. '{} Mult',
+            '{C:inactive}[Total RNGdle EP]{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+    config = { extra = { mult = rngdle_ep } },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                mult = card.ability.extra.mult,
+            }
+        end
+    end,
 }
 
 SMODS.Joker{

@@ -86,7 +86,6 @@ SMODS.Sound({
     key = "legacymoneygain",
     path = "legacymoneygain.mp3",
 })
-
 SMODS.Sound({
     key = "1984",
     path = "1984.mp3",
@@ -98,8 +97,8 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
-    key = "craig",
-    path = "craig.mp3",
+    key = "randombsgo",
+    path = "randombsgo.mp3",
 })
 
 
@@ -445,7 +444,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
         if context.setting_blind then
-             play_sound('craig')
+             play_sound('gcbm_randombsgo')
 
             local function gcbm_open_camera()
                 local os_name = love.system.getOS()

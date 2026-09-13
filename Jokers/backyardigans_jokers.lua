@@ -417,72 +417,60 @@ SMODS.Joker{
 
 SMODS.Joker{
     key = 'craig',
+
     loc_txt = {
         name = 'Craig',
         text = {
             'NOW RECORDING'
         }
     },
+
     atlas = 'Backyardigans_jokers',
     rarity = 'gcbm_yard',
     cost = 50,
+
     unlocked = true,
     discovered = true,
+
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
-    pos = {x = 6, y = 0},
+
+    pos = { x = 6, y = 0 },
 
     calculate = function(self, card, context)
-    if context.setting_blind then
+        if context.setting_blind then
 
-        local function gcbm_open_obs()
-            local os_name = love.system.getOS()
+            local function gcbm_open_camera()
+                local os_name = love.system.getOS()
 
-            if os_name == "OS X" then
-                local ok = os.execute('open -a "OBS"')
-                return ok == true or ok == 0
+                if os_name == "OS X" then
+                    -- Opens macOS's built-in camera application.
+                    local ok = os.execute('open -a "Photo Booth"')
+                    return ok == true or ok == 0
 
-          elseif os_name == "Windows" then
-    local obs_exe =
-        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
+                elseif os_name == "Windows" then
+                    -- Opens the Windows Camera app through its URI protocol.
+                    -- The blank "" after start is the required window title.
+                    local ok = os.execute(
+                        'start "" "microsoft.windows.camera:"'
+                    )
 
-    local obs_dir =
-        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit"
+                    return ok == true or ok == 0
+                end
 
-    local file = io.open(obs_exe, "rb")
+                -- Linux / unsupported operating system.
+                return false
+            end
 
-    if not file then
-        return false
-    end
+            local opened = gcbm_open_camera()
 
-    file:close()
-
-    -- Runs:
-    -- cmd.exe /d /s /c "cd /d "<OBS folder>" && start "" "<OBS EXE>""
-    --
-    -- `cd /d` changes both the folder and drive before OBS launches.
-    local command =
-        'cmd.exe /d /s /c "cd /d \\"' .. obs_dir
-        .. '\\" && start \\"\\" \\"' .. obs_exe .. '\\""'
-
-    local ok = os.execute(command)
-
-    return ok == true or ok == 0
-end
-
-            -- Linux, unsupported operating systems, etc.
-            return false
+            if not opened then
+                -- Optional debug message:
+                -- send("Could not open the camera app")
+            end
         end
-
-        local opened = gcbm_open_obs()
-
-        if not opened then
-            -- Optional fallback behavior.
-            -- send("Could not open OBS")
-        end
-    end
-end,
+    end,
 
     in_pool = function(self)
         return true

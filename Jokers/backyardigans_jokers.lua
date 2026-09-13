@@ -448,12 +448,20 @@ SMODS.Joker{
                 local program_files_x86 = os.getenv("ProgramFiles(x86)")
 
                 local candidates = {
-                    program_files and (
-                        program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+                program_files and (
+                    program_files .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+                     ),
+
+                program_files_x86 and (
+                      program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
+                     ),
+
+                program_files_x86 and (
+                 program_files_x86
+              .. "\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe"
                     ),
-                    program_files_x86 and (
-                        program_files_x86 .. "\\obs-studio\\bin\\64bit\\obs64.exe"
-                    ),
+
+                 "C:\\Program Files (x86)\\Steam\\steamapps\\common\\OBS Studio\\bin\\64bit\\obs64.exe",
                 }
 
                 for _, path in ipairs(candidates) do

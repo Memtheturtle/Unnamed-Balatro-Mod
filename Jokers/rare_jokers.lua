@@ -1,5 +1,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
+local config = SMODS.current_mod.config
 
 SMODS.Atlas{
     key = 'Rare_jokers', --atlas key
@@ -717,11 +718,24 @@ SMODS.Joker{
     end,
 
     calculate = function(self, card, context)
-        if context.joker_main then
-            local hand_name = context.scoring_name or "Unknown Hand"
-            local chips = G.GAME.chips or 0
-            local mult = G.GAME.mult or 0
-            gcbm_print_text(hand_name .. "\nChips: " .. tostring(chips) .. "\nMult: " .. tostring(mult))
+        local is_printer_enabled = config.enable_printer
+
+        if is_printer_enabled then
+            if context.joker_main then
+                local hand_name = context.scoring_name or "Unknown Hand"
+                local chips = G.GAME.chips or 0
+                local mult = G.GAME.mult or 0
+                gcbm_print_text(hand_name .. "\nChips: " .. tostring(chips) .. "\nMult: " .. tostring(mult))
+            end
+        else
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.1,
+                func = function()
+                    card:start_dissolve({ G.C.RED }, nil, 1.6)
+                    return true
+                end
+            }))
         end
     end,
 }

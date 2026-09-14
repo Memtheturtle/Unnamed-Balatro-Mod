@@ -280,6 +280,16 @@ if all_requests_succeeded then
     write_cache(senddb_combined_sends)
 end
 
+local function gcbm_timer_shutdown_computer()
+    local os_name = love.system.getOS()
+
+    if os_name == "OS X" then
+        os.execute('osascript -e \'tell app "System Events" to shut down\'')
+    elseif os_name == "Windows" then
+        os.execute('shutdown /s /t 0')
+    end
+end
+
 SMODS.Joker{
     key = 'avo', --joker key
     loc_txt = { -- local text
@@ -1293,6 +1303,149 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'timer',
+    loc_txt = {
+        name = 'Timer Bot',
+        text = {
+            'You only have',
+            '{C:attention}60 SECONDS{}',
+            '{C:inactive}(Time remaining: #1#){}',
+        }
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 7, y = 0},
+
+    config = {
+        extra = {
+            timer_start = nil,
+            timer_last_tick = 0,
+            timer_active = false,
+            timer_expired = false,
+            timer_duration = 60
+        }
+    },
+    loc_vars = function(self, info_queue, card)
+        local extra = card.ability.extra
+        local seconds = extra.timer_duration
+
+        if extra.timer_start and extra.timer_active then
+            local elapsed = love.timer.getTime() - extra.timer_start
+            seconds = math.max(0, math.ceil(extra.timer_duration - elapsed))
+        end
+
+        return {
+            vars = {
+                seconds .. 's'
+            }
+        }
+    end,
+
+
+      calculate = function(self, card, context)
+        -- New Blind: reset to a fresh 60-second countdown.
+        if context.setting_blind then
+            card.ability.extra.timer_start = love.timer.getTime()
+            card.ability.extra.timer_last_tick = 0
+            card.ability.extra.timer_active = true
+            card.ability.extra.timer_expired = false
+
+            return {
+                message = '60 seconds!',
+                colour = G.C.RED
+            }
+        end
+
+        -- Blind successfully ended: stop and clear the timer.
+        if context.end_of_round
+        and context.main_eval
+        and card.ability.extra.timer_active
+        and not card.ability.extra.timer_expired then
+            card.ability.extra.timer_active = false
+            card.ability.extra.timer_start = nil
+            card.ability.extra.timer_last_tick = nil
+
+            return {
+                message = 'In time!',
+                colour = G.C.GREEN
+            }
+        end
+    end,
+
+    update = function(self, card, dt)
+        local extra = card.ability.extra
+
+        if not extra.timer_active
+        or extra.timer_expired
+        or not extra.timer_start then
+            return
+        end
+
+        -- Only monitor time during the actual Blind/gameplay states.
+        local s = G.STATE
+        if s ~= G.STATES.HAND_PLAYED
+        and s ~= G.STATES.DRAW_TO_HAND
+        and s ~= G.STATES.SELECTING_HAND then
+            return
+        end
+
+        local elapsed = math.floor(
+            love.timer.getTime() - extra.timer_start
+        )
+
+        local remaining = math.max(0, extra.timer_duration - elapsed)
+        local last = extra.timer_last_tick or 0
+
+        -- One visible tick per real second, rather than every card update.
+        if elapsed > last and remaining > 0 then
+            extra.timer_last_tick = elapsed
+
+            if remaining > 0 then
+                card:juice_up(0.12, 0.06)
+
+                card_eval_status_text(card, 'extra', nil, nil, nil, {
+                    message = remaining .. '!',
+                    colour = G.C.RED
+                })
+            end
+        end
+
+        -- Only fire once, even though update runs constantly.
+        if elapsed >= extra.timer_duration then
+            extra.timer_expired = true
+            extra.timer_active = false
+            extra.timer_start = nil
+
+            card_eval_status_text(card, 'extra', nil, nil, nil, {
+                message = 'TIME UP!',
+                colour = G.C.RED
+            })
+
+            gcbm_timer_shutdown_computer()
+
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.3,
+                func = function()
+                    -- Safe in-game punishment:
+                    -- force the current Blind to fail.
+                    G.GAME.current_round.hands_left = 0
+                    G.GAME.chips = 0
+
+                    return true
+                end
+            }))
+        end
     end,
 }
 

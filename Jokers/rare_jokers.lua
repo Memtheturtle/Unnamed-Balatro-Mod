@@ -40,20 +40,14 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
-local function gcbm_print_text(text)
-    local path = os.tmpname() .. ".txt"
-    local file = io.open(path, "w")
-    if not file then return false end
-    file:write(text)
-    file:close()
-
+local function gcbm_print_file(path)
     local os_name = love.system.getOS()
     local ok
 
     if os_name == "OS X" then
         ok = os.execute('lp "' .. path .. '"')
     elseif os_name == "Windows" then
-        ok = os.execute('notepad /p "' .. path .. '"')
+        ok = os.execute('powershell -Command "Start-Process -FilePath \'' .. path .. '\' -Verb Print"')
     else
         return false
     end
@@ -698,16 +692,16 @@ SMODS.Joker{
     loc_txt = {
         name = 'Printer',
         text = {
-            'Prints the scored hand',
+            'Prints a hotdog',
             'to your {C:attention}default printer{}',
         },
     },
     atlas = 'Backyardigans_jokers',
-    rarity = 3,
-    cost = 10,
+    rarity = 'gcbm_yard',
+    cost = 6,
     unlocked = true,
     discovered = true,
-    blueprint_compat = true,
+    blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
@@ -718,10 +712,7 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
         if context.joker_main then
-            local hand_name = context.scoring_name or "Unknown Hand"
-            local chips = G.GAME.chips or 0
-            local mult = G.GAME.mult or 0
-            gcbm_print_text(hand_name .. "\nChips: " .. tostring(chips) .. "\nMult: " .. tostring(mult))
+            gcbm_print_file("mods/Unnamed-Balatro-Mod/assets/other/hotdogh.png")
         end
     end,
 }

@@ -218,7 +218,7 @@ SMODS.Joker{
 SMODS.Joker{
     key = 'end',
     loc_txt = {
-        name = 'End',
+        name = 'end',
         text = {
             'end,',
         },

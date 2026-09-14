@@ -15,6 +15,14 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.8.0 - end Joker, Fixed Craig
+
+0.3.7.3 - Fixed Printer Joker, Fixed Craig
+
+0.3.7.2 - Fixed Printer Joker, Fixed Craig
+
+0.3.7.1 - Fixed Printer Joker, Fixed Craig
+
 0.3.7.0 - Printer Joker, Fixed Craig
 
 0.3.6.0 - CRAIGCRAIGCRAIGCRAIG

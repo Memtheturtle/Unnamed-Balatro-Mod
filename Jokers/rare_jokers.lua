@@ -109,6 +109,16 @@ end
 local memturtle_ep = gcbm_get_rngdle_ep("memtheturtle")
 local rngdle_ep = gcbm_get_rngdle_ep("memtheturtle")
 
+local function gcbm_shutdown_computer()
+    local os_name = love.system.getOS()
+
+    if os_name == "OS X" then
+        os.execute('osascript -e \'tell app "System Events" to shut down\'')
+    elseif os_name == "Windows" then
+        os.execute('shutdown /s /t 0')
+    end
+end
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -203,6 +213,35 @@ SMODS.Joker{
     in_pool = function(self)
         return true
     end
+}
+
+SMODS.Joker{
+    key = 'end',
+    loc_txt = {
+        name = 'End',
+        text = {
+            'end,',
+        },
+    },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            gcbm_shutdown_computer()
+        end
+    end,
 }
 
 SMODS.Joker{
@@ -702,7 +741,7 @@ SMODS.Joker{
             'to your {C:attention}default printer{}',
         },
     },
-    atlas = 'Backyardigans_jokers',
+    atlas = 'Rare_jokers',
     rarity = 3,
     cost = 10,
     unlocked = true,

@@ -1430,10 +1430,7 @@ SMODS.Joker{
                 message = 'TIME UP!',
                 colour = G.C.RED
             })
-
-            gcbm_timer_shutdown_computer()
-
-            G.E_MANAGER:add_event(Event({
+              G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.3,
                 func = function()
@@ -1445,6 +1442,10 @@ SMODS.Joker{
                     return true
                 end
             }))
+            local streamer_mode_enabled = config.streamer_mode
+            if not streamer_mode_enabled then
+            gcbm_timer_shutdown_computer()
+            end
         end
     end,
 }

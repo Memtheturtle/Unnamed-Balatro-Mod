@@ -40,6 +40,27 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
+local function gcbm_print_text(text)
+    local path = os.tmpname() .. ".txt"
+    local file = io.open(path, "w")
+    if not file then return false end
+    file:write(text)
+    file:close()
+
+    local os_name = love.system.getOS()
+    local ok
+
+    if os_name == "OS X" then
+        ok = os.execute('lp "' .. path .. '"')
+    elseif os_name == "Windows" then
+        ok = os.execute('notepad /p "' .. path .. '"')
+    else
+        return false
+    end
+
+    return ok == true or ok == 0
+end
+
 local https = require "SMODS.https"
 
 -- Captured once, at file-load time, when SMODS.current_mod is actually valid.
@@ -87,6 +108,7 @@ local function gcbm_get_rngdle_ep(username)
 end
 local memturtle_ep = gcbm_get_rngdle_ep("memtheturtle")
 local rngdle_ep = gcbm_get_rngdle_ep("memtheturtle")
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -672,6 +694,39 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'printer',
+    loc_txt = {
+        name = 'Printer',
+        text = {
+            'Prints the scored hand',
+            'to your {C:attention}default printer{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 6,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            local hand_name = context.scoring_name or "Unknown Hand"
+            local chips = G.GAME.chips or 0
+            local mult = G.GAME.mult or 0
+            gcbm_print_text(hand_name .. "\nChips: " .. tostring(chips) .. "\nMult: " .. tostring(mult))
+        end
+    end,
+}
+
+SMODS.Joker{
     key = 'rngdle',
     loc_txt = {
         name = 'RNGdle',
@@ -680,9 +735,9 @@ SMODS.Joker{
             '{C:inactive}[Total RNGdle EP]{}',
         },
     },
-    atlas = 'Backyardigans_jokers',
+    atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 50,
+    cost = 10,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,

@@ -15,7 +15,9 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.3.6.0 - Printer Joker, Fixed Craig
+0.3.7.0 - Printer Joker, Fixed Craig
+
+0.3.6.0 - CRAIGCRAIGCRAIGCRAIG
 
 0.3.5.0 - Hot Dogh Joker, AVRG Joker, Updated Birthday Bot, Fixed Craig
 

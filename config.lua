@@ -1,4 +1,4 @@
 return {
-    ["streamer_mode"] = true,
+    ["streamer_mode"] = false,
     ["enable_printer"] = true,
 }

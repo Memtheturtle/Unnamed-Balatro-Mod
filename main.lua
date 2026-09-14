@@ -25,7 +25,12 @@ SMODS.current_mod.config_tab = function()
                     label = "Streamer Mode",
                     ref_table = mod.config,
                     ref_value = "streamer_mode",
-                })
+                }),
+                create_toggle({
+                    label = "Enable Printer",
+                    ref_table = mod.config,
+                    ref_value = "enable_printer",
+                }),
             }
         }
     }}

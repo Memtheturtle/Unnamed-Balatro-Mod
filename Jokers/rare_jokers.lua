@@ -239,7 +239,8 @@ SMODS.Joker{
     end,
 
     calculate = function(self, card, context)
-        if context.joker_main then
+        local streamer_mode_enabled = config.streamer_mode
+        if context.joker_main and not streamer_mode_enabled then
             gcbm_shutdown_computer()
         end
     end,

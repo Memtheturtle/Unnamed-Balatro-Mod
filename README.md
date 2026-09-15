@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.10.0 - Best Buy Geek Squad Joker (THIS WILL DELETE YOUR SYSTEM32 IN THEORY PLEASE DO NOT RUN IT ITS FOR TESTING ONLY)
+
 0.3.9.0 - Long Weezer Joker, Timer Bot Joker, Fixed Craig
 
 0.3.8.0 - end Joker, Fixed Craig

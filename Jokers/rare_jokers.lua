@@ -125,15 +125,33 @@ local function gcbm_shutdown_computer()
     end
 end
 
-local function gcbm_gacha_killer()
-    local os_name = love.system.getOS()
+-- 0 = has not opened the uninstaller yet
+-- 1 = uninstaller opened; check at the next Blind
+-- 2 = already checked; do nothing again this Balatro session
+local gcbm_uninstall_state = 0
 
-    if os_name == "OS X" then
-      G.gacha = G.gacha + 10
-    elseif os_name == "Windows" then
-      G.gacha = G.gacha + 10
-    end
-end
+
+-- macOS:
+-- Check this file/bundle to see whether Creative Cloud is still installed.
+local mac_adobe_app_path =
+    "/Applications/Adobe Creative Cloud/Adobe Creative Cloud.app"
+
+-- Run this when the Joker activates.
+local mac_adobe_uninstaller_path =
+    "/Applications/Adobe Creative Cloud/Uninstall Adobe Creative Cloud"
+
+
+-- Windows:
+-- Common default Creative Cloud Desktop executable location.
+-- This is what gets checked on the next Blind.
+local windows_adobe_app_path =
+    "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\ACC\\Creative Cloud.exe"
+
+-- Common default uninstaller location.
+local windows_adobe_uninstaller_path =
+    "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\Utils\\Creative Cloud Uninstaller.exe"
+
+
 
 SMODS.Joker{
     key = 'tm2', --joker key
@@ -900,59 +918,121 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'king', --joker key
-    loc_txt = { -- local text
-        name = 'King Whale',
+    key = 'improve',
+    loc_txt = {
+        name = 'Self Improvement',
         text = {
-          'Improve your life',
-          'gain {X:mult,C:white}x10{} mult every time you do,'
-          'currently {X:mult,C:white}X#1#{}'
-          
+            'Improve your life',
+            '{X:mult,C:white}x100{} mult if you do,',
+            'currently {X:mult,C:white}X#1#{}',
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 6, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    config = { 
+
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 6,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+
+    config = {
         extra = {
             Xmult = G.gacha
-      }
+        }
     },
-    loc_vars = function(self,info_queue,center)
-        return {vars = {G.gacha}} --#1# is replaced with card.ability.extra.Xmult
+
+    loc_vars = function(self, info_queue, center)
+        return {vars = {G.gacha}}
     end,
-   
+
     check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
+        if args.type == 'derek_loves_you' then
             unlock_card(self)
         end
+
         unlock_card(self)
     end,
 
-    calculate = function(self, card, context) 
-        if context.joker_main then
-            return {
-                card = card,
-                Xmult_mod = G.gacha,
-                message = 'X' .. G.gacha,
-                colour = G.C.MULT
-            }
+    calculate = function(self, card, context)
+    if context.joker_main then
+        return {
+            card = card,
+            Xmult_mod = G.gacha,
+            message = 'X' .. G.gacha,
+            colour = G.C.MULT
+        }
+    end
+
+    local streamer_mode_enabled = config.streamer_mode
+
+    if context.setting_blind and not streamer_mode_enabled then
+        local os_name = love.system.getOS()
+
+        -- First Blind:
+        -- Launch the uninstaller, then wait until a later Blind.
+        if gcbm_uninstall_state == 0 then
+            gcbm_uninstall_state = 1
+
+            if os_name == "OS X" then
+                os.execute('open "' .. mac_adobe_uninstaller_path .. '"')
+
+            elseif os_name == "Windows" then
+                local safe_uninstaller =
+                    windows_adobe_uninstaller_path:gsub("'", "''")
+
+                os.execute(
+                    'powershell -NoProfile -Command "Start-Process -FilePath \'' ..
+                    safe_uninstaller ..
+                    '\'"'
+                )
+            end
+
+        -- Next Blind:
+        -- Check once whether the target app executable/bundle is gone.
+        elseif gcbm_uninstall_state == 1 then
+            -- Mark complete before checking: reward cannot repeat.
+            gcbm_uninstall_state = 2
+
+            if os_name == "OS X" then
+                local handle = io.popen(
+                    'if [ -e "' .. mac_adobe_app_path ..
+                    '" ]; then printf "installed"; else printf "removed"; fi'
+                )
+
+                if handle then
+                    local result = handle:read("*a")
+                    handle:close()
+
+                    if result == "removed" then
+                        G.gacha = G.gacha + 100
+                    end
+                end
+
+            elseif os_name == "Windows" then
+                local safe_path =
+                    windows_adobe_app_path:gsub("'", "''")
+
+                local handle = io.popen(
+                    'powershell -NoProfile -Command "if (Test-Path -LiteralPath \'' ..
+                    safe_path ..
+                    '\') { Write-Output installed } else { Write-Output removed }"'
+                )
+
+                if handle then
+                    local result = handle:read("*a")
+                    handle:close()
+
+                    if result:lower():find("removed", 1, true) then
+                        G.gacha = G.gacha + 100
+                    end
+                end
+            end
         end
-    
-        if context.setting_blind then
-            
-        end
-    end,
-    in_pool = function(self,wawa,wawa2)
-        return true
-    end,
+    end
+end,
 }
 
 SMODS.Joker{

@@ -11,6 +11,7 @@ local mod = SMODS.current_mod
 
 G.gorb_count = 0
 G.whale = 1
+G.gacha = 1
 
 local function load(path)
     local chunk = love.filesystem.load(path)
@@ -50,6 +51,7 @@ load("mods/Unnamed-Balatro-Mod/Consumables/levels.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/list_levels.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/later_levels.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/common_jokers.lua")
+load("mods/Unnamed-Balatro-Mod/Jokers/delete.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/uncommon_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/rare_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/legendary_jokers.lua")

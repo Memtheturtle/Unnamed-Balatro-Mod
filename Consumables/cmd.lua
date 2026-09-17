@@ -162,6 +162,10 @@ SMODS.Consumable{
         -- Only usable when a Boss Blind is active
         return G.GAME.blind and G.GAME.blind.boss and not G.GAME.blind.disabled
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable{
@@ -191,6 +195,10 @@ SMODS.Consumable{
         return {
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -366,6 +374,10 @@ SMODS.Consumable {
             end
         }))
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -389,6 +401,10 @@ SMODS.Consumable {
     end,
     loc_vars = function(self, info_queue, card)
         return { vars = {} }
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -473,6 +489,10 @@ SMODS.Consumable {
                 return true
             end
         }))
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -631,6 +651,10 @@ SMODS.Consumable {
             end
         }))
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -689,6 +713,10 @@ SMODS.Consumable {
                 return true
             end
         }))
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -767,6 +795,10 @@ SMODS.Consumable {
             end
         end
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -824,6 +856,10 @@ SMODS.Consumable {
             }))
         end
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -854,6 +890,10 @@ SMODS.Consumable {
         return {
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -992,6 +1032,10 @@ SMODS.Consumable {
             end
         }))
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -1022,6 +1066,10 @@ SMODS.Consumable {
         return {
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -1141,6 +1189,10 @@ SMODS.Consumable {
             colour = G.C.RED
         }
     end
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 GCBM = GCBM or {}
@@ -1206,6 +1258,10 @@ SMODS.Consumable {
 
         G.GAME.chips = chips
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -1239,6 +1295,10 @@ SMODS.Consumable {
         end
     }))
     end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
 }
 
 SMODS.Consumable {
@@ -1270,6 +1330,10 @@ SMODS.Consumable {
             return true
         end
     }))
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -1390,5 +1454,9 @@ SMODS.Consumable {
                 return true
             end
         }))
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }

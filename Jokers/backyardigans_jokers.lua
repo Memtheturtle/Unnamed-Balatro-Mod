@@ -1152,16 +1152,17 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, args)
-        return true
-    end,
-
     calculate = function(self, card, context)
         if context.joker_main then
             return {
                 xmult = card.ability.extra.xmult,
             }
         end
+    end,
+
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 
@@ -1447,6 +1448,10 @@ SMODS.Joker{
             gcbm_timer_shutdown_computer()
             end
         end
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
     end,
 }
 
@@ -1474,6 +1479,11 @@ SMODS.Joker{
     add_to_deck = function(self, card, from_debuff)
         card:set_eternal(true)
         select_music_track = "music_choppa"
+    end,
+    
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 
 }
@@ -1526,6 +1536,10 @@ SMODS.Joker{
                 xmult = card.ability.extra.xmult,
             }
         end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 

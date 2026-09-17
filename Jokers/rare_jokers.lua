@@ -952,8 +952,12 @@ SMODS.Joker{
         if args.type == 'derek_loves_you' then
             unlock_card(self)
         end
-
         unlock_card(self)
+    end,
+
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 
     calculate = function(self, card, context)
@@ -1007,7 +1011,7 @@ SMODS.Joker{
                     handle:close()
 
                     if result == "removed" then
-                        G.gacha = G.gacha + 100
+                        G.gacha = G.gacha + 99
                     end
                 end
 
@@ -1026,7 +1030,7 @@ SMODS.Joker{
                     handle:close()
 
                     if result:lower():find("removed", 1, true) then
-                        G.gacha = G.gacha + 100
+                        G.gacha = G.gacha + 99
                     end
                 end
             end
@@ -1169,6 +1173,10 @@ calculate = function(self, card, context)
                 colour = G.C.RED,
             })
         end
+    end,
+        in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }
 

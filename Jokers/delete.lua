@@ -19,7 +19,7 @@ SMODS.Joker{
         },
     },
     atlas = 'Delete_jokers',
-    rarity = 3,
+    rarity = 2,
     cost = 10,
     unlocked = true,
     discovered = true,
@@ -28,9 +28,6 @@ SMODS.Joker{
     perishable_compat = true,
     pos = {x = 0, y = 0},
 
-    in_pool = function(self, args)
-        return true
-    end,
 
     calculate = function(self, card, context)
         if context.joker_main then
@@ -44,5 +41,9 @@ SMODS.Joker{
                     end
                 }))
         end
+    end,
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
 }

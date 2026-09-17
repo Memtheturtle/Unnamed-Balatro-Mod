@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.12.1 - Random Fixes, Fixed Craig
+
 0.3.12.0 - Self Improvement Joker Functional, Fixed Craig
 
 0.3.11.0 - Removed Best Buy, Added Delete Joker, Added Part of Self Improvement Joker (Not Functional), Fixed Craig

@@ -374,7 +374,7 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -490,7 +490,7 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1189,10 +1189,7 @@ SMODS.Consumable {
             colour = G.C.RED
         }
     end
-        in_pool = function(self,wawa,wawa2)
-        --whether or not this card is in the pool, return true if it is, return false if its not
-        return true
-    end,
+  
 }
 
 GCBM = GCBM or {}
@@ -1455,8 +1452,5 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
-        --whether or not this card is in the pool, return true if it is, return false if its not
-        return true
-    end,
+
 }

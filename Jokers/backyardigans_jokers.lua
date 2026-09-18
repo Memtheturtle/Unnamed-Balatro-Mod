@@ -778,7 +778,7 @@ SMODS.Joker{
 SMODS.Joker{
     key = 'lud',
     loc_txt = {
-        name = 'Bluegrass2222',
+        name = 'Ludtropolis',
         text = {
             'Spawns 10 Gooby!',
             'Kills itself',
@@ -1448,8 +1448,11 @@ SMODS.Joker{
             gcbm_timer_shutdown_computer()
             end
         end
+    in_pool = function(self,wawa,wawa2)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
     end,
-
+    end,
 }
 
 

@@ -44,6 +44,7 @@ if not has_albums_mod then
     load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")
 end
 load("mods/Unnamed-Balatro-Mod/Consumables/drugs.lua")
+load("mods/Unnamed-Balatro-Mod/Consumables/food.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/cmd.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/tarots.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/muscore.lua")

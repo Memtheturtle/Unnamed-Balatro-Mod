@@ -30,6 +30,41 @@ function Game:update(dt)
 	end
 end
 
+local hypercam_path = "mods/Unnamed-Balatro-Mod/assets/hypercam.png"
+local hypercam_img = nil
+local hypercam_checked = false
+
+local HYPERCAM_SIZE = 0.5 -- 1 = full size of the image, 0.5 = half, etc.
+
+local old_love_draw = love.draw
+love.draw = function(...)
+    old_love_draw(...)
+
+    if G.GCBM_HYPERCAM then
+        -- Load the image once, if it exists
+        if not hypercam_checked then
+            hypercam_checked = true
+            if love.filesystem.getInfo(hypercam_path) then
+                hypercam_img = love.graphics.newImage(hypercam_path)
+                hypercam_img:setFilter('linear', 'linear')
+            end
+        end
+
+        if hypercam_img then
+            love.graphics.push('all')
+            love.graphics.setCanvas()
+            love.graphics.setShader()
+            love.graphics.origin()
+            love.graphics.setColor(1, 1, 1, 1)
+
+            local scale = (love.graphics.getHeight() / 1080) * HYPERCAM_SIZE
+            love.graphics.draw(hypercam_img, 0, 0, 0, scale, scale)
+
+            love.graphics.pop()
+        end
+    end
+end
+
 SMODS.Atlas{
     key = 'Common_jokers', --atlas key
     path = 'Common_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
@@ -183,5 +218,57 @@ SMODS.Joker{
         return true
     end,
 }
+
+SMODS.Joker{
+    key = 'hypercam',
+    loc_txt = {
+        name = 'Unregistered Hypercam 2',
+        text = {
+            '{C:attention}Unregistered Hypercam 2{}',
+        },
+    },
+    atlas = 'Common_jokers',
+    rarity = 1,
+    cost = 2,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    add_to_deck = function(self, card, from_debuff)
+        G.GCBM_HYPERCAM = true
+        -- Remember the player's original cap so we can put it back
+        if not G.SLIDESHOW_ORIGINAL_FPS_CAP then
+            G.SLIDESHOW_ORIGINAL_FPS_CAP = G.FPS_CAP or 500
+        end
+        G.FPS_CAP = 10
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        G.GCBM_HYPERCAM = false
+    -- Only restore if no other copy of this joker is still owned
+        local others = 0
+        for _, j in ipairs(SMODS.find_card('j_gcbm_hypercam')) do
+         if j ~= card then others = others + 1 end
+        end
+        if others == 0 then
+          G.FPS_CAP = G.SLIDESHOW_ORIGINAL_FPS_CAP or 500
+          G.SLIDESHOW_ORIGINAL_FPS_CAP = nil
+     end
+    end,
+
+    -- Re-apply after loading a save, since add_to_deck may not fire then
+    update = function(self, card, dt)
+        if card.area == G.jokers and G.FPS_CAP ~= 10 then
+            if not G.SLIDESHOW_ORIGINAL_FPS_CAP then
+                G.SLIDESHOW_ORIGINAL_FPS_CAP = G.FPS_CAP or 500
+            end
+            G.FPS_CAP = 10
+        end
+    end,
+}
+
 ----------------------------------------------
 ------------MOD CODE END----------------------

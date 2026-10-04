@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.4.0.0 - New Consumable Type - Food, Fat Daddy Fried Chicken Joker, Unregistered Hypercam 2 Joker, Made Weezer Longer, Fixed Craig
+
 0.3.15.0 - 26 Total Albums in game, Fixed Craig
 
 0.3.14.0 - Around 15 Albums in game, Fixed Craig

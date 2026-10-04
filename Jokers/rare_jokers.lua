@@ -46,6 +46,41 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
+local hypercam_path = "mods/Unnamed-Balatro-Mod/assets/hypercam.png"
+local hypercam_img = nil
+local hypercam_checked = false
+
+local HYPERCAM_SIZE = 0.5 -- 1 = full size of the image, 0.5 = half, etc.
+
+local old_love_draw = love.draw
+love.draw = function(...)
+    old_love_draw(...)
+
+    if G.GCBM_HYPERCAM then
+        -- Load the image once, if it exists
+        if not hypercam_checked then
+            hypercam_checked = true
+            if love.filesystem.getInfo(hypercam_path) then
+                hypercam_img = love.graphics.newImage(hypercam_path)
+                hypercam_img:setFilter('linear', 'linear')
+            end
+        end
+
+        if hypercam_img then
+            love.graphics.push('all')
+            love.graphics.setCanvas()
+            love.graphics.setShader()
+            love.graphics.origin()
+            love.graphics.setColor(1, 1, 1, 1)
+
+            local scale = (love.graphics.getHeight() / 1080) * HYPERCAM_SIZE
+            love.graphics.draw(hypercam_img, 0, 0, 0, scale, scale)
+
+            love.graphics.pop()
+        end
+    end
+end
+
 local function gcbm_print_text(text)
     local path = os.tmpname() .. ".txt"
     local file = io.open(path, "w")
@@ -276,6 +311,80 @@ SMODS.Joker{
         if context.joker_main and not streamer_mode_enabled then
             gcbm_shutdown_computer()
         end
+    end,
+}
+
+SMODS.Joker{
+    key = 'fatdaddyfriedchicken',
+    loc_txt = {
+        name = 'Fat Daddy Fried Chicken',
+        text = {
+          'Gives a {C:attention}Fried Chicken{} consumable',
+          'at the start of each blind',
+          '{C:inactive}Gets wider every blind{}',
+        },
+    },
+    atlas = 'Albums',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
+    config = {
+        extra = {
+            width_mult = 1,      -- current width multiplier (saved with the run)
+            width_gain = 0.25,   -- added to the multiplier each blind
+            max_width_mult = 8,  -- cap, so it can't grow forever
+            grow_speed = 4,      -- how fast the visual catches up (higher = snappier)
+        }
+    },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+        unlock_card(self)
+    end,
+
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            local extra = card.ability.extra
+
+            -- Grow wider each blind
+            extra.width_mult = math.min(extra.max_width_mult, extra.width_mult + extra.width_gain)
+            SMODS.add_card({ set = "Food", key = 'c_gcbm_fried_chicken', area = G.consumeables})
+
+
+        end
+    end,
+
+    update = function(self, card, dt)
+        if card.area == G.jokers then
+            local extra = card.ability.extra
+            local target_w = G.CARD_W * extra.width_mult
+
+            -- Smoothly ease toward the target width
+            if math.abs(card.T.w - target_w) > 0.001 then
+                card.T.w = card.T.w + (target_w - card.T.w) * math.min(1, extra.grow_speed * dt)
+            else
+                card.T.w = target_w
+            end
+
+            -- Stretch the sprites to match so the art actually widens
+            if card.children.center then
+                card.children.center.T.w = card.T.w
+            end
+            if card.children.floating_sprite then
+                card.children.floating_sprite.T.w = card.T.w
+            end
+        end
+    end,
+
+    in_pool = function(self, wawa, wawa2)
+        return true
     end,
 }
 

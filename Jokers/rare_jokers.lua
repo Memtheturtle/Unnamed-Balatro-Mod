@@ -683,7 +683,7 @@ SMODS.Joker{
         config = {
         extra = {
             stretch_speed = 0.03,
-            max_height = 18,
+            max_height = 1800,
             started = false
         }
     },

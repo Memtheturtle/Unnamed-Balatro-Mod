@@ -375,12 +375,6 @@ SMODS.Joker{
         end
     end,
 
-    remove_from_deck = function(self, card, from_debuff)
-        for k, v in pairs(G.GAME.probabilities) do 
-            G.GAME.probabilities[k] = v * 1
-        end
-    end,
-
     in_pool = function(self,wawa,wawa2)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true

@@ -15,6 +15,12 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.3.15.0 - 26 Total Albums in game, Fixed Craig
+
+0.3.14.0 - Around 15 Albums in game, Fixed Craig
+
+0.3.13.0 - First 6 Albums in game, Fixed Craig
+
 0.3.12.1 - Random Fixes, Fixed Craig
 
 0.3.12.0 - Self Improvement Joker Functional, Fixed Craig

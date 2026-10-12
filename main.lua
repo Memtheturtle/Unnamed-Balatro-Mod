@@ -8,7 +8,7 @@
 ------------MOD CODE -------------------------
 
 local mod = SMODS.current_mod
-
+---@cast mod -nil
 G.gorb_count = 0
 G.whale = 1
 G.gacha = 1
@@ -33,12 +33,39 @@ SMODS.current_mod.config_tab = function()
                     ref_value = "enable_printer",
                 }),
             }
-        }
+        },
+        {
+            n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {
+                { n = G.UIT.T, config = { text = "AREDL Username", scale = 0.4, colour = G.C.UI.TEXT_LIGHT } },
+            }
+        },
+        {
+            n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {
+                create_text_input({
+                    w = 5,
+                    max_length = 32,
+                    prompt_text = "Enter username",
+                    ref_table = mod.config,
+                    ref_value = "aredl_username",
+                    extended_corpus = true,
+                    callback = function()
+                        SMODS.save_mod_config(mod)
+                        if AREDL_refresh_points then AREDL_refresh_points() end
+                    end,
+                }),
+            }
+        },
+        {
+            n = G.UIT.R, config = { align = "cm", padding = 0.05 }, nodes = {
+                { n = G.UIT.T, config = { text = "Press Enter to confirm", scale = 0.3, colour = G.C.UI.TEXT_INACTIVE } },
+            }
+        },
     }}
 end
 
 local has_albums_mod = love.filesystem.getInfo("mods/Albums", "directory") ~= nil
 
+load("mods/Unnamed-Balatro-Mod/Other/decks.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/minesweeper.lua")
 if not has_albums_mod then
     load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")
@@ -56,10 +83,12 @@ load("mods/Unnamed-Balatro-Mod/Jokers/delete.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/uncommon_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/rare_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/legendary_jokers.lua")
+load("mods/Unnamed-Balatro-Mod/Jokers/player_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/backyardigans_jokers.lua")
+load("mods/Unnamed-Balatro-Mod/Jokers/cat_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/uh_oh_jokers.lua")
 load("mods/Unnamed-Balatro-Mod/Jokers/unhinged_jokers.lua")
-load("mods/Unnamed-Balatro-Mod/Jokers/cat_jokers.lua")
+
 
 ----------------------------------------------
 ------------MOD CODE END----------------------

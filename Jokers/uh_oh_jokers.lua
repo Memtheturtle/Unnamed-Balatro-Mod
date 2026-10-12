@@ -86,7 +86,7 @@ SMODS.Joker{
             G.jokers:emplace(new_card)
 
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

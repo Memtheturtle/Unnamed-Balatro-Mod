@@ -20,7 +20,7 @@ SMODS.Joker{
     },
     atlas = 'Delete_jokers',
     rarity = 2,
-    cost = 10,
+    cost = 3,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
@@ -42,7 +42,7 @@ SMODS.Joker{
                 }))
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

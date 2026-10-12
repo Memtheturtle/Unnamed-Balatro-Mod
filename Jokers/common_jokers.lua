@@ -4,6 +4,7 @@ GCBM_pointer_dt = 0
 GCBM_jimball2_dt = 0
 
 local Game_update_ref = Game.update
+---@diagnostic disable-next-line: duplicate-set-field
 function Game:update(dt)
 	Game_update_ref(self, dt)
 
@@ -37,6 +38,7 @@ local hypercam_checked = false
 local HYPERCAM_SIZE = 0.5 -- 1 = full size of the image, 0.5 = half, etc.
 
 local old_love_draw = love.draw
+---@diagnostic disable-next-line: duplicate-set-field
 love.draw = function(...)
     old_love_draw(...)
 
@@ -100,6 +102,55 @@ SMODS.Sound({
 	end,
 })
 
+SMODS.Joker{
+    key = 'gaster', --joker key
+    loc_txt = { -- local text
+        name = 'W. D. Gaster',
+        text = {
+          '{C:attention}DARK, DARKER, YET DARKER{}',
+        },
+    },
+    atlas = 'Common_jokers', --atlas' key
+    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    cost = 1, --cost
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+
+    add_to_deck = function(self, card, from_debuff)
+        -- from_debuff is true when a debuff is lifted, which we don't want to trigger on
+        if from_debuff then return end
+
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.8,      -- lets the player see the joker land first
+            blocking = true,  -- pauses the event queue so nothing ticks mid-teardown
+            func = function()
+                -- only fire during a real run
+                if G.STAGE ~= G.STAGES.RUN then return true end
+
+                G.FUNCS.exit_overlay_menu()
+
+                -- delete the save file so Continue is gone
+                if remove_save then
+                    remove_save()
+                else
+                    G.SAVED_GAME = nil
+                    love.filesystem.remove(G.SETTINGS.profile .. '/save.jkr')
+                end
+
+                -- tear down the live run, then load the menu
+                G:delete_run()
+                G:main_menu()
+                return true
+            end
+        }))
+    end,
+}
+
 
 SMODS.Joker{
     key = 'jimball2', --joker key
@@ -131,9 +182,9 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-            select_music_track = "music_jimball"
+            self.select_music_track = "music_jimball"
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -170,9 +221,9 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-            select_music_track = "music_ksi"
+            self.select_music_track = "music_ksi"
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -213,7 +264,7 @@ SMODS.Joker{
          card:start_dissolve()
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

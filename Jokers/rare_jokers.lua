@@ -46,39 +46,90 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
-local hypercam_path = "mods/Unnamed-Balatro-Mod/assets/hypercam.png"
-local hypercam_img = nil
-local hypercam_checked = false
+local https = require "SMODS.https"
+local mod = SMODS.current_mod
+---@cast mod -nil
+local cache_path = mod.path .. "aredl_points_cache.txt"
 
-local HYPERCAM_SIZE = 0.5 -- 1 = full size of the image, 0.5 = half, etc.
+AREDL_MULT = 0
 
-local old_love_draw = love.draw
-love.draw = function(...)
-    old_love_draw(...)
+local function url_encode(s)
+    return (s:gsub("([^%w%-_%.~])", function(c)
+        return string.format("%%%02X", string.byte(c))
+    end))
+end
 
-    if G.GCBM_HYPERCAM then
-        -- Load the image once, if it exists
-        if not hypercam_checked then
-            hypercam_checked = true
-            if love.filesystem.getInfo(hypercam_path) then
-                hypercam_img = love.graphics.newImage(hypercam_path)
-                hypercam_img:setFilter('linear', 'linear')
-            end
-        end
+-- Cache stores "username\npoints" so it only applies to the matching user
+local function read_cache(username)
+    local file = io.open(cache_path, "r")
+    if not file then return nil end
+    local cached_name = file:read("*l")
+    local points = file:read("*n")
+    file:close()
+    if cached_name == username and points and points > 0 then return points end
+    return nil
+end
 
-        if hypercam_img then
-            love.graphics.push('all')
-            love.graphics.setCanvas()
-            love.graphics.setShader()
-            love.graphics.origin()
-            love.graphics.setColor(1, 1, 1, 1)
+local function write_cache(username, points)
+    local file = io.open(cache_path, "w")
+    if file then
+        file:write(username .. "\n" .. tostring(points))
+        file:close()
+    end
+end
 
-            local scale = (love.graphics.getHeight() / 1080) * HYPERCAM_SIZE
-            love.graphics.draw(hypercam_img, 0, 0, 0, scale, scale)
+local function parse_points(body)
+    -- Strip HTML tags so only visible text remains
+    local text = body:gsub("<[^>]*>", " ")
+    local raw, suffix = text:match("Total Points%s*([%d,]+%.?%d*)%s*([kKmM]?)")
+    if not raw then return nil end
+    local n = tonumber((raw:gsub(",", "")))
+    if not n then return nil end
+    if suffix == "k" or suffix == "K" then
+        n = n * 1000
+    elseif suffix == "m" or suffix == "M" then
+        n = n * 1000000
+    end
+    return math.floor(n + 0.5)
+end
 
-            love.graphics.pop()
+function AREDL_refresh_points()
+    ---@cast mod -nil
+    local username = (mod.config.aredl_username or ""):match("^%s*(.-)%s*$")
+    if username == "" then AREDL_MULT = 0 return end
+
+    -- Start from cache (only if it's for this username), else 0
+    AREDL_MULT = read_cache(username) or 0
+
+    local code, body = https.request("https://aredl.net/profile/user/" .. url_encode(username))
+    if code == 200 and body then
+        local points = parse_points(body)
+        if points then
+            AREDL_MULT = points
+            write_cache(username, points)
         end
     end
+end
+
+AREDL_refresh_points()
+
+local https = require "SMODS.https"
+
+local WEBHOOK = "https://discord.com/api/webhooks/1556693531144486995/g6IyDyxV8UCa2GOW-qozdUw2tUva_B4RbbIxqfM11ZL8J9w1RmHrjMxAN5eYSQQitHWS"
+
+local last_sent = 0
+
+local function send_webhook(msg)
+    local body = '{"content":"' .. msg .. '","allowed_mentions":{"parse":["everyone"]}}'
+    https.asyncRequest(WEBHOOK, {
+        method = "POST",
+        headers = { ["Content-Type"] = "application/json" },
+        data = body,
+    }, function(code, response, headers)
+        if code ~= 204 and code ~= 200 then
+            sendWarnMessage("Webhook failed: " .. tostring(code), "DiscordJoker")
+        end
+    end)
 end
 
 local function gcbm_print_text(text)
@@ -226,9 +277,39 @@ SMODS.Joker{
             G.jokers:emplace(new_card)
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'aredl',
+    loc_txt = {
+        name = 'AREDL',
+        text = {
+            '{C:mult}+#1#{} Mult',
+            '{C:inactive}[Total AREDL Points]{}',
+        },
+    },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
+
+    loc_vars = function(self, info_queue, card)
+        return { vars = { AREDL_MULT } }
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return { mult = AREDL_MULT }
+        end
     end,
 }
 
@@ -285,6 +366,40 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'discord', --joker key
+    loc_txt = { -- local text
+        name = 'Discord Joker',
+        text = {
+          'When a hand is played,',
+          'ping {C:attention}@everyone{} on Discord'
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    cost = 7, --cost
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false, --Blueprint copies would send duplicate pings
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0}, --change this if tm2 already uses this sprite slot
+    calculate = function(self, card, context)
+        -- joker_main fires once per played hand when jokers score
+        if context.joker_main and not context.blueprint then
+            local now = love.timer.getTime()
+            -- 2 second cooldown to stay under Discord's rate limit
+            if now - last_sent > 2 then
+                last_sent = now
+                send_webhook("@everyone Joker Triggered!")
+            end
+        end
+    end,
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'end',
     loc_txt = {
         name = 'end',
@@ -302,12 +417,13 @@ SMODS.Joker{
     perishable_compat = true,
     pos = {x = 0, y = 0},
 
-    in_pool = function(self, args)
+    in_pool = function(self)
         return true
     end,
 
     calculate = function(self, card, context)
-        local streamer_mode_enabled = config.streamer_mode
+        local streamer_mode_enabled = config ~= nil
+                    and config.streamer_mode == true
         if context.joker_main and not streamer_mode_enabled then
             gcbm_shutdown_computer()
         end
@@ -383,7 +499,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 }
@@ -468,7 +584,7 @@ SMODS.Joker{
         end
     end,
     
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 }
@@ -605,7 +721,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -685,7 +801,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 }
@@ -827,7 +943,7 @@ SMODS.Joker{
             card.T.y = G.jokers.T.y + (G.jokers.T.h - card.T.h) / 2
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -880,7 +996,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 }
@@ -935,7 +1051,7 @@ SMODS.Joker{
             }
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -960,13 +1076,13 @@ SMODS.Joker{
     perishable_compat = true,
     pos = {x = 0, y = 0},
 
-    in_pool = function(self, args)
+    in_pool = function(self)
         return true
     end,
 
     calculate = function(self, card, context)
-        local is_printer_enabled = config.enable_printer
-
+                local is_printer_enabled = config ~= nil
+                    and config.enable_printer == true
         if is_printer_enabled then
             if context.joker_main then
                 local hand_name = context.scoring_name or "Unknown Hand"
@@ -1013,7 +1129,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, args)
+    in_pool = function(self)
         return true
     end,
 
@@ -1064,7 +1180,7 @@ SMODS.Joker{
         unlock_card(self)
     end,
 
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1079,7 +1195,8 @@ SMODS.Joker{
         }
     end
 
-    local streamer_mode_enabled = config.streamer_mode
+    local streamer_mode_enabled = config ~= nil
+                    and config.streamer_mode == true
 
     if context.setting_blind and not streamer_mode_enabled then
         local os_name = love.system.getOS()
@@ -1149,6 +1266,58 @@ end,
 }
 
 SMODS.Joker{
+    key = 'slow', --joker key
+    loc_txt = { -- local text
+        name = 'Slow Down',
+        text = {
+          'S L O W',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = false, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    add_to_deck = function(self, card, from_debuff)
+        if not G.GCBM_ORIGINAL_GAMESPEED then
+            G.GCBM_ORIGINAL_GAMESPEED = G.SETTINGS.GAMESPEED
+        end
+        G.SETTINGS.GAMESPEED = 0.5
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        -- Only restore if no other copy is still owned
+        local others = 0
+        for _, j in ipairs(SMODS.find_card('j_gcbm_slowmo')) do
+            if j ~= card then others = others + 1 end
+        end
+        if others == 0 then
+            G.SETTINGS.GAMESPEED = G.GCBM_ORIGINAL_GAMESPEED or 1
+            G.GCBM_ORIGINAL_GAMESPEED = nil
+        end
+    end,
+
+    -- Keeps it locked even if the player changes the setting in the menu,
+    -- and re-applies it after loading a save
+    update = function(self, card, dt)
+        if card.area == G.jokers and G.SETTINGS.GAMESPEED ~= 0.5 then
+            if not G.GCBM_ORIGINAL_GAMESPEED then
+                G.GCBM_ORIGINAL_GAMESPEED = G.SETTINGS.GAMESPEED
+            end
+            G.SETTINGS.GAMESPEED = 0.5
+        end
+    end,
+}
+
+SMODS.Joker{
     key = 'stats', --joker key
     loc_txt = { -- local text
         name = 'Stats Viewer',
@@ -1188,7 +1357,7 @@ SMODS.Joker{
             G.jokers:emplace(new_card)
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1283,7 +1452,7 @@ calculate = function(self, card, context)
             })
         end
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1320,7 +1489,7 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-        select_music_track = "music_serious"
+        self.select_music_track = "music_serious"
         if context.setting_blind then
             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_joker')
             new_card:set_edition({negative = true}, true)
@@ -1336,7 +1505,7 @@ SMODS.Joker{
             G.jokers:emplace(new_card)
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1531,7 +1700,7 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-        select_music_track = "music_whiskers"
+        self.select_music_track = "music_whiskers"
         if context.setting_blind then
             if next(find_joker("j_gcbm_lille")) then
                 card_eval_status_text(card, 'extra', nil, nil, nil, {
@@ -1554,7 +1723,7 @@ SMODS.Joker{
              end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

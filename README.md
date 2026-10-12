@@ -15,7 +15,11 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.4.0.0 - New Consumable Type - Food, Fat Daddy Fried Chicken Joker, Unregistered Hypercam 2 Joker, Made Weezer Longer, Fixed Craig
+0.4.1.0 - New Joker Type - GD PLayers, Maxwell Joker, 👎︎✌︎☼︎😐︎📪︎ 👎︎✌︎☼︎😐︎☜︎☼︎📪︎ ✡︎☜︎❄︎ 👎︎✌︎☼︎😐︎☜︎☼︎, AREDL Joker, Discord Joker, Blueskii Joker, Slow Down Joker, Spoiler Joker, Cleaned Up Code so VS Stopped Yelling at Me, Fixed Craig
+
+0.4.0.0 - New Consumable Type - Food, Fat Daddy Fried Chicken Joker, Unregistered Hypercam 2 Joker, Fixed Craig
+
+0.3.15.1 - Made Weezer Longer, Fixed Craig
 
 0.3.15.0 - 26 Total Albums in game, Fixed Craig
 
@@ -114,17 +118,19 @@ VERSION HISTORY:
 
 CURRENT FEATURES:
 
-4 New Types of Jokers: Backyardigans, Cat, Unhinged, and Uh Oh
+5 New Types of Jokers: Backyardigans, Cat, Unhinged, GD Players, and Uh Oh
 
-44 Total New Jokers
+50+ Total New Jokers
 
 1 Tarot Card 
 
+25+ Album Consumable Cards (Some With Art!)
+
 10 Minesweeper Consumable Cards (With Art!)
 
-17 CMD Consumable Cards (With Art!)
+17 CMD Consumable Cards (Some Not Yet functional)
 
-6 Drug Consumable Cards (1 Not yet functional)
+6 Drug Consumable Cards (1 Not Yet functional)
 
 Custom Music and SFX!
 
@@ -137,9 +143,9 @@ PLANNED FEATURES:
 
 5+ Legendary Jokers Themed Around Famous Jesters
 
-10+ Additional Legendary Jokers Themed Around Popular GD Players/Creators
+10+ Additional Jokers Themed Around Popular GD Players/Creators
 
-Nightmare Freddy Joker
+30+ Additional Jokers From Common-Rare
 
 2 Additional Tarot Cards
 
@@ -159,6 +165,8 @@ Nightmare Freddy Joker
 
 10+ Consumable Cards Themed Around Movies We Watched Together
 
+10+ Custom Decks
+
 Custom Art for All Cards!
 
 
@@ -168,6 +176,8 @@ The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We h
 THERE ARE JUMPSCARES and if you have a heart attack you cant sue me.
 
 Some cards may open certain things. There is a streamer mode to prevent this.
+
+For the AREDL joker, you must enter the username that appears in the url of your profile, not just your display name on the site.
 
 
 INSTALLATION:

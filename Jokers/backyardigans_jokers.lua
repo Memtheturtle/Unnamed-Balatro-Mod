@@ -199,7 +199,6 @@ local function write_cache(total_sends)
     local file, err = io.open(cache_path, "w")
 
     if not file then
-        send("Could not write combined SendDB cache: " .. tostring(err))
         return false
     end
 
@@ -266,10 +265,6 @@ for _, creator_id in ipairs(creator_ids) do
 
     if creator_sends == nil then
         all_requests_succeeded = false
-        send(
-            "SendDB request/match failed for creator ID "
-            .. tostring(creator_id)
-        )
     else
         fresh_total = fresh_total + creator_sends
     end
@@ -331,7 +326,7 @@ SMODS.Joker{
            G.gorb_count = G.gorb_count +1 
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -375,7 +370,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -410,7 +405,7 @@ SMODS.Joker{
         local month = tonumber(os.date('%m'))
         local day   = tonumber(os.date('%d'))
 
-        elseif month == 1 and day == 22 then
+        if month == 1 and day == 22 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_craig')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
@@ -524,9 +519,10 @@ SMODS.Joker{
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
         end
+    end
     end,
 
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 }
@@ -559,7 +555,8 @@ SMODS.Joker{
 
             local function gcbm_open_camera()
                 local os_name = love.system.getOS()
-                local streamer_mode_enabled = config.streamer_mode
+                local streamer_mode_enabled = config ~= nil
+                    and config.streamer_mode == true
 
                 if not streamer_mode_enabled then
                     if os_name == "OS X" then
@@ -670,7 +667,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, wawa, wawa2)
+    in_pool = function(self)
         return true
     end,
 } 
@@ -708,7 +705,7 @@ SMODS.Joker{
             SMODS.add_card({ set = "CMD", area = G.consumeables})
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -889,7 +886,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -937,7 +934,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -978,7 +975,7 @@ SMODS.Joker{
 
 
     calculate = function(self, card, context)
-        select_music_track = "music_season"
+        self.select_music_track = "music_season"
         if context.setting_blind then
             ease_dollars(2)
              card_eval_status_text(card, 'dollars', 2)
@@ -1154,7 +1151,7 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1193,7 +1190,7 @@ SMODS.Joker{
             SMODS.add_card({ set = "Spectral", key = 'c_black_hole', area = G.spectrals, edition = 'e_negative' })
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1233,7 +1230,7 @@ SMODS.Joker{
             SMODS.add_card({ set = "Tarot", key = 'c_gcbm_women', area = G.consumeables, edition = 'e_negative' })
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1295,7 +1292,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1437,7 +1434,8 @@ SMODS.Joker{
                     return true
                 end
             }))
-            local streamer_mode_enabled = config.streamer_mode
+             local streamer_mode_enabled = config ~= nil
+                    and config.streamer_mode == true
             if not streamer_mode_enabled then
             gcbm_timer_shutdown_computer()
             end
@@ -1468,10 +1466,10 @@ SMODS.Joker{
     
     add_to_deck = function(self, card, from_debuff)
         card:set_eternal(true)
-        select_music_track = "music_choppa"
+        self.select_music_track = "music_choppa"
     end,
     
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1505,10 +1503,6 @@ SMODS.Joker{
         end
     end,
 
-    in_pool = function(self, args)
-        return true
-    end,
-
     add_to_deck = function(self, card, from_debuff)
         local delta = 1 - G.hand.config.card_limit
         card.ability.extra.h_size = delta
@@ -1527,7 +1521,7 @@ SMODS.Joker{
             }
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1573,7 +1567,8 @@ SMODS.Joker{
             if pseudorandom('nineteeneightyfour') < G.GAME.probabilities.normal / 2 then
                 play_sound('gcbm_1984')
                 
-                local streamer_mode_enabled = config.streamer_mode
+                 local streamer_mode_enabled = config ~= nil
+                    and config.streamer_mode == true
                 if not streamer_mode_enabled then
                     local opened = love.system.openURL("https://www.youtube.com/watch?v=5jjnIBITmbg")
                 end
@@ -1582,7 +1577,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

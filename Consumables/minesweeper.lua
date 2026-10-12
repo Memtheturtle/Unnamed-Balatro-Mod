@@ -419,19 +419,21 @@ SMODS.Consumable{
                 -- Check if player has a flag
                 local has_flag = false
                 local flag_card = nil
-                
+                local flag_index = nil
+
                 for i, c in ipairs(G.consumeables.cards) do
-                    if c.config.center.key == 'c_gcbm_flag' then  -- Full key with prefix
+                    if c.config.center.key == 'c_gcbm_flag' then
                         has_flag = true
                         flag_card = c
-                        break
+                        flag_index = i
+                    break
                     end
                 end
-                
-                if has_flag and flag_card then
+
+                if has_flag and flag_card and flag_index then
                     -- Flag blocks the mine - both dissolve
                     flag_card:start_dissolve()
-                    table.remove(G.consumeables.cards, i)
+                    table.remove(G.consumeables.cards, flag_index)
                     card:start_dissolve()
                 else
                     -- No flag - mine activates normally

@@ -69,7 +69,7 @@ SMODS.Joker{
         unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
-        select_music_track = "music_criminal"
+        self.select_music_track = "music_criminal"
         if context.setting_blind then
             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
             new_card:set_edition({negative = true}, true)
@@ -101,7 +101,7 @@ SMODS.Joker{
             G.jokers:emplace(new_card)
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -204,7 +204,7 @@ SMODS.Joker{
             end
         end
     end,
-    in_pool = function(self,wawa,wawa2)
+    in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

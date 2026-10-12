@@ -6,6 +6,7 @@ SMODS.Atlas{
 }
 
 local use_ref = Card.use_consumeable
+---@diagnostic disable-next-line duplicate-set-field
 function Card:use_consumeable(area, copier)
     local center = self.config and self.config.center
     if center then
@@ -42,6 +43,7 @@ end
 G.FUNCS.tracert_search = function(e)
     -- Close selection menu
     if G.OVERLAY_MENU then
+        ---@diagnostic disable-next-line: undefined-field
         G.OVERLAY_MENU:remove()
         G.OVERLAY_MENU = nil
     end
@@ -162,7 +164,7 @@ SMODS.Consumable{
         -- Only usable when a Boss Blind is active
         return G.GAME.blind and G.GAME.blind.boss and not G.GAME.blind.disabled
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -196,7 +198,7 @@ SMODS.Consumable{
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -402,7 +404,7 @@ SMODS.Consumable {
     loc_vars = function(self, info_queue, card)
         return { vars = {} }
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -651,7 +653,7 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -714,7 +716,7 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -795,7 +797,7 @@ SMODS.Consumable {
             end
         end
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -856,7 +858,7 @@ SMODS.Consumable {
             }))
         end
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -891,7 +893,7 @@ SMODS.Consumable {
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1032,7 +1034,7 @@ SMODS.Consumable {
             end
         }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1067,7 +1069,7 @@ SMODS.Consumable {
             vars = { G.GAME.prev_used_consumable and G.GAME.prev_used_consumable.name or "None" }
         }
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1148,6 +1150,7 @@ end
 -- Hook the real "play hand" callback so we know which cards were used,
 -- without needing a phantom joker sitting in G.jokers.
 local rmdir_play_ref = G.FUNCS.play_cards_from_highlighted
+---@diagnostic disable-next-line: duplicate-set-field
 G.FUNCS.play_cards_from_highlighted = function(e)
     local played = {}
     for _, c in ipairs(G.hand.highlighted) do
@@ -1176,20 +1179,21 @@ SMODS.Consumable {
         return #rmdir_get_unused_playing_cards() > 0
     end,
 
-    use = function(self, card, area, copier)
-        local targets = rmdir_get_unused_playing_cards()
-        for _, target in ipairs(targets) do
-            if target.start_dissolve then
-                target:start_dissolve()
-            end
-        end
+   use = function(self, card, area, copier)
+    local targets = rmdir_get_unused_playing_cards()
 
-        return {
-            message = "Deleted!",
-            colour = G.C.RED
-        }
+    for _, target in ipairs(targets) do
+        if target.start_dissolve then
+            target:start_dissolve()
+        end
     end
-  
+
+    card_eval_status_text(copier or card, 'extra', nil, nil, nil, {
+        message = "Deleted!",
+        colour = G.C.RED
+    })
+    end
+
 }
 
 GCBM = GCBM or {}
@@ -1199,6 +1203,7 @@ GCBM.cd_state = GCBM.cd_state or { history = {} }
 -- We keep our own history because Balatro overwrites blind_choices.Boss on
 -- each ante-up, so there's no native way to recover a past ante's boss.
 local cd_new_round_ref = new_round
+---@diagnostic disable-next-line: lowercase-global
 function new_round()
     local key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
     table.insert(GCBM.cd_state.history, {
@@ -1255,7 +1260,7 @@ SMODS.Consumable {
 
         G.GAME.chips = chips
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1275,7 +1280,7 @@ SMODS.Consumable {
         }
     },
     can_use = function(self, card)
-        return G.GAME and G.GAME.blind and G.GAME.blind.chips
+        return not not (G.GAME and G.GAME.blind and G.GAME.blind.chips)
     end,
     use = function(self, card, area, copier)
     local half = math.floor(G.GAME.blind.chips / 2)
@@ -1292,7 +1297,7 @@ SMODS.Consumable {
         end
     }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
@@ -1311,7 +1316,7 @@ SMODS.Consumable {
         }
     },
      can_use = function(self, card)
-        return G.GAME and G.GAME.blind and G.GAME.blind.chips
+        return not not (G.GAME and G.GAME.blind and G.GAME.blind.chips)
     end,
     use = function(self, card, area, copier)
     local all = math.floor(G.GAME.blind.chips)
@@ -1328,7 +1333,7 @@ SMODS.Consumable {
         end
     }))
     end,
-        in_pool = function(self,wawa,wawa2)
+        in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,

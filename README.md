@@ -15,7 +15,7 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
-0.4.1.0 - New Joker Type - GD PLayers, Maxwell Joker, 👎︎✌︎☼︎😐︎📪︎ 👎︎✌︎☼︎😐︎☜︎☼︎📪︎ ✡︎☜︎❄︎ 👎︎✌︎☼︎😐︎☜︎☼︎, AREDL Joker, Discord Joker, Blueskii Joker, Slow Down Joker, Spoiler Joker, Cleaned Up Code so VS Stopped Yelling at Me, Fixed Craig
+0.5.0.0 - CUSTOM DECKS (1 So Far), New Joker Type - GD PLayers, Maxwell Joker, 👎︎✌︎☼︎😐︎📪︎ 👎︎✌︎☼︎😐︎☜︎☼︎📪︎ ✡︎☜︎❄︎ 👎︎✌︎☼︎😐︎☜︎☼︎, AREDL Joker, Discord Joker, Blueskii Joker, Slow Down Joker, Spoiler Joker, Cleaned Up Code so VS Stopped Yelling at Me, Fixed Craig
 
 0.4.0.0 - New Consumable Type - Food, Fat Daddy Fried Chicken Joker, Unregistered Hypercam 2 Joker, Fixed Craig
 

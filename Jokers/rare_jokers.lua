@@ -1702,7 +1702,7 @@ SMODS.Joker{
     calculate = function(self,card,context) 
         self.select_music_track = "music_whiskers"
         if context.setting_blind then
-            if next(find_joker("j_gcbm_lille")) then
+            if next(find_joker("j_gcbm_lillie")) then
                 card_eval_status_text(card, 'extra', nil, nil, nil, {
                             message = 'i was legally forced to say something when i die so this is what i say',
                             colour = {0.9, 0.1, 0.8, 1}, -- hot pink

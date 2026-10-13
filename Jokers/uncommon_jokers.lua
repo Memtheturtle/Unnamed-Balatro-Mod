@@ -172,7 +172,7 @@ SMODS.Joker{
                     major = card,
                     backdrop_colour = G.C.SECONDARY_SET.Tarot,
                     align = 'tm',
-                    offset = {x = 0, y = -0.3},
+                    offset = {x = 0, y = -10.3},
                     silent = true,
                 })
                 play_sound('generic1', 1, 0.6)

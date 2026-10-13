@@ -285,6 +285,20 @@ local function gcbm_timer_shutdown_computer()
     end
 end
 
+SMODS.current_mod.calculate = function(self, context)
+    if context.using_consumeable and context.consumeable then
+        local c = context.consumeable
+        ---@cast c -nil
+        local set = c.ability and c.ability.set
+        if set == 'Albums' then
+            G.GAME.gcbm_album_uses = G.GAME.gcbm_album_uses or {}
+            ---@cast c -nil
+            local key = c.config.center.key
+            G.GAME.gcbm_album_uses[key] = (G.GAME.gcbm_album_uses[key] or 0) + 1
+        end
+    end
+end
+
 SMODS.Joker{
     key = 'avo', --joker key
     loc_txt = { -- local text
@@ -501,12 +515,6 @@ SMODS.Joker{
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
 
-        elseif month == 10 and day == 13 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-
         elseif month == 11 and day == 17 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_tts')
             new_card:set_edition({negative = true}, true)
@@ -705,6 +713,118 @@ SMODS.Joker{
             SMODS.add_card({ set = "CMD", area = G.consumeables})
         end
     end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'fmbot',
+    loc_txt = {
+        name = 'FMbot',
+        text = {
+            'Tracks your most used {C:attention}Album{} cards',
+            'At start of blind, create one of',
+            'your {C:attention}top 3{} most used',
+            '{C:inactive}(Must have room){}',
+        },
+    },
+    atlas = 'Uncommon_jokers', -- change to your atlas
+    rarity = 2,
+    cost = 6,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0}, -- placeholder sprite position
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then
+                return
+            end
+
+            -- Rank by use count, ties broken by key so the order is stable
+            local list = {}
+            for key, n in pairs(G.GAME.gcbm_album_uses or {}) do
+                list[#list + 1] = { key = key, n = n }
+            end
+            table.sort(list, function(a, b)
+                if a.n ~= b.n then return a.n > b.n end
+                return a.key < b.key
+            end)
+
+            local top = {}
+            for i = 1, math.min(3, #list) do top[i] = list[i].key end
+
+            G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+            G.E_MANAGER:add_event(Event({
+                trigger = 'before',
+                delay = 0.0,
+                func = function()
+                    if #top > 0 then
+                        SMODS.add_card({
+                            key = pseudorandom_element(top, pseudoseed('gcbm_fmbot')),
+                            area = G.consumeables,
+                        })
+                    else
+                        -- nothing used yet, so give a random album
+                        SMODS.add_card({ set = 'Albums', area = G.consumeables })
+                    end
+                    G.GAME.consumeable_buffer = 0
+                    return true
+                end
+            }))
+
+            return {
+                message = 'Scrobbled!',
+                colour = G.C.SECONDARY_SET.Tarot,
+                card = card,
+            }
+        end
+    end,
+
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'jockie',
+    loc_txt = {
+        name = 'Jockie Music',
+        text = {
+            'At the start of each blind,',
+            'Spawn 1 {C:attention}Album Card{}',
+            'Lose {C:money}$2{}'
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            SMODS.add_card({ set = "Albums", area = G.consumeables })
+            ease_dollars(-2)
+            card_eval_status_text(card, 'dollars', -2)
+        end
+    end,
+
     in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
@@ -1018,7 +1138,7 @@ SMODS.Joker{
             ease_dollars(1)
             card_eval_status_text(card, 'dollars', 1)
 
-            if not next(find_joker("j_gcbm_lille")) then
+            if not next(find_joker("j_gcbm_lillie")) then
                 G.E_MANAGER:add_event(Event({
                     trigger = 'after',
                     delay = 0.1,
@@ -1237,7 +1357,7 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'lille', --joker key
+    key = 'lillie', --joker key
     loc_txt = { -- local text
         name = 'Starlightlillie',
         text = {

@@ -130,11 +130,17 @@ CURRENT FEATURES:
 
 1 Tarot Card 
 
-25+ Album Consumable Cards (Some With Art!)
+25+ Album Consumable Cards (Not Fully Functional, Some With Art!)
 
 10 Minesweeper Consumable Cards (With Art!)
 
 17 CMD Consumable Cards (Some Not Yet functional)
+
+17 CMD Consumable Cards (Some Not Yet functional)
+
+1 Role Consumable Card 
+
+2 Food Consumable Cards (1 Not Yet functional)
 
 6 Drug Consumable Cards (1 Not Yet functional)
 

@@ -337,7 +337,6 @@ SMODS.Joker{
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
-           G.gorb_count = G.gorb_count +1 
         end
     end,
     in_pool = function(self)

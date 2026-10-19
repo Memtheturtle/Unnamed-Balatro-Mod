@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 VERSION HISTORY:
 
+0.5.2.0 - Fih Joker (Not Functional), Fih Deck, Yogurt Consumable, Megahack Joker, Smooth Jazz Joker, Fixed A03 and Stats Viewer to Live Update, Fixed Gorb Calculation, Fixed Craig
+
 0.5.1.0 - Atlas Deck, Album of the Year Deck, Chud Deck, Decks Dark, Deck Deck, Starlight Deck, FMbot Joker, Jockie Music Joker, Fixed Typo Causing Crash, Fixed Craig
 
 0.5.0.0 - CUSTOM DECKS (1 So Far), New Joker Type - GD PLayers, Maxwell Joker, 👎︎✌︎☼︎😐︎📪︎ 👎︎✌︎☼︎😐︎☜︎☼︎📪︎ ✡︎☜︎❄︎ 👎︎✌︎☼︎😐︎☜︎☼︎, AREDL Joker, Discord Joker, Blueskii Joker, Slow Down Joker, Spoiler Joker, Cleaned Up Code so VS Stopped Yelling at Me, Fixed Craig

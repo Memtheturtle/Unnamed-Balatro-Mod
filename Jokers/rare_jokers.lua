@@ -37,14 +37,163 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+	key = "music_jazz",
+	path = "music_jazz.mp3",
+	sync = false,
+	pitch = 1,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_smooth_jazz")) 
+	end,
+})
+
+SMODS.Sound({
     key = "watchmen",
     path = "watchmen.mp3",
+})
+
+SMODS.Sound({
+    key = "megahack",
+    path = "megahack.mp3",
 })
 
 SMODS.Sound({
     key = "wtk",
     path = "wethreekings.mp3",
 })
+
+-- Turns a sheet cell into a joker key: "mem" -> "j_gcbm_mem"
+-- Returns nil if the cell is empty or no joker with that key exists.
+function SHEET_joker_key(ref, fallback_key)
+    local raw = SHEET_cell(ref, "")
+    raw = raw:lower():gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", "_")
+    local key = "j_gcbm_" .. raw
+    if raw ~= "" and G.P_CENTERS[key] then
+        return key
+    end
+    return fallback_key
+end
+
+local https = require "SMODS.https"
+local mod = SMODS.current_mod
+---@cast mod -nil
+local cache_path = mod.path .. "sheet_xmult_cache.txt"
+
+local SHEET_ID = "176piq1zsNrXs75yhRzGGFaT0kpT6Y6rqgKY24pu0r3o"
+local SHEET_URL = "https://docs.google.com/spreadsheets/d/" .. SHEET_ID .. "/gviz/tq?tqx=out:csv&sheet=Sheet1"
+
+SHEET_DATA = {}   -- SHEET_DATA[row][col], 1-indexed, row 1 = sheet row 1
+SHEET_XMULT = 1   -- kept so your existing joker still works
+
+-- Quote-aware CSV parser (handles "quoted, cells" and "" escapes)
+local function parse_csv(body)
+    local rows, row, field = {}, {}, {}
+    local in_quotes = false
+    local i, len = 1, #body
+    while i <= len do
+        local c = body:sub(i, i)
+        if in_quotes then
+            if c == '"' then
+                if body:sub(i + 1, i + 1) == '"' then
+                    field[#field + 1] = '"'
+                    i = i + 1
+                else
+                    in_quotes = false
+                end
+            else
+                field[#field + 1] = c
+            end
+        else
+            if c == '"' then
+                in_quotes = true
+            elseif c == "," then
+                row[#row + 1] = table.concat(field)
+                field = {}
+            elseif c == "\n" or c == "\r" then
+                if c == "\r" and body:sub(i + 1, i + 1) == "\n" then i = i + 1 end
+                row[#row + 1] = table.concat(field)
+                rows[#rows + 1] = row
+                row, field = {}, {}
+            else
+                field[#field + 1] = c
+            end
+        end
+        i = i + 1
+    end
+    if #field > 0 or #row > 0 then
+        row[#row + 1] = table.concat(field)
+        rows[#rows + 1] = row
+    end
+    return rows
+end
+
+-- "B2" -> row 2, col 2. Supports A-Z only, which is plenty here.
+local function ref_to_rc(ref)
+    local letters, num = ref:upper():match("^([A-Z])(%d+)$")
+    if not letters then return nil end
+    return tonumber(num), letters:byte() - 64
+end
+
+-- SHEET_cell("B2") -> "mem", or `default` if empty/missing
+function SHEET_cell(ref, default)
+    local r, c = ref_to_rc(ref)
+    local v = r and SHEET_DATA[r] and SHEET_DATA[r][c]
+    if v == nil or v == "" then return default end
+    return v
+end
+
+-- SHEET_num("A2", 1) -> 27.76, or the default if it isn't a number
+function SHEET_num(ref, default)
+    local v = tonumber((tostring(SHEET_cell(ref, "")):gsub(",", "")))
+    return v or default
+end
+
+local function read_cache()
+    if not cache_path then return nil end
+    local file = io.open(cache_path, "r")
+    if not file then return nil end
+    local body = file:read("*a")
+    file:close()
+    if body and body ~= "" then return body end
+    return nil
+end
+
+local function write_cache(body)
+    if not cache_path then return end
+    local file = io.open(cache_path, "w")
+    if file then
+        file:write(body)
+        file:close()
+    end
+end
+
+local function fetch(url, depth)
+    depth = depth or 0
+    local ok, code, body, headers = pcall(https.request, url)
+    if not ok then
+        return nil
+    end
+    if (code == 301 or code == 302 or code == 303 or code == 307 or code == 308)
+        and headers and depth < 3 then
+        local loc = headers.Location or headers.location
+        if loc then return fetch(loc, depth + 1) end
+    end
+    if code == 200 and body and body ~= "" then return body end
+    return nil
+end
+
+function SHEET_refresh()
+    local body = fetch(SHEET_URL)
+    if body then
+        SHEET_DATA = parse_csv(body)
+        write_cache(body)
+    else
+        local cached = read_cache()
+        if cached then SHEET_DATA = parse_csv(cached) end
+    end
+    SHEET_XMULT = SHEET_num("A2", 1)
+end
+
+SHEET_refresh()
 
 local https = require "SMODS.https"
 local mod = SMODS.current_mod
@@ -237,6 +386,55 @@ local windows_adobe_app_path =
 local windows_adobe_uninstaller_path =
     "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\Utils\\Creative Cloud Uninstaller.exe"
 
+local foxy_path = "mods/Unnamed-Balatro-Mod/assets/foxy.png"
+local foxy_img = nil
+local foxy_checked = false
+
+local JUMPSCARE_DURATION = 1.0 -- seconds the image stays on screen
+local JUMPSCARE_SHAKE = 25     -- shake strength in pixels (0 = none)
+
+G.GCBM_JUMPSCARE_TIME = 0
+---@diagnostic disable-next-line duplicate-set-field
+function gcbm_trigger_jumpscare()
+    G.GCBM_JUMPSCARE_TIME = JUMPSCARE_DURATION
+end
+
+local old_love_draw_foxy = love.draw
+love.draw = function(...)
+    old_love_draw_foxy(...)
+
+    if G.GCBM_JUMPSCARE_TIME and G.GCBM_JUMPSCARE_TIME > 0 then
+        G.GCBM_JUMPSCARE_TIME = G.GCBM_JUMPSCARE_TIME - love.timer.getDelta()
+
+        -- Load the image once, if it exists
+        if not foxy_checked then
+            foxy_checked = true
+            if love.filesystem.getInfo(foxy_path) then
+                foxy_img = love.graphics.newImage(foxy_path)
+                foxy_img:setFilter('linear', 'linear')
+            end
+        end
+
+        if foxy_img then
+            love.graphics.push('all')
+            love.graphics.setCanvas()
+            love.graphics.setShader()
+            love.graphics.origin()
+            love.graphics.setColor(1, 1, 1, 1)
+
+            local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+            local iw, ih = foxy_img:getWidth(), foxy_img:getHeight()
+
+            -- Scale up so the image fully covers the window, centered
+            local scale = math.max(sw / iw, sh / ih) * 1.1 -- 1.1 leaves room for the shake
+            local x = (sw - iw * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
+            local y = (sh - ih * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
+
+            love.graphics.draw(foxy_img, x, y, 0, scale, scale)
+            love.graphics.pop()
+        end
+    end
+end
 
 
 SMODS.Joker{
@@ -245,7 +443,7 @@ SMODS.Joker{
         name = 'A03',
         text = {
           'When blind is selected,',
-          'create a Negative Joker of the top 1 TM2 Lagoon Maryland player'
+          'create a Joker of the top 1 TM2 Lagoon Maryland player'
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -271,10 +469,8 @@ SMODS.Joker{
     end,
     calculate = function(self,card,context) 
         if context.setting_blind then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_whisk')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            local key = SHEET_joker_key("C2", "j_gcbm_lillie")  -- second arg is the fallback
+            SMODS.add_card({ key = key })
         end
     end,
     in_pool = function(self)
@@ -499,6 +695,30 @@ SMODS.Joker{
         end
     end,
 
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'fih', --joker key
+    loc_txt = { -- local text
+        name = 'Fih',
+        text = {
+          'Fih',
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    cost = 7, --cost
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false, --Blueprint copies would send duplicate pings
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0}, --change this if tm2 already uses this sprite slot
+    calculate = function(self, card, context)
+    end,
     in_pool = function(self)
         return true
     end,
@@ -950,6 +1170,50 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'megahack', --joker key
+    loc_txt = { -- local text
+        name = 'Megahack',
+        text = {
+          'When blind is selected,',
+          'create {C:attention}1{} {C:attention}CMD Card{}',
+          '{C:attention}Chance of Jumpscare{}',
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self,card,context) 
+        if context.setting_blind then
+            SMODS.add_card({ set = "CMD", area = G.consumeables})
+            if pseudorandom('megahack_scare') < 0.10 then
+                play_sound('gcbm_megahack')
+                gcbm_trigger_jumpscare()
+            end
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'bone',
     loc_txt = {
         name = 'Mr. Weak Bones',
@@ -1318,12 +1582,66 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = "smooth_jazz",
+    loc_txt = {
+        name = "Smooth Jazz",
+        text = {
+            "{X:mult,C:white}X#1#{} Mult",
+            "{C:inactive}(Starlightlillie's Smooth Jazz PB){}",
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    config = { extra = { xmult = 1 } },
+    loc_vars = function(self, info_queue, card)
+        local extra = card and card.ability and card.ability.extra
+        local x = (type(extra) == "table" and extra.xmult) or SHEET_XMULT
+        return { vars = { x } }
+    end,
+    set_ability = function(self, card, initial, delay_sprites)
+        if initial then
+            if type(card.ability.extra) ~= "table" then
+                card.ability.extra = {}
+            end
+            card.ability.extra.xmult = SHEET_XMULT
+        end
+    end,
+    calculate = function(self, card, context)
+        if context.joker_main then
+            local extra = card.ability.extra
+            local x = (type(extra) == "table" and extra.xmult) or SHEET_XMULT
+            return { xmult = x }
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'stats', --joker key
     loc_txt = { -- local text
         name = 'Stats Viewer',
         text = {
           'When blind is selected,',
-          'create a Negative Joker of the',
+          'create a Joker of the',
           'Top 1 Unnamed List Player'
           
         },
@@ -1351,10 +1669,8 @@ SMODS.Joker{
     end,
     calculate = function(self,card,context) 
         if context.setting_blind then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            local key = SHEET_joker_key("B2", "j_gcbm_mem")  -- second arg is the fallback
+            SMODS.add_card({ key = key })
         end
     end,
     in_pool = function(self)

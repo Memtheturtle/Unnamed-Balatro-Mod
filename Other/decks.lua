@@ -151,6 +151,116 @@ love.update = function(dt, ...)
     end
 end
 
+local FORCED_BOSS   = 'bl_fish'     -- change to the real key
+local FORCE_DECK   = 'b_gcbm_fihdeck' -- change to the real key
+local FORCED_JOKER = 'j_gcbm_fih'            -- change to the real key
+local FORCED_PACK  = 'p_buffoon_normal_1'     -- a pack type that normally holds jokers
+
+local function force_active()
+    local b = G.GAME and G.GAME.selected_back
+    local center = b and b.effect and b.effect.center
+    return center and center.key == FORCE_DECK
+end
+
+-- Everything made through create_card becomes the Fish joker:
+-- shop jokers, tarots, planets, spectrals, albums, and all pack contents.
+-- Playing cards (Base/Enhanced) are left alone so your hand still works.
+local old_create_card = create_card
+---@diagnostic disable-next-line duplicate-set-field
+function create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
+    if force_active() and not forced_key
+        and _type ~= 'Base' and _type ~= 'Enhanced'
+        and G.P_CENTERS[FORCED_JOKER] then
+        forced_key = FORCED_JOKER
+    end
+    return old_create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
+end
+
+-- Shop vouchers become the Fish joker
+local old_get_next_voucher_key = get_next_voucher_key
+---@diagnostic disable-next-line duplicate-set-field
+function get_next_voucher_key(...)
+    if force_active() and G.P_CENTERS[FORCED_JOKER] then
+        return FORCED_JOKER
+    end
+    return old_get_next_voucher_key(...)
+end
+
+-- Shop packs are always the same joker pack, and its contents are forced above
+local old_get_pack = get_pack
+---@diagnostic disable-next-line duplicate-set-field
+function get_pack(...)
+    if force_active() and G.P_CENTERS[FORCED_PACK] then
+        return G.P_CENTERS[FORCED_PACK]
+    end
+    return old_get_pack(...)
+end
+
+-- Every boss blind becomes the forced one (also covers boss rerolls)
+local old_get_new_boss = get_new_boss
+---@diagnostic disable-next-line duplicate-set-field
+function get_new_boss(...)
+    if force_active() and G.P_BLINDS[FORCED_BOSS] then
+        return FORCED_BOSS
+    end
+    return old_get_new_boss(...)
+end
+
+local old_set_blind = Blind.set_blind
+---@diagnostic disable-next-line duplicate-set-field
+function Blind:set_blind(blind, reset, silent)
+    -- blind is nil/reset when the game is clearing the blind, so leave that alone
+    if blind and not reset and force_active() and G.P_BLINDS[FORCED_BOSS] then
+        blind = G.P_BLINDS[FORCED_BOSS]
+    end
+    return old_set_blind(self, blind, reset, silent)
+end
+
+local DUSKBREAKER_KEY = 'b_gcbm_duskbreaker' -- 'b_' + prefix + deck key
+local DUSKBREAKER_TARGET = 8266
+
+local function duskbreaker_active()
+    if not (G.GAME and G.STAGES and G.STAGE == G.STAGES.RUN) then return false end
+    local b = G.GAME.selected_back
+    local center = b and b.effect and b.effect.center
+    return center and center.key == DUSKBREAKER_KEY
+end
+
+-- True while the player is still stuck on the first Small Blind
+local function duskbreaker_locked()
+    return duskbreaker_active()
+        and G.GAME.round_resets.ante == 1
+        and (G.GAME.gcbm_duskbreaker_count or 0) < DUSKBREAKER_TARGET
+end
+
+-- Right before the blind select screen is built, if the Small Blind was just beaten,
+-- count it and put the run back on the Small Blind.
+local old_update_blind_select = Game.update_blind_select
+---@diagnostic disable-next-line duplicate-set-field
+function Game:update_blind_select(dt)
+    if not G.STATE_COMPLETE and duskbreaker_locked() then
+        local states = G.GAME.round_resets.blind_states
+        if states.Small == 'Defeated' then
+            G.GAME.gcbm_duskbreaker_count = (G.GAME.gcbm_duskbreaker_count or 0) + 1
+            if G.GAME.gcbm_duskbreaker_count < DUSKBREAKER_TARGET then
+                states.Small = 'Select'
+                states.Big = 'Upcoming'
+                states.Boss = 'Upcoming'
+                G.GAME.blind_on_deck = 'Small'
+            end
+        end
+    end
+    return old_update_blind_select(self, dt)
+end
+
+-- No skipping the Small Blind to dodge the loop (also stops tag farming)
+local old_skip_blind = G.FUNCS.skip_blind
+---@diagnostic disable-next-line duplicate-set-field
+G.FUNCS.skip_blind = function(e)
+    if duskbreaker_locked() then return end
+    return old_skip_blind(e)
+end
+
 -- Atlas for deck art (once per file/mod)
 SMODS.Atlas{
     key = 'Decks',
@@ -448,6 +558,57 @@ SMODS.Back{
                 return true
             end
         }))
+    end,
+}
+
+SMODS.Back{
+    key = 'duskbreaker',
+    loc_txt = {
+        name = 'Duskbreaker Deck',
+        text = {
+            'Replay the first',
+            '{C:attention}Small Blind{} {C:attention}8266{} times',
+            'before you can proceed',
+        },
+    },
+    atlas = 'Decks',
+    pos = {x = 0, y = 0}, -- placeholder sprite position
+    unlocked = true,
+    discovered = true,
+    config = {},
+}
+
+SMODS.Back{
+    key = 'fihdeck',
+    loc_txt = {
+        name = 'Fih Deck',
+        text = {
+            'Fih',
+        },
+    },
+    atlas = 'Decks',
+    pos = {x = 0, y = 2},
+    unlocked = true,
+    discovered = true,
+
+    config = {
+        hands = 0,        -- extra hands per round
+        discards = 0,    -- discard change
+        hand_size = 0,    -- hand size change
+        dollars = 0,      -- starting money change
+    },
+
+   loc_vars = function(self, info_queue, back)
+    local c = self.config
+    ---@cast c -nil
+
+    return {
+        vars = {
+            c.hands,
+            math.abs(c.discards),
+            c.hand_size
+            }
+        }
     end,
 }
 

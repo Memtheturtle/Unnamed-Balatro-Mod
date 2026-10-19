@@ -55,11 +55,14 @@ SMODS.Joker{
       loc_vars = function(self,info_queue,center)
         return {vars = {G.gorb_count}} --#1# is replaced with card.ability.extra.Xmult
     end,
-   
+    
+    add_to_deck = function(self, card, from_debuff)
+     G.gorb_count = G.gorb_count +1
+    end,
 
 
     check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
+        if args.type == 'derek_loves_you' then
             unlock_card(self)
         end
         unlock_card(self) --unlocks the card if it isnt unlocked

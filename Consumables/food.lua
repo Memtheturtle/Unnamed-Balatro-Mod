@@ -1,5 +1,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
+local config = SMODS.current_mod.config
 
 SMODS.Atlas{
     key = 'Food', --atlas key
@@ -47,3 +48,28 @@ SMODS.Consumable{
     use = function(self,card,area,copier)
     end, 
 }
+
+SMODS.Consumable{
+    key = 'yogurt', --key
+    set = 'Food', --the set of the card: corresponds to a consumable type
+    atlas = 'Food', --atlas
+    pos = {x = 9, y = 0}, --position in atlas
+    loc_txt = {
+        name = 'Yogurt', --name of card
+        text = { --text of card
+            'Tastes Good'
+        }
+    },
+    can_use = function(self,card)
+       return true
+    end,
+    use = function(self,card,area,copier)
+        local streamer_mode_enabled = config ~= nil
+                and config.streamer_mode == true
+            if not streamer_mode_enabled then
+                local opened = love.system.openURL("https://youtu.be/eTE-gFPsTgw?si=j9oOHmXoc8MGYP27")
+            end
+    end, 
+}
+
+

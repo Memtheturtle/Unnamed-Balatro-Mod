@@ -41,6 +41,11 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+    key = "fitter_happier",
+    path = "fitter_happier.mp3",
+})
+
+SMODS.Sound({
     key = "minecraft_volume_alpha",
     path = "minecraft_volume_alpha.mp3",
 })
@@ -417,8 +422,12 @@ SMODS.Consumable{
        return true
     end,
     use = function(self,card,area,copier)
-        play_sound('gcbm_ok_computer')
-    end, 
+        if pseudorandom('fitter') < 0.083 then
+            play_sound('gcbm_fitter_happier')
+        else
+            play_sound('gcbm_ok_computer')
+        end
+    end,
 }
 
 SMODS.Consumable{

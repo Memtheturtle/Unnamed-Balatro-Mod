@@ -61,6 +61,82 @@ SMODS.Sound({
     path = "wethreekings.mp3",
 })
 
+local VOICE = "Fred"
+local RATE = 150   -- Fred sounds closer to the song a bit slower than the default
+local PITCH = 35   -- lower = deeper, try 25-50
+
+local function wrap(text, width)
+    local rows, row = {}, ""
+    for word in text:gmatch("%S+") do
+        if #row + #word + 1 > width and #row > 0 then
+            rows[#rows + 1] = row
+            row = word
+        else
+            row = (#row > 0) and (row .. " " .. word) or word
+        end
+    end
+    if #row > 0 then rows[#rows + 1] = row end
+    return rows
+end
+
+local function show_line(line)
+    local rows = wrap(line, 32)
+    local words = select(2, line:gsub("%S+", ""))
+    local real_seconds = math.max(6, words / ((RATE or 175) / 60))
+    local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)   -- compensate for game speed
+    local scale = (#rows > 3) and 0.55 or 0.7
+
+    G.E_MANAGER:add_event(Event({
+        trigger = "after",
+        delay = 0.2,
+        func = function()
+            for i, row in ipairs(rows) do
+                attention_text({
+                    text = row,
+                    scale = scale,
+                    hold = hold,
+                    major = G.play,
+                    align = "cm",
+                    offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
+                })
+            end
+            return true
+        end,
+    }))
+end
+
+local function speak(text)
+    local os_name = love.system.getOS()
+    if os_name == "OS X" then
+        local safe = text:gsub("'", "'\\''")
+        local cmd = "(say -v '" .. VOICE .. "' -r " .. RATE ..
+            " '[[pbas " .. PITCH .. "]] " .. safe .. "') &"
+        sendDebugMessage("LineJoker speaking via: " .. cmd)
+        os.execute(cmd)
+    elseif os_name == "Windows" then
+        local safe = text:gsub("[^%w%s%.,!%?]", "")
+        os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
+    end
+end
+
+local lines = {}
+
+local function load_lines()
+    local data = NFS.read(SMODS.current_mod.path .. "oldrattle.txt")
+    if data then
+        ---@diagnostic disable-next-line undefined-field
+        for line in data:gmatch("[^\r\n]+") do
+            if line:match("%S") then
+                lines[#lines + 1] = line
+            end
+        end
+    end
+    if #lines == 0 then
+        lines[1] = "oldrattle.txt is missing or empty!"
+    end
+end
+load_lines()
+
 -- Turns a sheet cell into a joker key: "mem" -> "j_gcbm_mem"
 -- Returns nil if the cell is empty or no joker with that key exists.
 function SHEET_joker_key(ref, fallback_key)
@@ -1261,6 +1337,51 @@ SMODS.Joker{
     end,
 
     in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'oldmanrattle', --joker key
+    loc_txt = { -- local text
+        name = 'Old Man Rattle',
+        text = {
+          'When blind is selected,',
+          'read one of {C:attention}Old Man Rattles{}',
+          '1000 most recent tweets'
+          
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = false, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            local line = pseudorandom_element(lines, pseudoseed("linejoker"))
+            speak(line)
+            show_line(line)
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }

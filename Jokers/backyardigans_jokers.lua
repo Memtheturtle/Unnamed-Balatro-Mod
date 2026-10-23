@@ -64,6 +64,17 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+	key = "music_tiki",
+	path = "music_tiki.mp3",
+	sync = false,
+	pitch = 1,
+	volume = 6,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_dino")) 
+	end,
+})
+
+SMODS.Sound({
     key = "music_frankenstein",
     path = "music_frankenstein.mp3",
     sync = false,
@@ -244,7 +255,7 @@ local creator_ids = {
     276735696, -- Ludtropolis
     133466003,  -- Perfect
     93438679,  -- Waterbound
-    53310466,  -- Theskycrusher
+    53310466,  -- Theskycrusher6
     115847777,  -- Raindear
     95502357,  -- AVRG
     236798208,  -- Tryingdino7
@@ -298,6 +309,80 @@ SMODS.current_mod.calculate = function(self, context)
         end
     end
 end
+
+local QUOTE_VOICE = "Fred"
+local QUOTE_RATE = 150
+local QUOTE_PITCH = 35
+
+local function quote_wrap(text, width)
+    local rows, row = {}, ""
+    for word in text:gmatch("%S+") do
+        if #row + #word + 1 > width and #row > 0 then
+            rows[#rows + 1] = row
+            row = word
+        else
+            row = (#row > 0) and (row .. " " .. word) or word
+        end
+    end
+    if #row > 0 then rows[#rows + 1] = row end
+    return rows
+end
+
+local function quote_show_line(line)
+    local rows = quote_wrap(line, 32)
+    local words = select(2, line:gsub("%S+", ""))
+    local real_seconds = math.max(6, words / (QUOTE_RATE / 60))
+    local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)
+    local scale = (#rows > 3) and 0.55 or 0.7
+
+    G.E_MANAGER:add_event(Event({
+        trigger = "after",
+        delay = 0.2,
+        func = function()
+            for i, row in ipairs(rows) do
+                attention_text({
+                    text = row,
+                    scale = scale,
+                    hold = hold,
+                    major = G.play,
+                    align = "cm",
+                    offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
+                })
+            end
+            return true
+        end,
+    }))
+end
+
+local function quote_speak(text)
+    local os_name = love.system.getOS()
+    if os_name == "OS X" then
+        local safe = text:gsub("'", "'\\''")
+        local cmd = "(say -v '" .. QUOTE_VOICE .. "' -r " .. QUOTE_RATE ..
+            " '[[pbas " .. QUOTE_PITCH .. "]] " .. safe .. "') &"
+        os.execute(cmd)
+    elseif os_name == "Windows" then
+        local safe = text:gsub("[^%w%s%.,!%?]", "")
+        os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
+    end
+end
+
+local quote_lines = {}
+
+local function quote_load_lines()
+    local data = NFS.read(SMODS.current_mod.path .. "quotes.txt")
+    if data then
+        for line in data:gmatch("[^\r\n]+") do
+            if line:match("%S") then
+                quote_lines[#quote_lines + 1] = line
+            end
+        end
+    end
+    if #quote_lines == 0 then
+        quote_lines[1] = "quotes.txt is missing or empty!"
+    end
+end
+quote_load_lines()
 
 SMODS.Joker{
     key = 'avo', --joker key
@@ -388,7 +473,6 @@ SMODS.Joker{
         return true
     end,
 }
-
 
 SMODS.Joker{
     key = 'bday',
@@ -907,51 +991,17 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
         if context.setting_blind then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_goob')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            G.E_MANAGER:add_event(Event({ 
+            for _ = 1, 10 do
+                local new_card = create_card('Joker', G.jokers, nil, nil, nil, nil, 'j_gcbm_goob')
+                new_card:set_edition({ negative = true }, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+            end
+            G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.1,
                 func = function()
-                    card:start_dissolve({G.C.RED}, nil, 1.6)
+                    card:start_dissolve({ G.C.RED }, nil, 1.6)
                     return true
                 end
             }))
@@ -961,6 +1011,42 @@ SMODS.Joker{
     in_pool = function(self)
         return true
     end
+}
+
+SMODS.Joker{
+    key = 'makeitaquote',
+    loc_txt = {
+        name = 'Make it a Quote',
+        text = {
+          'When blind is selected,',
+          'read one of {C:attention}Our Servers Quotes{}',
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+        unlock_card(self)
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind then
+            local line = pseudorandom_element(quote_lines, pseudoseed("quote"))
+            quote_speak(line)
+            quote_show_line(line)
+        end
+    end,
+    in_pool = function(self)
+        return true
+    end,
 }
 
 SMODS.Joker{
@@ -1276,6 +1362,65 @@ SMODS.Joker{
     end,
 }
 
+SMODS.Joker {
+    key = "simarlet",
+    loc_txt = {
+        name = "Simarlet",
+        text = {
+            "After your first hand is drawn,",
+            "{C:red}destroy your entire deck{}",
+        },
+    },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = true,
+    pos = {x = 3, y = 0},
+
+    calculate = function(self, card, context)
+        if context.first_hand_drawn and not context.blueprint then
+            local doomed = {}
+            for _, c in ipairs(G.deck.cards) do doomed[#doomed + 1] = c end
+            if #doomed == 0 then return end
+
+            -- chain reaction: cards go off one after another, shake builds up
+            for i, c in ipairs(doomed) do
+                G.E_MANAGER:add_event(Event({
+                    trigger = "after",
+                    delay = 0.03,
+                    func = function()
+                        if i % 4 == 1 then
+                            play_sound("tarot1", 0.5 + (i / #doomed) * 0.6, 0.7)
+                            G.ROOM.jiggle = G.ROOM.jiggle + 1.5
+                            G.deck:juice_up(0.6, 0.6)
+                        end
+                        c:start_dissolve({ G.C.RED, G.C.ORANGE, G.C.YELLOW }, nil, 1.6)
+                        return true
+                    end,
+                }))
+            end
+
+            -- big finale
+            G.E_MANAGER:add_event(Event({
+                trigger = "after",
+                delay = 0.3,
+                func = function()
+                    play_sound("cancel", 0.4, 1)
+                    card:juice_up(1, 1)
+                    G.ROOM.jiggle = G.ROOM.jiggle + 8
+                    return true
+                end,
+            }))
+
+            SMODS.calculate_context({ remove_playing_cards = true, removed = doomed })
+        end
+    end,
+}
+
 SMODS.Joker{
     key = 'sin', --joker key
     loc_txt = { -- local text
@@ -1562,6 +1707,53 @@ SMODS.Joker{
     end,
 }
 
+SMODS.Joker{
+    key = 'dino', --joker key
+    loc_txt = { -- local text
+        name = 'Tryingdino7',
+        text = {
+          'When blind is selected,',
+          '{C:attention}Go To Brazil{}',
+        }
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Backyardigans_jokers', --atlas' key
+    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 50, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
+    end,
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self,card,context) 
+        if context.setting_blind then
+            local streamer_mode_enabled = config ~= nil
+                and config.streamer_mode == true
+            if not streamer_mode_enabled then
+                local opened = love.system.openURL("https://www.expedia.com/Destinations-In-Brazil.d23.Flight-Destinations")
+            end
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
 
 SMODS.Joker{
     key = 'tts',
@@ -1581,13 +1773,10 @@ SMODS.Joker{
     perishable_compat = false,
     config = {eternal = true},
     pos = {x = 7, y = 1},
-    
-    
     add_to_deck = function(self, card, from_debuff)
         card:set_eternal(true)
         self.select_music_track = "music_choppa"
     end,
-    
     in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true

@@ -546,5 +546,26 @@ SMODS.Consumable{
     end, 
 }
 
+SMODS.Consumable{
+    key = 'galaxy', --key
+    set = 'Drugs', --the set of the card: corresponds to a consumable type
+    atlas = 'Drugs', --atlas
+    pos = {x = 0, y = 1}, --position in atlas
+    loc_txt = {
+        name = 'Galaxy Gas', --name of card
+        text = { --text of card
+            'Gives {C:attention}Kanye West{}'
+        }
+    },
+    can_use = function(self,card)
+        return true
+    end,
+    use = function(self,card,area,copier)
+        local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_kanye')
+        new_card:add_to_deck()
+        G.jokers:emplace(new_card)
+    end,
+}
+
 ----------------------------------------------
 ------------MOD CODE END----------------------

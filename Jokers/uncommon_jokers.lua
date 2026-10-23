@@ -8,6 +8,144 @@ SMODS.Atlas{
     py = 95 -- height of one card
 }
 
+local PC = { active = false, a = 0, b = 0, input = "", prompt = "", display = "_" }
+
+local function new_problem()
+    PC.a = math.floor(pseudorandom("pc_a") * 90) + 10   -- 10 to 99
+    PC.b = math.floor(pseudorandom("pc_b") * 90) + 10   -- 10 to 99
+    PC.input = ""
+    PC.prompt = PC.a .. " x " .. PC.b .. " = ?"
+    PC.display = "_"
+end
+
+local function refresh_display()
+    PC.display = (PC.input == "") and "_" or PC.input
+end
+
+local function press_digit(d)
+    if #PC.input < 4 then
+        PC.input = PC.input .. d
+        refresh_display()
+        play_sound("button", 1, 0.5)
+    end
+end
+
+local function press_back()
+    PC.input = PC.input:sub(1, -2)
+    refresh_display()
+end
+
+local function submit()
+    if tonumber(PC.input) == PC.a * PC.b then
+        PC.active = false
+        play_sound("coin1")
+        G.FUNCS.exit_overlay_menu()
+    else
+        play_sound("cancel")
+        G.ROOM.jiggle = G.ROOM.jiggle + 3
+        new_problem()   -- wrong answer = new problem
+    end
+end
+
+-- button callbacks
+G.FUNCS.pc_key = function(e) press_digit(e.config.ref_table.key) end
+G.FUNCS.pc_back = function(e) press_back() end
+G.FUNCS.pc_submit = function(e) submit() end
+
+-- keyboard support
+local old_key_press = Controller.key_press_update
+---@diagnostic disable-next-line: duplicate-set-field
+function Controller:key_press_update(key, dt)
+    if PC.active then
+        local d = key:match("^(%d)$") or key:match("^kp(%d)$")
+        if d then press_digit(d)
+        elseif key == "backspace" then press_back()
+        elseif key == "return" or key == "kpenter" then submit() end
+        return
+    end
+    return old_key_press(self, key, dt)
+end
+
+local function num_button(label)
+    return UIBox_button({
+        label = { label }, button = "pc_key", ref_table = { key = label },
+        minw = 1, minh = 0.8, scale = 0.5, colour = G.C.BLUE,
+    })
+end
+
+local function row(...)
+    local nodes = {}
+    for _, label in ipairs({ ... }) do
+        nodes[#nodes + 1] = { n = G.UIT.C, config = { padding = 0.05 }, nodes = { num_button(label) } }
+    end
+    return { n = G.UIT.R, config = { align = "cm" }, nodes = nodes }
+end
+
+local function pc_ui()
+    return create_UIBox_generic_options({
+        no_back = true,
+        contents = {
+            { n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {
+                { n = G.UIT.T, config = { text = "PARENTAL CONTROLS", scale = 0.5, colour = G.C.RED, shadow = true } } } },
+            { n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {
+                { n = G.UIT.O, config = { object = DynaText({
+                    string = { { ref_table = PC, ref_value = "prompt" } },
+                    colours = { G.C.WHITE }, scale = 0.9, shadow = true }) } } } },
+            { n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {
+                { n = G.UIT.O, config = { object = DynaText({
+                    string = { { ref_table = PC, ref_value = "display" } },
+                    colours = { G.C.GOLD }, scale = 0.9, shadow = true }) } } } },
+            row("1", "2", "3"),
+            row("4", "5", "6"),
+            row("7", "8", "9"),
+            { n = G.UIT.R, config = { align = "cm" }, nodes = {
+                { n = G.UIT.C, config = { padding = 0.05 }, nodes = { UIBox_button({
+                    label = { "DEL" }, button = "pc_back", minw = 1, minh = 0.8, scale = 0.45, colour = G.C.RED }) } },
+                { n = G.UIT.C, config = { padding = 0.05 }, nodes = { num_button("0") } },
+                { n = G.UIT.C, config = { padding = 0.05 }, nodes = { UIBox_button({
+                    label = { "OK" }, button = "pc_submit", minw = 1, minh = 0.8, scale = 0.45, colour = G.C.GREEN }) } },
+            } },
+        },
+    })
+end
+
+SMODS.Joker {
+    key = "parental_controls",
+    loc_txt = {
+        name = "Parental Controls",
+        text = {
+            "When {C:attention}Blind{} is selected,",
+            "you must solve a",
+            "{C:attention}multiplication problem{}",
+        },
+    },
+   atlas = 'Uncommon_jokers', --atlas' key
+    rarity = 2, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 4, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 1, y = 0},
+
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            G.E_MANAGER:add_event(Event({
+                trigger = "after",
+                delay = 0.5,
+                func = function()
+                    new_problem()
+                    PC.active = true
+                    G.FUNCS.overlay_menu({ definition = pc_ui() })
+                    return true
+                end,
+            }))
+        end
+    end,
+}
+
 SMODS.Joker{
     key = 'maxwell',
     loc_txt = {
@@ -159,7 +297,7 @@ SMODS.Joker{
         }
 
         local msg = pseudorandom_element(spoilers, pseudoseed('gcbm_spoil'))
-        local hold_time = 3 -- seconds the message stays up
+        local hold_time = 4 -- seconds the message stays up
 
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
@@ -170,9 +308,7 @@ SMODS.Joker{
                     scale = 0.9,
                     hold = hold_time,
                     major = card,
-                    backdrop_colour = G.C.SECONDARY_SET.Tarot,
-                    align = 'tm',
-                    offset = {x = 0, y = -10.3},
+                    align = "cm",
                     silent = true,
                 })
                 play_sound('generic1', 1, 0.6)

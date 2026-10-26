@@ -6,7 +6,7 @@ CONTRIBUTORS:
 
 Coding: Memtheturtle, PerfectLKM
 
-Art: Memtheturtle, Theskycrusher6, StayReal, and SingularityXVI
+Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, and SingularityXVI
 
 Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, and Legacy5
 

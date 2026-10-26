@@ -4,7 +4,7 @@ This mod is a random grab bag of ideas we have had over the past year or so.
 
 CONTRIBUTORS:
 
-Coding: Memtheturtle
+Coding: Memtheturtle, PerfectLKM
 
 Art: Memtheturtle, Theskycrusher6, StayReal, and SingularityXVI
 
@@ -14,6 +14,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
 
 VERSION HISTORY:
+
+0.6.1.1 - Updated Readme, Added Quotes, Fixed Lua Error, Fixed Craig
 
 0.6.1.0 - Simarlet Joker, Make it a Quote Joker (with 250+ quotes), Galaxy Gas, Kanye Joker (Not Yet Functional) Fixed Craig
 
@@ -138,13 +140,13 @@ CURRENT FEATURES:
 
 17 CMD Consumable Cards (Some Not Yet functional)
 
-17 CMD Consumable Cards (Some Not Yet functional)
-
 1 Role Consumable Card 
 
 2 Food Consumable Cards (1 Not Yet functional)
 
-6 Drug Consumable Cards (1 Not Yet functional)
+7 Drug Consumable Cards (1 Not Yet functional)
+
+8 Custom Decks
 
 Custom Music and SFX!
 

@@ -372,6 +372,7 @@ local quote_lines = {}
 local function quote_load_lines()
     local data = NFS.read(SMODS.current_mod.path .. "quotes.txt")
     if data then
+        ---@diagnostic disable-next-line: param-type-mismatch
         for line in data:gmatch("[^\r\n]+") do
             if line:match("%S") then
                 quote_lines[#quote_lines + 1] = line

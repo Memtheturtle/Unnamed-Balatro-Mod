@@ -8,12 +8,14 @@ Coding: Memtheturtle, PerfectLKM
 
 Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, and SingularityXVI
 
-Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, Tonkorsmth, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, and Legacy5
+Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Bluegrass2222, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise
 
 This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Some art is not implemented yet but will be for the final release.
 
-
+  
 VERSION HISTORY:
+
+0.6.2.0 - New Joker Type - AREDL Jokers (2 So Far!), Fixed Quotes Typos and Added More, Fixed Craig
 
 0.6.1.1 - Updated Readme, Added Quotes, Fixed Lua Error, Fixed Craig
 

@@ -151,7 +151,6 @@ SMODS.Joker{
     end,
 }
 
-
 SMODS.Joker{
     key = 'jimball2', --joker key
     loc_txt = { -- local text

@@ -148,7 +148,9 @@ SMODS.Rarity{
 local https = require "SMODS.https"
 
 -- Cache file path
-local cache_path = SMODS.current_mod.path .. "waterbound_rank_cache.txt"
+local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+local cache_path = gcbm_cache_dir .. "waterbound_rank_cache.txt"
 
 -- Try to read cached rank from file
 local function read_cache()
@@ -186,7 +188,8 @@ end
 local https = require "SMODS.https"
 
 -- One file, one number: the combined SendDB total for all listed creators.
-local cache_path = SMODS.current_mod.path .. "senddb_combined_sends_cache.txt"
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+local cache_path = gcbm_cache_dir .. "senddb_combined_sends_cache.txt"
 
 local function read_cache()
     local file = io.open(cache_path, "r")
@@ -370,7 +373,8 @@ end
 local quote_lines = {}
 
 local function quote_load_lines()
-    local data = NFS.read(SMODS.current_mod.path .. "quotes.txt")
+    local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
+    local data = NFS.read(gcbm_text_dir .. "quotes.txt")
     if data then
         ---@diagnostic disable-next-line: param-type-mismatch
         for line in data:gmatch("[^\r\n]+") do

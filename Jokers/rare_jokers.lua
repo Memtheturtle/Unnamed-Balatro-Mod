@@ -122,7 +122,8 @@ end
 local lines = {}
 
 local function load_lines()
-    local data = NFS.read(SMODS.current_mod.path .. "oldrattle.txt")
+    local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
+    local data = NFS.read(gcbm_text_dir .. "oldrattle.txt")
     if data then
         ---@diagnostic disable-next-line undefined-field
         for line in data:gmatch("[^\r\n]+") do
@@ -150,9 +151,10 @@ function SHEET_joker_key(ref, fallback_key)
 end
 
 local https = require "SMODS.https"
-local mod = SMODS.current_mod
----@cast mod -nil
-local cache_path = mod.path .. "sheet_xmult_cache.txt"
+
+local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+local cache_path = gcbm_cache_dir .. "sheet_xmult_cache.txt"
 
 local SHEET_ID = "176piq1zsNrXs75yhRzGGFaT0kpT6Y6rqgKY24pu0r3o"
 local SHEET_URL = "https://docs.google.com/spreadsheets/d/" .. SHEET_ID .. "/gviz/tq?tqx=out:csv&sheet=Sheet1"
@@ -274,7 +276,10 @@ SHEET_refresh()
 local https = require "SMODS.https"
 local mod = SMODS.current_mod
 ---@cast mod -nil
-local cache_path = mod.path .. "aredl_points_cache.txt"
+
+local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+local cache_path = gcbm_cache_dir .. "aredl_points_cache.txt"
 
 AREDL_MULT = 0
 
@@ -380,12 +385,11 @@ end
 
 local https = require "SMODS.https"
 
--- Captured once, at file-load time, when SMODS.current_mod is actually valid.
--- Do NOT call SMODS.current_mod again inside functions used at runtime (e.g. add_to_deck/calculate).
 local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
 
 local function rngdle_cache_path(username)
-    return gcbm_mod_path .. "rngdle_" .. tostring(username) .. "_cache.txt"
+    return gcbm_cache_dir .. "rngdle_" .. tostring(username) .. "_cache.txt"
 end
 
 local function read_cache(username)

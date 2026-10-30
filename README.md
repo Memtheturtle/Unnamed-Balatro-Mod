@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
   
 VERSION HISTORY:
 
+0.7.0.1 - Cleaned Up Files In Mod Folder
+
 0.7.0.0 - New Joker Types - AREDL Jokers and Bunny Jokers, Reclassified Fat Daddy Fried Chicken, Blueshift Joker, Shyne Joker, Jupibun Joker, Bunny Joker, Added More Birthdays, Fixed Quotes Typos, Removed Some, and Added More, Fixed Craig
 
 0.6.1.1 - Updated Readme, Added Quotes, Fixed Lua Error, Fixed Craig

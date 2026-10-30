@@ -514,6 +514,12 @@ SMODS.Joker{
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
+
+        elseif month == 2 and day == 10 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_jockie')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
   
         elseif month == 2 and day == 18 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_pig')
@@ -523,6 +529,12 @@ SMODS.Joker{
 
         elseif month == 2 and day == 27 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 3 and day == 4 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_makeitaquote')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
@@ -545,14 +557,14 @@ SMODS.Joker{
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 24 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_limitz')
+        elseif month == 5 and day == 25 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 25 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
+        elseif month == 5 and day == 27 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dino')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
@@ -599,6 +611,24 @@ SMODS.Joker{
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
 
+        elseif month == 9 and day == 9 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_fmbot')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+        
+        elseif month == 9 and day == 26 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_timer')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 10 and day == 13 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_wushady')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
         elseif month == 11 and day == 17 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_tts')
             new_card:set_edition({negative = true}, true)
@@ -607,6 +637,12 @@ SMODS.Joker{
 
         elseif month == 12 and day == 4 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
+            new_card:set_edition({negative = true}, true)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+
+        elseif month == 12 and day == 10 then
+          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_water')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
@@ -1054,54 +1090,6 @@ SMODS.Joker{
     key = 'mem', --joker key
     loc_txt = { -- local text
         name = 'Memtheturtle',
-        text = {
-          'When blind is selected,',
-          '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',
-        },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
-    },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-    loc_vars = function(self,info_queue,center)
-        return {vars = {G.GAME.probabilities.normal}} 
-    end,
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-    calculate = function(self,card,context) 
-        if context.setting_blind then
-            if pseudorandom('gamble') < G.GAME.probabilities.normal / 8 then
-                ease_dollars(9 * G.GAME.dollars)
-            else
-                ease_dollars(-G.GAME.dollars)
-            end
-        end
-    end,
-    in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
-        return true
-    end,
-}
-
-SMODS.Joker{
-    key = 'limitz', --joker key
-    loc_txt = { -- local text
-        name = 'Mrhumanlimitz',
         text = {
           'When blind is selected,',
           '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',

@@ -516,6 +516,70 @@ love.draw = function(...)
     end
 end
 
+-- Set this to the command you normally use to launch modded Balatro.
+-- Mac (Lovely script, adjust the path to your install):
+local LAUNCH = "cd '" .. os.getenv("HOME") ..
+    "/Library/Application Support/Steam/steamapps/common/Balatro' && ./run_lovely_macos.sh"
+-- Windows alternative:
+local LAUNCH = 'start "" "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Balatro\\Balatro.exe"'
+
+local IS_CHILD = os.getenv("BALATRO_CHILD") == "1"
+local WINDOW_COUNT = 1
+local MAX_WINDOWS = 16   -- safety cap
+
+local function double_windows()
+    if IS_CHILD then return end   -- copies must never spawn more copies
+    local to_spawn = math.min(WINDOW_COUNT, MAX_WINDOWS - WINDOW_COUNT)
+    for _ = 1, to_spawn do
+        if love.system.getOS() == "Windows" then
+            os.execute("set BALATRO_CHILD=1 && " .. LAUNCH)
+        else
+            os.execute("(BALATRO_CHILD=1 " .. LAUNCH .. ") >/dev/null 2>&1 &")
+        end
+    end
+    WINDOW_COUNT = WINDOW_COUNT + to_spawn
+end
+
+SMODS.Joker{
+    key = 'aaaaaaa', --joker key
+    loc_txt = { -- local text
+        name = 'A',
+        text = {
+          'When blind is selected,',
+          'create a Joker of the top 1 TM2 Lagoon Maryland player'
+        },
+        --[[unlock = {
+            'Be {C:legendary}cool{}',
+        }]]
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+   
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            double_windows()
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
 
 SMODS.Joker{
     key = 'tm2', --joker key

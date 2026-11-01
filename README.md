@@ -17,6 +17,8 @@ VERSION HISTORY:
 
 0.7.1.0 - Apple Salt Joker, Mitosis Joker, Fixed Craig
 
+0.7.0.4 - Testing Mitosis, Fixed Craig
+
 0.7.0.3 - Testing Mitosis, Fixed Craig
 
 0.7.0.2 - Testing Mitosis, Fixed Craig

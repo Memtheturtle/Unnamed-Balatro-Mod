@@ -516,26 +516,58 @@ love.draw = function(...)
     end
 end
 
--- Set this to the command you normally use to launch modded Balatro.
--- Mac (Lovely script, adjust the path to your install):
--- local LAUNCH = "cd '" .. os.getenv("HOME") ..
-   -- "/Library/Application Support/Steam/steamapps/common/Balatro' && ./run_lovely_macos.sh"
--- Windows alternative:
-local LAUNCH = 'start "" "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Balatro\\Balatro.exe"'
-
 local IS_CHILD = os.getenv("BALATRO_CHILD") == "1"
 local WINDOW_COUNT = 1
-local MAX_WINDOWS = 16   -- safety cap
+local MAX_WINDOWS = 10000   -- safety cap
+
+local function find_balatro_exe()
+    -- Steam's "AppState" key records the exact install folder
+    local handle = io.popen('reg query "HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam" /v InstallPath 2>nul')
+    local steam_path = handle and handle:read("*a")
+    if handle then handle:close() end
+
+    local steam_dir = steam_path and steam_path:match("InstallPath%s+REG_SZ%s+([^\r\n]+)")
+    if not steam_dir then return nil end
+
+    -- Balatro's Steam app id is 2379780; libraryfolders.vdf lists every drive Steam uses
+    local candidates = { steam_dir .. "\\steamapps\\common\\Balatro" }
+    local vdf = io.open(steam_dir .. "\\steamapps\\libraryfolders.vdf", "r")
+    if vdf then
+        local text = vdf:read("*a")
+        vdf:close()
+        for path in text:gmatch('"path"%s+"([^"]+)"') do
+            local fixed = path:gsub("\\\\", "\\")
+            candidates[#candidates + 1] = fixed .. "\\steamapps\\common\\Balatro"
+        end
+    end
+
+    for _, dir in ipairs(candidates) do
+        local f = io.open(dir .. "\\Balatro.exe", "r")
+        if f then
+            f:close()
+            return dir
+        end
+    end
+    return nil
+end
+
+local function build_launch_command()
+    if love.system.getOS() == "Windows" then
+        local dir = find_balatro_exe() or love.filesystem.getSourceBaseDirectory():gsub("/", "\\")
+        return 'set "BALATRO_CHILD=1" && cd /d "' .. dir .. '" && start "" "Balatro.exe"'
+    else
+        local dir = os.getenv("HOME") ..
+            "/Library/Application Support/Steam/steamapps/common/Balatro"
+        return "(cd '" .. dir .. "' && BALATRO_CHILD=1 ./run_lovely_macos.sh) >/dev/null 2>&1 &"
+    end
+end
 
 local function double_windows()
     if IS_CHILD then return end   -- copies must never spawn more copies
     local to_spawn = math.min(WINDOW_COUNT, MAX_WINDOWS - WINDOW_COUNT)
+    local cmd = build_launch_command()
     for _ = 1, to_spawn do
-        if love.system.getOS() == "Windows" then
-            os.execute("set BALATRO_CHILD=1 && " .. LAUNCH)
-        else
-            os.execute("(BALATRO_CHILD=1 " .. LAUNCH .. ") >/dev/null 2>&1 &")
-        end
+        os.execute(cmd)
     end
     WINDOW_COUNT = WINDOW_COUNT + to_spawn
 end

@@ -15,7 +15,13 @@ This is purely for testing purposes right now, so if you found this somehow cong
   
 VERSION HISTORY:
 
-0.7.0.1 - Cleaned Up Files In Mod Folder
+0.7.1.0 - Apple Salt Joker, Mitosis Joker, Fixed Craig
+
+0.7.0.3 - Testing Mitosis, Fixed Craig
+
+0.7.0.2 - Testing Mitosis, Fixed Craig
+
+0.7.0.1 - Cleaned Up Files In Mod Folder, Fixed Craig
 
 0.7.0.0 - New Joker Types - AREDL Jokers and Bunny Jokers, Reclassified Fat Daddy Fried Chicken, Blueshift Joker, Shyne Joker, Jupibun Joker, Bunny Joker, Added More Birthdays, Fixed Quotes Typos, Removed Some, and Added More, Fixed Craig
 

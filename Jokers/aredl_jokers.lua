@@ -26,6 +26,11 @@ SMODS.Sound({
     path = "flashbang.mp3",
 })
 
+SMODS.Sound({
+    key = "apple",
+    path = "apple.mp3",
+})
+
 local GREEN_SPAWN_POOL = { 'j_gluttenous_joker', 'j_zany', 'j_wily', 'j_ceremonial', 'j_pareidolia',
     'j_green_joker', 'j_blackboard', 'j_turtle_bean', 'j_to_the_moon', 'j_oops',
     'j_trio', 'j_perkeo', 'j_gcbm_mem' }
@@ -169,6 +174,150 @@ function love.draw(...)
     love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
     love.graphics.pop()
 end
+
+local cow_path = "mods/Unnamed-Balatro-Mod/assets/cow.png"
+local cow_img = nil
+local cow_checked = false
+
+G.GCBM_COWS = {}          -- list of { x, y }
+G.GCBM_COW_SESSION_END = 0  -- love.timer.getTime() value when everything should clear
+local GCBM_LAST_SPAWN = nil -- love.timer.getTime() of the last cow spawn
+
+local function gcbm_load_cow_img()
+    if not cow_checked then
+        cow_checked = true
+        if love.filesystem.getInfo(cow_path) then
+            cow_img = love.graphics.newImage(cow_path)
+            cow_img:setFilter('linear', 'linear')
+        end
+    end
+end
+
+local function gcbm_spawn_cow()
+    gcbm_load_cow_img()
+    if not cow_img then return end
+
+    local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+    local iw, ih = cow_img:getWidth(), cow_img:getHeight()
+    local scale = math.max(sw / iw, sh / ih) * 1
+
+    local x = math.random(-iw * scale * 0.3, sw - iw * scale * 0.7)
+    local y = math.random(-ih * scale * 0.3, sh - ih * scale * 0.7)
+
+    G.GCBM_COWS[#G.GCBM_COWS + 1] = { x = x, y = y, scale = scale }
+end
+
+---@diagnostic disable-next-line duplicate-set-field
+function gcbm_trigger_cow()
+    G.GCBM_COWS = {}
+    GCBM_LAST_SPAWN = love.timer.getTime()
+    G.GCBM_COW_SESSION_END = love.timer.getTime() + 10
+    gcbm_spawn_cow()   -- first one immediately
+end
+
+local old_love_draw_cow = love.draw
+love.draw = function(...)
+    old_love_draw_cow(...)
+
+    local now = love.timer.getTime()
+    if now >= G.GCBM_COW_SESSION_END then
+        if #G.GCBM_COWS > 0 then G.GCBM_COWS = {} end
+        return
+    end
+
+    -- spawn one more roughly every second
+    if GCBM_LAST_SPAWN and now - GCBM_LAST_SPAWN >= 1 then
+        GCBM_LAST_SPAWN = now
+        gcbm_spawn_cow()
+    end
+
+    if cow_img and #G.GCBM_COWS > 0 then
+        love.graphics.push('all')
+        love.graphics.setCanvas()
+        love.graphics.setShader()
+        love.graphics.origin()
+        love.graphics.setColor(1, 1, 1, 1)
+        for _, cow in ipairs(G.GCBM_COWS) do
+            love.graphics.draw(cow_img, cow.x, cow.y, 0, cow.scale, cow.scale)
+        end
+        love.graphics.pop()
+    end
+end
+
+local RTIMER = { next_at = nil, active_until = nil }
+
+local function rtimer_pick_next()
+    RTIMER.next_at = love.timer.getTime() + math.random(180, 480)   -- 3 to 7 minutes
+end
+
+local function rtimer_do_stuff()
+    gcbm_trigger_cow()
+    play_sound('gcbm_apple')
+end
+
+local old_update_rtimer = love.update
+function love.update(dt)
+    old_update_rtimer(dt)
+
+    if not (G.jokers and G.jokers.cards) then return end
+    local has_joker = false
+    for _, c in ipairs(G.jokers.cards) do
+        if c.config.center.key == 'j_gcbm_apple' then has_joker = true break end
+    end
+    if not has_joker then
+        RTIMER.next_at, RTIMER.active_until = nil, nil
+        return
+    end
+
+    local now = love.timer.getTime()
+
+    if RTIMER.active_until then
+        if now >= RTIMER.active_until then
+            RTIMER.active_until = nil
+            rtimer_pick_next()
+        end
+        return
+    end
+
+    if not RTIMER.next_at then
+        rtimer_pick_next()
+        return
+    end
+
+    if now >= RTIMER.next_at then
+        RTIMER.active_until = now + 10
+        rtimer_do_stuff()
+    end
+end
+
+
+SMODS.Joker{
+    key = 'apple',
+    loc_txt = {
+        name = 'Apple Salt',
+        text = {
+            '{C:attention}MOO{}',
+        }
+    },
+    atlas = 'Aredl_jokers', --atlas' key
+    rarity = 'gcbm_aredl', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 10, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    calculate = function(self, card, context)
+
+    end,
+    
+    in_pool = function(self)
+        return true
+    end,
+}
 
 SMODS.Joker{
     key = 'blueshift', --joker key

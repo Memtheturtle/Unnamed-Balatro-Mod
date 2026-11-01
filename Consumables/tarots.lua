@@ -8,6 +8,37 @@ SMODS.Atlas{
     py = 95 -- height of one card
 }
 
+SMODS.Consumable{
+    key = 'men', --key
+    set = 'Tarot', --the set of the card: corresponds to a consumable type
+    atlas = 'Tarots', --atlas
+    pos = {x = 9, y = 0}, --position in atlas
+    loc_txt = {
+        name = 'Anime Men', --name of card
+        text = { --text of card
+            '{C:green}#1# in 10{} chance to spawn a Positive {C:attention}Soul{} card'
+        }
+    },
+    
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
+    end,
+  
+    can_use = function(self,card)
+       return true
+    end,
+   
+    use = function(self,card,area,copier)
+      
+        if pseudorandom('women') < G.GAME.probabilities.normal / 10 then
+            SMODS.add_card({ set = "Tarot", key = 'c_soul', area = G.consumeables})
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
 
 
 SMODS.Consumable{

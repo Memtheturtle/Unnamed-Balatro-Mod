@@ -573,16 +573,13 @@ local function double_windows()
 end
 
 SMODS.Joker{
-    key = 'aaaaaaa', --joker key
+    key = 'mitosis', --joker key
     loc_txt = { -- local text
-        name = 'A',
+        name = 'Mitosis',
         text = {
           'When blind is selected,',
-          'create a Joker of the top 1 TM2 Lagoon Maryland player'
+          '{C:attention}double{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
     atlas = 'Rare_jokers', --atlas' key
     rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
@@ -595,7 +592,6 @@ SMODS.Joker{
     perishable_compat = true, --can it be perishable
     pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
     
-   
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then 
             unlock_card(self)

@@ -518,8 +518,8 @@ end
 
 -- Set this to the command you normally use to launch modded Balatro.
 -- Mac (Lovely script, adjust the path to your install):
-local LAUNCH = "cd '" .. os.getenv("HOME") ..
-    "/Library/Application Support/Steam/steamapps/common/Balatro' && ./run_lovely_macos.sh"
+-- local LAUNCH = "cd '" .. os.getenv("HOME") ..
+   -- "/Library/Application Support/Steam/steamapps/common/Balatro' && ./run_lovely_macos.sh"
 -- Windows alternative:
 local LAUNCH = 'start "" "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Balatro\\Balatro.exe"'
 

@@ -15,6 +15,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
   
 VERSION HISTORY:
 
+0.7.2.0 - Bean Joker, Nightmare Freddy Joker (Not Yet Functional), Fixed Craig
+
 0.7.1.0 - Apple Salt Joker, Mitosis Joker, Fixed Craig
 
 0.7.0.4 - Testing Mitosis, Fixed Craig

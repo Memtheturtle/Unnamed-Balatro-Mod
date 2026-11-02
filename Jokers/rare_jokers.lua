@@ -573,43 +573,6 @@ local function double_windows()
 end
 
 SMODS.Joker{
-    key = 'mitosis', --joker key
-    loc_txt = { -- local text
-        name = 'Mitosis',
-        text = {
-          'When blind is selected,',
-          '{C:attention}double{}',
-        },
-    },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-    calculate = function(self, card, context)
-        if context.setting_blind and not context.blueprint then
-            double_windows()
-        end
-    end,
-    in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
-        return true
-    end,
-}
-
-SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
         name = 'A03',
@@ -1315,6 +1278,43 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'mitosis', --joker key
+    loc_txt = { -- local text
+        name = 'Mitosis',
+        text = {
+          'When blind is selected,',
+          '{C:attention}double{}',
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then 
+            unlock_card(self)
+        end
+        unlock_card(self) --unlocks the card if it isnt unlocked
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            double_windows()
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'bone',
     loc_txt = {
         name = 'Mr. Weak Bones',
@@ -1362,6 +1362,35 @@ SMODS.Joker{
     end,
 
     in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'nightmare', --joker key
+    loc_txt = { -- local text
+        name = 'Nightmare Freddy',
+        text = {
+          'Placeholder',
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }

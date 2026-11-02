@@ -102,6 +102,57 @@ SMODS.Sound({
 	end,
 })
 
+local gaster_path = "mods/Unnamed-Balatro-Mod/assets/Gaster.jpg"
+local gaster_img = nil
+local gaster_checked = false
+local JUMPSCARE_DURATION = 1000000.0 -- seconds the image stays on screen
+
+G.GCBM_GASTER_TIME = 0
+---@diagnostic disable-next-line duplicate-set-field
+function gcbm_trigger_gaster()
+    G.GCBM_GASTER_TIME = JUMPSCARE_DURATION
+end
+
+local old_love_draw_gaster = love.draw
+love.draw = function(...)
+    old_love_draw_gaster(...)
+
+    if G.GCBM_GASTER_TIME and G.GCBM_GASTER_TIME > 0 then
+        G.GCBM_GASTER_TIME = G.GCBM_GASTER_TIME - love.timer.getDelta()
+
+        if not gaster_checked then
+            gaster_checked = true
+            if love.filesystem.getInfo(gaster_path) then
+                gaster_img = love.graphics.newImage(gaster_path)
+                gaster_img:setFilter('linear', 'linear')
+            end
+        end
+
+        if gaster_img then
+            love.graphics.push('all')
+            love.graphics.setCanvas()
+            love.graphics.setShader()
+            love.graphics.origin()
+            love.graphics.setColor(1, 1, 1, 1)
+
+            local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+            local iw, ih = gaster_img:getWidth(), gaster_img:getHeight()
+
+            local scale = math.max(sw / iw, sh / ih)
+            local x = (sw - iw * scale) / 2
+            local y = (sh - ih * scale) / 2
+
+            love.graphics.draw(gaster_img, x, y, 0, scale, scale)
+            love.graphics.pop()
+        end
+    end
+end
+
+SMODS.Sound({
+	key = "gaster",
+	path = "gaster.mp3",
+})
+
 SMODS.Joker{
     key = 'gaster', --joker key
     loc_txt = { -- local text
@@ -124,30 +175,36 @@ SMODS.Joker{
         -- from_debuff is true when a debuff is lifted, which we don't want to trigger on
         if from_debuff then return end
 
-        G.E_MANAGER:add_event(Event({
-            trigger = 'after',
-            delay = 0.8,      -- lets the player see the joker land first
-            blocking = true,  -- pauses the event queue so nothing ticks mid-teardown
-            func = function()
-                -- only fire during a real run
-                if G.STAGE ~= G.STAGES.RUN then return true end
+        if pseudorandom('gaster') < 0.1 then
+            G.SETTINGS.SOUND.music_volume = 0
+            play_sound('gcbm_gaster')
+            gcbm_trigger_gaster()
+        else
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.8,      -- lets the player see the joker land first
+                blocking = true,  -- pauses the event queue so nothing ticks mid-teardown
+                func = function()
+                    -- only fire during a real run
+                    if G.STAGE ~= G.STAGES.RUN then return true end
 
-                G.FUNCS.exit_overlay_menu()
+                    G.FUNCS.exit_overlay_menu()
 
-                -- delete the save file so Continue is gone
-                if remove_save then
-                    remove_save()
-                else
-                    G.SAVED_GAME = nil
-                    love.filesystem.remove(G.SETTINGS.profile .. '/save.jkr')
+                    -- delete the save file so Continue is gone
+                    if remove_save then
+                        remove_save()
+                    else
+                        G.SAVED_GAME = nil
+                        love.filesystem.remove(G.SETTINGS.profile .. '/save.jkr')
+                    end
+
+                    -- tear down the live run, then load the menu
+                    G:delete_run()
+                    G:main_menu()
+                    return true
                 end
-
-                -- tear down the live run, then load the menu
-                G:delete_run()
-                G:main_menu()
-                return true
-            end
-        }))
+            }))
+        end
     end,
 }
 

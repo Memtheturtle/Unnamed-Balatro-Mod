@@ -1,5 +1,5 @@
 # Unnamed Balatro Mod
-This mod is a random grab bag of ideas we have had over the past year or so.
+This mod is a random grab bag of ideas we have had over the past two years or so.
 
 
 CONTRIBUTORS:
@@ -8,12 +8,14 @@ Coding: Memtheturtle, PerfectLKM
 
 Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, and SingularityXVI
 
-Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Bluegrass2222, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise
+Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise, Blueshift, Taiga, FsInTheChat
 
 This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Some art is not implemented yet but will be for the final release.
 
   
 VERSION HISTORY:
+
+0.7.4.0 - Bookend Joker, Gucci Morty Joker, FsInTheChat Joker, Made Game Not Take Forever To Launch, Fixed Craig
 
 0.7.3.0 - Updated Gaster Joker (Error Sans Cousin), SUPER Fixed Craig This Time
 

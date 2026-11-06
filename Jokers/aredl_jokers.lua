@@ -290,6 +290,19 @@ function love.update(dt)
     end
 end
 
+local EDITION_POOL = { 'e_foil', 'e_holo', 'e_polychrome' }  -- negative excluded for playing cards usually
+
+local function gcbm_random_edition()
+    local key = EDITION_POOL[math.random(#EDITION_POOL)]
+    return key:gsub('^e_', '')  -- set_edition wants 'foil', 'holo', etc, not the prefixed key
+end
+
+local function gcbm_is_last_hand()
+    -- hands_played counts completed hands; current hand is the last if
+    -- after this one, hands_played would equal the hand limit for the round
+    local hands_left = G.GAME.current_round.hands_left
+    return hands_left ~= nil and hands_left <= 1
+end
 
 SMODS.Joker{
     key = 'apple',
@@ -488,6 +501,56 @@ SMODS.Joker{
         end
     end,
 
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'fsinthechat',
+    loc_txt = {
+        name = 'FsInTheChat',
+        text = {
+            'On first played hand of round',
+            'played {C:attention}Lucky Cards{} get {C:attention}Random Edition{},',
+            'All probabilities {C:attention}Doubled{} on last hand of round',
+        }
+    },
+    atlas = 'Aredl_jokers', --atlas' key
+    rarity = 'gcbm_aredl', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 10, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+     calculate = function(self, card, context)
+        if context.individual and context.cardarea == G.play and not context.blueprint then
+            local played_card = context.other_card
+             local hands_left = G.GAME.current_round.hands_left
+                if hands_left and hands_left <= 1 then
+                    G.GAME.probabilities.normal = G.GAME.probabilities.normal * 2
+                end
+            if played_card and played_card.ability and played_card.ability.name == 'Lucky Card' then
+                local is_first_hand = G.GAME.current_round.hands_played == 0
+                local is_last_hand = gcbm_is_last_hand()
+
+                if (is_first_hand or is_last_hand) and not played_card.edition then
+                    ---@diagnostic disable-next-line: undefined-global
+                    local chance = BASE_CHANCE
+                    if is_last_hand then chance = chance * 2 end
+
+                    if pseudorandom('lucky_editioner') < chance then
+                        played_card:set_edition({ [gcbm_random_edition()] = true }, true)
+                    end
+                end
+            end
+        end
+    end,
+    
     in_pool = function(self)
         return true
     end,

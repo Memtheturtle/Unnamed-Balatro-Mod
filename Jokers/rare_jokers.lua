@@ -225,8 +225,7 @@ function SHEET_num(ref, default)
     return v or default
 end
 
-local function read_cache()
-    if not cache_path then return nil end
+local function sheet_read_cache()
     local file = io.open(cache_path, "r")
     if not file then return nil end
     local body = file:read("*a")
@@ -235,8 +234,7 @@ local function read_cache()
     return nil
 end
 
-local function write_cache(body)
-    if not cache_path then return end
+local function sheet_write_cache(body)
     local file = io.open(cache_path, "w")
     if file then
         file:write(body)
@@ -244,68 +242,55 @@ local function write_cache(body)
     end
 end
 
-local function fetch(url, depth)
+-- Async fetch that follows redirects (Google Sheets redirects).
+-- Calls cb(body) on success, cb(nil) on failure.
+local function sheet_fetch(url, cb, depth)
     depth = depth or 0
-    local ok, code, body, headers = pcall(https.request, url)
-    if not ok then
-        return nil
-    end
-    if (code == 301 or code == 302 or code == 303 or code == 307 or code == 308)
-        and headers and depth < 3 then
-        local loc = headers.Location or headers.location
-        if loc then return fetch(loc, depth + 1) end
-    end
-    if code == 200 and body and body ~= "" then return body end
-    return nil
+    local started = pcall(https.asyncRequest, url, function(code, body, headers)
+        if (code == 301 or code == 302 or code == 303 or code == 307 or code == 308)
+            and headers and depth < 3 then
+            local loc = headers.Location or headers.location
+            if loc then return sheet_fetch(loc, cb, depth + 1) end
+        end
+        if code == 200 and body and body ~= "" then
+            cb(body)
+        else
+            cb(nil)
+        end
+    end)
+    if not started then cb(nil) end
 end
 
-function SHEET_refresh()
-    local body = fetch(SHEET_URL)
-    if body then
-        SHEET_DATA = parse_csv(body)
-        write_cache(body)
-    else
-        local cached = read_cache()
-        if cached then SHEET_DATA = parse_csv(cached) end
-    end
-    SHEET_XMULT = SHEET_num("A2", 1)
+function SHEET_refresh(done)
+    sheet_fetch(SHEET_URL, function(body)
+        if body then
+            SHEET_DATA = parse_csv(body)
+            sheet_write_cache(body)
+            SHEET_XMULT = SHEET_num("A2", 1)
+            if done then done() end
+        end
+    end)
 end
 
-SHEET_refresh()
+-- Startup: use the cache immediately, refresh in the background if stale
+local cached_sheet = sheet_read_cache()
+if cached_sheet then SHEET_DATA = parse_csv(cached_sheet) end
+SHEET_XMULT = SHEET_num("A2", 1)
+GCBM_NET.queue("sheet", SHEET_refresh)
 
 local https = require "SMODS.https"
 local mod = SMODS.current_mod
 ---@cast mod -nil
 
-local gcbm_mod_path = SMODS.current_mod.path
-local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-local cache_path = gcbm_cache_dir .. "aredl_points_cache.txt"
+local aredl_cache_path = gcbm_cache_dir .. "aredl_points_cache.txt"
 
 AREDL_MULT = 0
+
 
 local function url_encode(s)
     return (s:gsub("([^%w%-_%.~])", function(c)
         return string.format("%%%02X", string.byte(c))
     end))
-end
-
--- Cache stores "username\npoints" so it only applies to the matching user
-local function read_cache(username)
-    local file = io.open(cache_path, "r")
-    if not file then return nil end
-    local cached_name = file:read("*l")
-    local points = file:read("*n")
-    file:close()
-    if cached_name == username and points and points > 0 then return points end
-    return nil
-end
-
-local function write_cache(username, points)
-    local file = io.open(cache_path, "w")
-    if file then
-        file:write(username .. "\n" .. tostring(points))
-        file:close()
-    end
 end
 
 local function parse_points(body)
@@ -322,45 +307,54 @@ local function parse_points(body)
     end
     return math.floor(n + 0.5)
 end
+-- (keep your url_encode function here, unchanged)
 
-function AREDL_refresh_points()
-    ---@cast mod -nil
-    local username = (mod.config.aredl_username or ""):match("^%s*(.-)%s*$")
-    if username == "" then AREDL_MULT = 0 return end
+local function aredl_read_cache(username)
+    local file = io.open(aredl_cache_path, "r")
+    if not file then return nil end
+    local cached_name = file:read("*l")
+    local points = file:read("*n")
+    file:close()
+    if cached_name == username and points and points > 0 then return points end
+    return nil
+end
 
-    -- Start from cache (only if it's for this username), else 0
-    AREDL_MULT = read_cache(username) or 0
-
-    local code, body = https.request("https://aredl.net/profile/user/" .. url_encode(username))
-    if code == 200 and body then
-        local points = parse_points(body)
-        if points then
-            AREDL_MULT = points
-            write_cache(username, points)
-        end
+local function aredl_write_cache(username, points)
+    local file = io.open(aredl_cache_path, "w")
+    if file then
+        file:write(username .. "\n" .. tostring(points))
+        file:close()
     end
 end
 
-AREDL_refresh_points()
+-- (keep your parse_points function here, unchanged)
 
-local https = require "SMODS.https"
-
-local WEBHOOK = "https://discord.com/api/webhooks/1556693531144486995/g6IyDyxV8UCa2GOW-qozdUw2tUva_B4RbbIxqfM11ZL8J9w1RmHrjMxAN5eYSQQitHWS"
-
-local last_sent = 0
-
-local function send_webhook(msg)
-    local body = '{"content":"' .. msg .. '","allowed_mentions":{"parse":["everyone"]}}'
-    https.asyncRequest(WEBHOOK, {
-        method = "POST",
-        headers = { ["Content-Type"] = "application/json" },
-        data = body,
-    }, function(code, response, headers)
-        if code ~= 204 and code ~= 200 then
-            sendWarnMessage("Webhook failed: " .. tostring(code), "DiscordJoker")
-        end
-    end)
+local function aredl_username()
+    return (mod.config.aredl_username or ""):match("^%s*(.-)%s*$")
 end
+
+function AREDL_refresh_points(done)
+    local username = aredl_username()
+    if username == "" then AREDL_MULT = 0 return end
+
+    https.asyncRequest("https://aredl.net/profile/user/" .. url_encode(username),
+        function(code, body)
+            if code == 200 and body then
+                local points = parse_points(body)
+                if points then
+                    AREDL_MULT = points
+                    aredl_write_cache(username, points)
+                    if done then done() end
+                end
+            end
+        end)
+end
+
+-- Startup: cache now, refresh later. The stamp name includes the username,
+-- so changing the username in config triggers a fresh fetch right away.
+local u = aredl_username()
+AREDL_MULT = aredl_read_cache(u) or 0
+GCBM_NET.queue("aredl_user_" .. u:gsub("[^%w_]", "_"), AREDL_refresh_points)
 
 local function gcbm_print_text(text)
     local path = os.tmpname() .. ".txt"
@@ -385,14 +379,11 @@ end
 
 local https = require "SMODS.https"
 
-local gcbm_mod_path = SMODS.current_mod.path
-local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-
 local function rngdle_cache_path(username)
     return gcbm_cache_dir .. "rngdle_" .. tostring(username) .. "_cache.txt"
 end
 
-local function read_cache(username)
+local function rngdle_read_cache(username)
     local file = io.open(rngdle_cache_path(username), "r")
     if file then
         local val = file:read("*n")
@@ -402,7 +393,7 @@ local function read_cache(username)
     return nil
 end
 
-local function write_cache(username, ep)
+local function rngdle_write_cache(username, ep)
     local file = io.open(rngdle_cache_path(username), "w")
     if file then
         file:write(tostring(ep))
@@ -410,25 +401,34 @@ local function write_cache(username, ep)
     end
 end
 
-local function gcbm_get_rngdle_ep(username)
-    local ep_total = read_cache(username) or 0
-
-    local code, body = https.request("https://www.rngdle.com/u/" .. tostring(username))
-    if code == 200 and body then
-        local ep_str = body:match('<meta name="description" content="([%d,]+) EP')
-        if ep_str then
-            local ep = tonumber((ep_str:gsub(",", "")))
-            if ep then
-                ep_total = ep
-                write_cache(username, ep_total)
+-- Calls cb(ep) on success, cb(nil) on failure
+local function gcbm_get_rngdle_ep(username, cb)
+    https.asyncRequest("https://www.rngdle.com/u/" .. tostring(username),
+        function(code, body)
+            if code == 200 and body then
+                local ep_str = body:match('<meta name="description" content="([%d,]+) EP')
+                local ep = ep_str and tonumber((ep_str:gsub(",", "")))
+                if ep then
+                    rngdle_write_cache(username, ep)
+                    return cb(ep)
+                end
             end
-        end
-    end
-
-    return ep_total
+            cb(nil)
+        end)
 end
-local memturtle_ep = gcbm_get_rngdle_ep("memtheturtle")
-local rngdle_ep = gcbm_get_rngdle_ep("memtheturtle")
+
+local memturtle_ep = rngdle_read_cache("memtheturtle") or 0
+local rngdle_ep = memturtle_ep   -- same user, so one fetch covers both
+
+GCBM_NET.queue("rngdle", function(done)
+    gcbm_get_rngdle_ep("memtheturtle", function(ep)
+        if ep then
+            memturtle_ep = ep
+            rngdle_ep = ep
+            done()
+        end
+    end)
+end)
 
 local function gcbm_shutdown_computer()
     local os_name = love.system.getOS()
@@ -572,6 +572,8 @@ local function double_windows()
     WINDOW_COUNT = WINDOW_COUNT + to_spawn
 end
 
+local SCORE_BOOKEND = { first_hand_score = nil }
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -640,6 +642,78 @@ SMODS.Joker{
     calculate = function(self, card, context)
         if context.joker_main then
             return { mult = AREDL_MULT }
+        end
+    end,
+}
+
+SMODS.Joker{
+    key = 'bookend', --joker key
+    loc_txt = { -- local text
+        name = 'Bookend',
+        text = {
+          'Last hand of the round,',
+          'will score the same as first hand',
+        },
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    
+   calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            SCORE_BOOKEND.first_hand_score = nil
+            SCORE_BOOKEND.total_hands = (G.GAME.current_round.hands_played or 0) + (G.GAME.current_round.hands_left or 0)
+            SCORE_BOOKEND.fired_this_hand = false
+        end
+
+        if context.before and not context.blueprint then
+            SCORE_BOOKEND.fired_this_hand = false
+
+            -- is THIS hand about to be the last one? capture total score going in
+            local hands_played_now = G.GAME.current_round.hands_played
+            local is_about_to_be_last = SCORE_BOOKEND.total_hands and (hands_played_now + 1 == SCORE_BOOKEND.total_hands)
+            if is_about_to_be_last then
+                SCORE_BOOKEND.score_before_last_hand = G.GAME.chips
+            end
+        end
+
+        if context.after and not context.blueprint and not SCORE_BOOKEND.fired_this_hand then
+            local hands_played_now = G.GAME.current_round.hands_played
+
+            if hands_played_now == 1 and not SCORE_BOOKEND.first_hand_score then
+                SCORE_BOOKEND.first_hand_score = G.GAME.chips
+                SCORE_BOOKEND.fired_this_hand = true
+            end
+
+            local is_last_hand = SCORE_BOOKEND.total_hands and (hands_played_now + 1 == SCORE_BOOKEND.total_hands)
+            if is_last_hand and SCORE_BOOKEND.first_hand_score and SCORE_BOOKEND.score_before_last_hand and hands_played_now >= 1 then
+                SCORE_BOOKEND.fired_this_hand = true
+
+                local this_hand_contribution = G.GAME.chips - SCORE_BOOKEND.score_before_last_hand
+
+                -- only step in if the last hand scored less than hand 1 did
+                if this_hand_contribution < SCORE_BOOKEND.first_hand_score then
+                    local corrected_total = SCORE_BOOKEND.score_before_last_hand + SCORE_BOOKEND.first_hand_score
+                    G.E_MANAGER:add_event(Event({
+                        func = function()
+                            play_sound('tarot2', 0.76, 0.4)
+                            card:juice_up(0.3, 0.5)
+                            G.GAME.chips = corrected_total
+                            if G.hand_text_area and G.hand_text_area.game_chips then
+                                G.hand_text_area.game_chips:update_text()
+                            end
+                            return true
+                        end
+                    }))
+                end
+            end
         end
     end,
 }
@@ -719,10 +793,6 @@ SMODS.Joker{
         if context.joker_main and not context.blueprint then
             local now = love.timer.getTime()
             -- 2 second cooldown to stay under Discord's rate limit
-            if now - last_sent > 2 then
-                last_sent = now
-                send_webhook("@everyone Joker Triggered!")
-            end
         end
     end,
     in_pool = function(self)

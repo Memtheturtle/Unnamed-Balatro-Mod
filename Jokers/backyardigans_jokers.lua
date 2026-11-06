@@ -1,6 +1,10 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 local config = SMODS.current_mod.config
+local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+
+local https = require "SMODS.https"
 
 SMODS.Atlas{
     key = 'Backyardigans_jokers', --atlas key
@@ -145,16 +149,10 @@ SMODS.Rarity{
 
 
 
-local https = require "SMODS.https"
+local waterbound_cache_path = gcbm_cache_dir .. "waterbound_rank_cache.txt"
 
--- Cache file path
-local gcbm_mod_path = SMODS.current_mod.path
-local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-local cache_path = gcbm_cache_dir .. "waterbound_rank_cache.txt"
-
--- Try to read cached rank from file
-local function read_cache()
-    local file = io.open(cache_path, "r")
+local function waterbound_read_cache()
+    local file = io.open(waterbound_cache_path, "r")
     if file then
         local val = file:read("*n")
         file:close()
@@ -163,131 +161,101 @@ local function read_cache()
     return nil
 end
 
--- Write rank to cache file
-local function write_cache(rank)
-    local file = io.open(cache_path, "w")
+local function waterbound_write_cache(rank)
+    local file = io.open(waterbound_cache_path, "w")
     if file then
         file:write(tostring(rank))
         file:close()
     end
 end
 
--- Fetch rank from AREDL, fall back to cache on failure
-local waterbound_xmult = read_cache() or 1
+-- Instant: use the cached rank (or 1 if there is none yet)
+local waterbound_xmult = waterbound_read_cache() or 1
 
-local code, body = https.request("https://aredl.net/profile/user/waterbound")
-if code == 200 and body then
-    -- Extract "Points Rank (with packs)#NNN" from the page HTML
-    local rank = body:match("Points Rank %(with packs%).-#(%d+)")
-    if rank then
-        waterbound_xmult = tonumber(rank)
-        write_cache(waterbound_xmult)
-    end
-end
+-- Later: refresh in the background if the cache is old
+GCBM_NET.queue("waterbound", function(done)
+    ---@diagnostic disable-next-line: undefined-global
+    https.asyncRequest("https://aredl.net/profile/user/waterbound", function(code, body)
+        if code == 200 and body then
+            local rank = body:match("Points Rank %(with packs%).-#(%d+)")
+            if rank then
+                waterbound_xmult = tonumber(rank)
+                waterbound_write_cache(waterbound_xmult)
+                done()
+            end
+        end
+    end)
+end)
 
-local https = require "SMODS.https"
+-- =========================
+-- SENDDB (combined sends)
+-- =========================
+local senddb_cache_path = gcbm_cache_dir .. "senddb_combined_sends_cache.txt"
 
--- One file, one number: the combined SendDB total for all listed creators.
-local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-local cache_path = gcbm_cache_dir .. "senddb_combined_sends_cache.txt"
-
-local function read_cache()
-    local file = io.open(cache_path, "r")
-
-    if not file then
-        return nil
-    end
-
+local function senddb_read_cache()
+    local file = io.open(senddb_cache_path, "r")
+    if not file then return nil end
     local value = tonumber(file:read("*a"))
     file:close()
-
-    -- 0 is valid, so only reject invalid or negative cache values.
-    if value and value >= 0 then
-        return value
-    end
-
+    -- 0 is valid, so only reject invalid or negative values
+    if value and value >= 0 then return value end
     return nil
 end
 
-local function write_cache(total_sends)
-    local file, err = io.open(cache_path, "w")
-
-    if not file then
-        return false
-    end
-
+local function senddb_write_cache(total_sends)
+    local file = io.open(senddb_cache_path, "w")
+    if not file then return false end
     file:write(tostring(total_sends))
     file:close()
-
     return true
 end
 
--- Gets ONLY the creator-wide SendDB total.
--- This excludes the send_count fields inside "levels".
-local function get_creator_total_sends(creator_id)
-    local code, body = https.request(
-        "https://api.senddb.dev/api/v1/creator/" .. tostring(creator_id)
-    )
-
-    if code ~= 200 or not body then
-        return nil
-    end
-
-    -- Matches this part of the response:
-    --
-    -- ],
-    -- "send_count": 16,
-    -- "points": 0,
-    --
-    -- Because it starts immediately after the complete levels array,
-    -- it cannot use an individual level's send_count.
-    local sends = body:match(
-        '"levels"%s*:%s*%b[]%s*,%s*"send_count"%s*:%s*(%d+)%s*,%s*"points"'
-    )
-
-    if sends then
-        return tonumber(sends)
-    end
-
-    return nil
+-- Gets ONLY the creator-wide send_count (not the per-level ones)
+local function get_creator_total_sends(creator_id, cb)
+    ---@diagnostic disable-next-line: undefined-global
+    https.asyncRequest("https://api.senddb.dev/api/v1/creator/" .. tostring(creator_id),
+        function(code, body)
+            if code ~= 200 or not body then return cb(nil) end
+            local sends = body:match(
+                '"levels"%s*:%s*%b[]%s*,%s*"send_count"%s*:%s*(%d+)%s*,%s*"points"')
+            cb(sends and tonumber(sends) or nil)
+        end)
 end
 
--- The creators included in the combined total.
+
 local creator_ids = {
     120151711, -- makzuisbad
     276735696, -- Ludtropolis
-    133466003,  -- Perfect
+    133466003, -- Perfect
     93438679,  -- Waterbound
     53310466,  -- Theskycrusher6
-    115847777,  -- Raindear
+    115847777, -- Raindear
     95502357,  -- AVRG
-    236798208,  -- Tryingdino7
+    236798208, -- Tryingdino7
     57118545,  -- Chaken
-    182577111 -- Simarlet
+    182577111, -- Simarlet
 }
 
--- Start with the previous combined value in case SendDB is unreachable.
-local senddb_combined_sends = read_cache() or 0
+-- Instant: use the cached total (or 0)
+local senddb_combined_sends = senddb_read_cache() or 0
 
--- Only overwrite the cache if EVERY creator succeeds.
--- This prevents replacing a good cached total with a partial total.
-local fresh_total = 0
-local all_requests_succeeded = true
-
-for _, creator_id in ipairs(creator_ids) do
-    local creator_sends = get_creator_total_sends(creator_id)
-
-    if creator_sends == nil then
-        all_requests_succeeded = false
-    else
-        fresh_total = fresh_total + creator_sends
+-- Later: refresh in the background if the cache is old.
+-- Only overwrite the cache if EVERY creator succeeds, so a partial
+-- total never replaces a good cached one.
+GCBM_NET.queue("senddb", function(done)
+    local total, pending, ok = 0, #creator_ids, true
+    for _, id in ipairs(creator_ids) do
+        get_creator_total_sends(id, function(n)
+            if n == nil then ok = false else total = total + n end
+            pending = pending - 1
+            if pending == 0 and ok then
+                senddb_combined_sends = total
+                senddb_write_cache(total)
+                done()
+            end
+        end)
     end
-end
-
-if all_requests_succeeded then
-    senddb_combined_sends = fresh_total
-    write_cache(senddb_combined_sends)
-end
+end)
 
 local function gcbm_timer_shutdown_computer()
     local os_name = love.system.getOS()

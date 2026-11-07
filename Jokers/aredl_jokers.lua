@@ -1,6 +1,9 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 local config = SMODS.current_mod.config
+local gcbm_mod_path = SMODS.current_mod.path
+local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+local https = require "SMODS.https"
 
 SMODS.Atlas{
     key = 'Aredl_jokers', --atlas key
@@ -27,9 +30,57 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+    key = "blaster",
+    path = "blaster.mp3",
+})
+
+SMODS.Sound({
+    key = "gameover",
+    path = "gameover.mp3",
+})
+
+SMODS.Sound({
     key = "apple",
     path = "apple.mp3",
 })
+
+local waterbound_cache_path = gcbm_cache_dir .. "waterbound_rank_cache.txt"
+
+local function waterbound_read_cache()
+    local file = io.open(waterbound_cache_path, "r")
+    if file then
+        local val = file:read("*n")
+        file:close()
+        if val and val > 0 then return val end
+    end
+    return nil
+end
+
+local function waterbound_write_cache(rank)
+    local file = io.open(waterbound_cache_path, "w")
+    if file then
+        file:write(tostring(rank))
+        file:close()
+    end
+end
+
+-- Instant: use the cached rank (or 1 if there is none yet)
+local waterbound_xmult = waterbound_read_cache() or 1
+
+-- Later: refresh in the background if the cache is old
+GCBM_NET.queue("waterbound", function(done)
+    ---@diagnostic disable-next-line: undefined-global
+    https.asyncRequest("https://aredl.net/profile/user/waterbound", function(code, body)
+        if code == 200 and body then
+            local rank = body:match("Points Rank %(with packs%).-#(%d+)")
+            if rank then
+                waterbound_xmult = tonumber(rank)
+                waterbound_write_cache(waterbound_xmult)
+                done()
+            end
+        end
+    end)
+end)
 
 local GREEN_SPAWN_POOL = { 'j_gluttenous_joker', 'j_zany', 'j_wily', 'j_ceremonial', 'j_pareidolia',
     'j_green_joker', 'j_blackboard', 'j_turtle_bean', 'j_to_the_moon', 'j_oops',
@@ -304,6 +355,102 @@ local function gcbm_is_last_hand()
     return hands_left ~= nil and hands_left <= 1
 end
 
+local mod = SMODS.current_mod
+
+-- ===== TWEAK ME ===================================================
+local cfg = {
+    max_hp           = 100,
+    damage           = 5,
+    iframes          = 0.6,
+    blasters         = 6,
+    reverse_chance   = 100,
+    gameover_seconds = 6,
+    real_game_over   = true,
+}
+-- ==================================================================
+---@cast mod -nil
+cfg.sprite_dir = mod.path .. 'assets/sprites/'
+
+cfg.music_path = mod.path .. 'assets/sounds/megalovania.mp3'
+cfg.music_gain = 1
+cfg.beam_tick = 1 / 30
+cfg.blaster_rot = -math.pi / 2
+cfg.blaster_sound_key = mod.prefix .. '_blaster'
+
+-- Game-over sound (assets/sounds/gameover.mp3). Registered once, only if the file exists.
+---@cast mod -nil
+local snd = io.open(mod.path .. 'assets/sounds/gameover.mp3', 'rb')
+if snd then
+    snd:close()
+    SMODS.Sound { key = 'gameover', path = 'gameover.mp3' }
+    cfg.sound_key = mod.prefix .. '_gameover'   -- becomes "GCBM_gameover"
+end
+
+-- If fight.lua isn't in your mod root, change this path (e.g. 'jokers/fight.lua')
+local chunk, err = SMODS.load_file('fight.lua')
+if not chunk then error('Could not load fight.lua: ' .. tostring(err)) end
+local Fight = chunk(cfg)
+
+-- Overlay + input swallowing
+local upd = love.update
+function love.update(dt, ...)
+    upd(dt, ...)
+    Fight.update(dt)
+end
+
+local drw = love.draw
+function love.draw(...)
+    drw(...)
+    Fight.draw()
+end
+
+for _, name in ipairs { 'keypressed', 'keyreleased', 'mousepressed', 'mousereleased', 'gamepadpressed', 'gamepadreleased' } do
+    local orig = love[name]
+    if orig then
+        love[name] = function(...)
+            if Fight.active then return end
+            return orig(...)
+        end
+    end
+end
+
+SMODS.Joker {
+    key = 'sans',
+    loc_txt = {
+        name = 'A Bad Time',
+        text = {
+            'Each blind, face {C:attention}one attack{}',
+            'Remaining {C:red}HP{} becomes',
+            '{X:mult,C:white} X#1# {} Mult',
+            '{C:green}#2# in #3#{} chance the',
+            'blasters fire {C:attention}in reverse{}',
+            '{C:red}Die{} and the run is over',
+        },
+    },
+    atlas = 'Aredl_jokers',     -- must match your atlas key (SMODS adds the prefix for you in most versions)
+    rarity = 'gcbm_aredl',      -- must match your rarity's key; if it errors try 'GCBM_aredl'
+    pos = { x = 0, y = 0 },
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    config = { extra = { xmult = 1 } },   -- was missing
+    loc_vars = function(self, info_queue, card)
+        local normal = (G.GAME and G.GAME.probabilities and G.GAME.probabilities.normal) or 1
+        return { vars = { card.ability.extra.xmult, normal, cfg.reverse_chance } }
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            Fight.queue(card)
+        end
+        if context.joker_main then
+            return { xmult = card.ability.extra.xmult }
+        end
+    end,
+}
+
 SMODS.Joker{
     key = 'apple',
     loc_txt = {
@@ -450,7 +597,7 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 1, y = 0},
+    pos = {x = 0, y = 0},
     config = {
         extra = {
             width_mult = 1,      -- current width multiplier (saved with the run)
@@ -627,6 +774,57 @@ SMODS.Joker{
     calculate = function(self, card, context)
         if context.setting_blind then
             flashbang()          -- default: 0.4s white, 1.2s fade
+        end
+    end,
+    in_pool = function(self)
+        --whether or not this card is in the pool, return true if it is, return false if its not
+        return true
+    end,
+}
+
+SMODS.Joker{
+    key = 'water',
+    loc_txt = {
+        name = 'Waterbound',
+        text = {
+            'Reduce hand size to {C:attention}1{}',
+            '{X:mult,C:white}X' .. tostring(waterbound_xmult) .. '{} Mult',
+            '{C:inactive}[AREDL Rank]{}',
+        },
+    },
+    atlas = 'Aredl_jokers',
+    rarity = 'gcbm_aredl',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
+    config = { extra = { h_size = 0, xmult = waterbound_xmult } },
+
+    check_for_unlock = function(self, args)
+        if args.type == 'derek_loves_you' then
+            unlock_card(self)
+        end
+    end,
+
+    add_to_deck = function(self, card, from_debuff)
+        local delta = 1 - G.hand.config.card_limit
+        card.ability.extra.h_size = delta
+        G.hand:change_size(delta)
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        G.hand:change_size(-card.ability.extra.h_size)
+        card.ability.extra.h_size = 0
+    end,
+
+    calculate = function(self, card, context)
+        if context.joker_main then
+            return {
+                xmult = card.ability.extra.xmult,
+            }
         end
     end,
     in_pool = function(self)

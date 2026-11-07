@@ -148,45 +148,6 @@ SMODS.Rarity{
 }
 
 
-
-local waterbound_cache_path = gcbm_cache_dir .. "waterbound_rank_cache.txt"
-
-local function waterbound_read_cache()
-    local file = io.open(waterbound_cache_path, "r")
-    if file then
-        local val = file:read("*n")
-        file:close()
-        if val and val > 0 then return val end
-    end
-    return nil
-end
-
-local function waterbound_write_cache(rank)
-    local file = io.open(waterbound_cache_path, "w")
-    if file then
-        file:write(tostring(rank))
-        file:close()
-    end
-end
-
--- Instant: use the cached rank (or 1 if there is none yet)
-local waterbound_xmult = waterbound_read_cache() or 1
-
--- Later: refresh in the background if the cache is old
-GCBM_NET.queue("waterbound", function(done)
-    ---@diagnostic disable-next-line: undefined-global
-    https.asyncRequest("https://aredl.net/profile/user/waterbound", function(code, body)
-        if code == 200 and body then
-            local rank = body:match("Points Rank %(with packs%).-#(%d+)")
-            if rank then
-                waterbound_xmult = tonumber(rank)
-                waterbound_write_cache(waterbound_xmult)
-                done()
-            end
-        end
-    end)
-end)
-
 -- =========================
 -- SENDDB (combined sends)
 -- =========================
@@ -655,12 +616,6 @@ SMODS.Joker{
 
         elseif month == 12 and day == 4 then
           local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-
-        elseif month == 12 and day == 10 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_water')
             new_card:set_edition({negative = true}, true)
             new_card:add_to_deck()
             G.jokers:emplace(new_card)
@@ -1789,57 +1744,6 @@ SMODS.Joker{
         return true
     end,
 
-}
-
-SMODS.Joker{
-    key = 'water',
-    loc_txt = {
-        name = 'Waterbound',
-        text = {
-            'Reduce hand size to {C:attention}1{}',
-            '{X:mult,C:white}X' .. tostring(waterbound_xmult) .. '{} Mult',
-            '{C:inactive}[AREDL Rank]{}',
-        },
-    },
-    atlas = 'Backyardigans_jokers',
-    rarity = 'gcbm_yard',
-    cost = 50,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = true,
-    perishable_compat = true,
-    pos = {x = 3, y = 0},
-    config = { extra = { h_size = 0, xmult = waterbound_xmult } },
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-    end,
-
-    add_to_deck = function(self, card, from_debuff)
-        local delta = 1 - G.hand.config.card_limit
-        card.ability.extra.h_size = delta
-        G.hand:change_size(delta)
-    end,
-
-    remove_from_deck = function(self, card, from_debuff)
-        G.hand:change_size(-card.ability.extra.h_size)
-        card.ability.extra.h_size = 0
-    end,
-
-    calculate = function(self, card, context)
-        if context.joker_main then
-            return {
-                xmult = card.ability.extra.xmult,
-            }
-        end
-    end,
-    in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
-        return true
-    end,
 }
 
 SMODS.Joker{

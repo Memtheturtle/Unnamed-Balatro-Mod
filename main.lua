@@ -66,7 +66,9 @@ end
 local has_albums_mod = love.filesystem.getInfo("mods/Albums", "directory") ~= nil
 
 load("mods/Unnamed-Balatro-Mod/Cache/net.lua")
+load("mods/Unnamed-Balatro-Mod/fight.lua")
 load("mods/Unnamed-Balatro-Mod/Other/decks.lua")
+load("mods/Unnamed-Balatro-Mod/Other/booster.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/minesweeper.lua")
 if not has_albums_mod then
     load("mods/Unnamed-Balatro-Mod/Consumables/albums.lua")

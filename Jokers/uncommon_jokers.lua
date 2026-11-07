@@ -294,6 +294,12 @@ SMODS.Joker{
             "Perfect beats Zaphkiel",
             "Misfire 2 is created",
             "William afton gets springlocked",
+            "mem comes out as straight",
+            "avrg never beats sevvend",
+            "doggie verified grief",
+            "npesta verified kenos",
+            "avrg boyfriend dies",
+            "this mod releases in 1.0",
         }
 
         local msg = pseudorandom_element(spoilers, pseudoseed('gcbm_spoil'))

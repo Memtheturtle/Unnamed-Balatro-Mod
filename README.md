@@ -6,7 +6,7 @@ CONTRIBUTORS:
 
 Coding: Memtheturtle, PerfectLKM
 
-Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, and SingularityXVI
+Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, Bluegrass2222, Raindear, and SingularityXVI
 
 Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise, Blueshift, Taiga, FsInTheChat
 
@@ -14,6 +14,8 @@ This is purely for testing purposes right now, so if you found this somehow cong
 
   
 VERSION HISTORY:
+
+0.8.0.0 - Custom Booster Packs (5 So Far), dat_one_cursed_one Joker, Chnged Waterbound from Backyardigan to Aredl Staff, Added Quotes, Added Art, Fixed Craig
 
 0.7.4.0 - Bookend Joker, Gucci Morty Joker, FsInTheChat Joker, Made Game Not Take Forever To Launch, Fixed Craig
 
@@ -146,9 +148,9 @@ VERSION HISTORY:
 
 CURRENT FEATURES:
 
-5 New Types of Jokers: Backyardigans, Cat, Unhinged, GD Players, and Uh Oh
+6 New Types of Jokers: Backyardigans, Cat, Unhinged, GD Players, AREDL Staff, and Uh Oh
 
-50+ Total New Jokers
+75+ Total New Jokers
 
 1 Tarot Card 
 
@@ -165,6 +167,8 @@ CURRENT FEATURES:
 7 Drug Consumable Cards (1 Not Yet functional)
 
 8 Custom Decks
+
+5 Custom Booster Packs
 
 Custom Music and SFX!
 

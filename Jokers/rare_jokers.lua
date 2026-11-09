@@ -47,6 +47,18 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+	key = "music_brown",
+	path = "music_brown.mp3",
+	sync = false,
+	pitch = 1,
+    volume = 12,
+	select_music_track = function()
+		return next(find_joker("j_gcbm_brown"))
+	end,
+})
+
+
+SMODS.Sound({
     key = "watchmen",
     path = "watchmen.mp3",
 })
@@ -60,6 +72,32 @@ SMODS.Sound({
     key = "wtk",
     path = "wethreekings.mp3",
 })
+local KEY = 'j_' .. SMODS.current_mod.prefix .. '_nightmare'
+
+local function set_tick_debuff(joker, state)
+    if SMODS.debuff_card then
+        SMODS.debuff_card(joker, state, 'nightmare')
+    else
+        joker:set_debuff(state)
+    end
+end
+ 
+-- Wrap evaluate_play: score the hand first, then flip every Tick Tock
+local old_evaluate_play = G.FUNCS.evaluate_play
+---@diagnostic disable-next-line duplicate-set-field
+G.FUNCS.evaluate_play = function(...)
+    local ret = old_evaluate_play(...)
+    if G.jokers then
+        for _, joker in ipairs(G.jokers.cards) do
+            if joker.config.center.key == KEY then
+                joker.ability.extra.off = not joker.ability.extra.off
+                set_tick_debuff(joker, joker.ability.extra.off)
+                sendDebugMessage('Nightmare Freddy Debuff = ' .. tostring(joker.ability.extra.off))
+            end
+        end
+    end
+    return ret
+end
 
 local VOICE = "Fred"
 local RATE = 150   -- Fred sounds closer to the song a bit slower than the default
@@ -574,6 +612,49 @@ end
 
 local SCORE_BOOKEND = { first_hand_score = nil }
 
+local https = require "SMODS.https"
+
+-- Capture the mod object at load time (same table your config tab edits)
+local mod = SMODS.current_mod
+
+local last_sent = 0
+
+local function json_escape(s)
+    return (s:gsub('[%c"\\]', function(c)
+        local map = { ['"'] = '\\"', ['\\'] = '\\\\', ['\n'] = '\\n', ['\r'] = '\\r', ['\t'] = '\\t' }
+        return map[c] or string.format("\\u%04x", c:byte())
+    end))
+end
+
+local function get_webhook()
+    local url = mod and mod.config and mod.config.discord_webhook
+    if type(url) ~= "string" then return nil end
+    url = url:match("^%s*(.-)%s*$")
+    if url:match("^https://discord%.com/api/webhooks/")
+        or url:match("^https://discordapp%.com/api/webhooks/") then
+        return url
+    end
+    return nil
+end
+
+local function send_webhook(msg)
+    local webhook = get_webhook()
+    if not webhook then return false end
+
+    local body = '{"content":"' .. json_escape(msg) .. '","allowed_mentions":{"parse":["everyone"]}}'
+    https.asyncRequest(webhook, {
+        method = "POST",
+        headers = { ["Content-Type"] = "application/json" },
+        data = body,
+    }, function(code, response, headers)
+        if code ~= 204 and code ~= 200 then
+            sendWarnMessage("Webhook failed: " .. tostring(code), "DiscordJoker")
+        end
+    end)
+    return true
+end
+
+
 SMODS.Joker{
     key = 'tm2', --joker key
     loc_txt = { -- local text
@@ -719,6 +800,34 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
+    key = 'brown',
+    loc_txt = {
+        name = 'Brown Note',
+        text = {
+            '{C:attention}Oh Dear{}',
+        }
+    },
+    atlas = 'Rare_jokers', --atlas' key
+    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
+    --soul_pos = { x = 0, y = 0 },
+    cost = 7, --cost
+    unlocked = true, --where it is unlocked or not: if true, 
+    discovered = true, --whether or not it starts discovered
+    blueprint_compat = true, --can it be blueprinted/brainstormed/other
+    eternal_compat = true, --can it be eternal
+    perishable_compat = true, --can it be perishable
+    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+
+    calculate = function(self, card, context)
+        self.select_music_track = "music_brown"
+    end,
+
+    in_pool = function(self)
+        return true
+    end,
+}
+
+SMODS.Joker{
     key = 'crash',
     loc_txt = {
         name = 'Crash Trigger',
@@ -726,6 +835,7 @@ SMODS.Joker{
             '+{C:chips}#1#{} Chips',
             '{C:green}#2# in 19{} chance',
             'to {C:attention}Crash Game{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     atlas = 'Rare_jokers',
@@ -771,28 +881,32 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'discord', --joker key
-    loc_txt = { -- local text
+    key = 'discord',
+    loc_txt = {
         name = 'Discord Joker',
         text = {
-          'When a hand is played,',
-          'ping {C:attention}@everyone{} on Discord'
+            'When a hand is played,',
+            'ping {C:attention}@everyone{} on Discord'
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    cost = 7, --cost
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
     unlocked = true,
     discovered = true,
-    blueprint_compat = false, --Blueprint copies would send duplicate pings
+    blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 9, y = 0}, --change this if tm2 already uses this sprite slot
+    pos = {x = 9, y = 0},
     calculate = function(self, card, context)
-        -- joker_main fires once per played hand when jokers score
         if context.joker_main and not context.blueprint then
             local now = love.timer.getTime()
             -- 2 second cooldown to stay under Discord's rate limit
+            if now - last_sent > 2 then
+                if send_webhook("@everyone Joker Triggered!") then
+                    last_sent = now
+                end
+            end
         end
     end,
     in_pool = function(self)
@@ -861,7 +975,8 @@ SMODS.Joker{
         name = 'Gooby!',
         text = {
           'At the start of each blind, gain {C:money}$10{}',
-          'and turn 1 adjacent joker into {C:attention}Gooby!{}'
+          'and turn 1 adjacent joker into {C:attention}Gooby!{}',
+          '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
     },
     atlas = 'Rare_jokers',
@@ -1244,6 +1359,7 @@ SMODS.Joker{
         name = 'Long Weezer',
         text = {
           '{C:attention}L O N G{}',
+          '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -1391,7 +1507,8 @@ SMODS.Joker{
         text = {
             'Saves you if your score',
             'is at least 25% of required score',
-            '{C:attention}Self Destructs{}, {C:attention}-1 Ante{}'
+            '{C:attention}Self Destructs{}, {C:attention}-1 Ante{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
     },
     atlas = 'Rare_jokers',
@@ -1441,7 +1558,8 @@ SMODS.Joker{
     loc_txt = { -- local text
         name = 'Nightmare Freddy',
         text = {
-          'Placeholder',
+          'Alternates Between {C:attention}In Head{} ({X:mult,C:white}X#1#{} Mult)',
+          'and {C:attention}In Bed{} ({C:attention}Debuffed{})',
         },
     },
     atlas = 'Rare_jokers', --atlas' key
@@ -1454,9 +1572,18 @@ SMODS.Joker{
     eternal_compat = true, --can it be eternal
     perishable_compat = true, --can it be perishable
     pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
+    config = { extra = { Xmult = 3 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.Xmult } }
+    end,
     calculate = function(self, card, context)
-        if context.setting_blind and not context.blueprint then
+        if context.joker_main then
+                return {
+                card = card,
+                Xmult_mod = card.ability.extra.Xmult,
+                message = 'X' .. card.ability.extra.Xmult,
+                colour = G.C.MULT
+            }
         end
     end,
     in_pool = function(self)
@@ -2021,6 +2148,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'create {C:attention}3{} Negative {C:attention}Jimbos{}',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -2073,7 +2201,8 @@ SMODS.Joker{
         name = 'Watchmen',
         text = {
             '{X:mult,C:white}X#1#{} Mult,',
-            '{C:attention}Dont look behind you...{}'
+            '{C:attention}Dont look behind you...{}',
+            '{s:0.8}{C:inactive}Art by Stayreal{}',
         }
     },
     atlas = 'Rare_jokers',
@@ -2229,6 +2358,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'create {C:attention}3{} Negative {C:attention}Estrogen{}',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

@@ -360,10 +360,9 @@ local mod = SMODS.current_mod
 -- ===== TWEAK ME ===================================================
 local cfg = {
     max_hp           = 100,
-    damage           = 5,
-    iframes          = 0.6,
+    damage           = 1,
+    iframes          = 0.01,
     blasters         = 6,
-    reverse_chance   = 100,
     gameover_seconds = 6,
     real_game_over   = true,
 }
@@ -414,42 +413,6 @@ for _, name in ipairs { 'keypressed', 'keyreleased', 'mousepressed', 'mouserelea
     end
 end
 
-SMODS.Joker {
-    key = 'sans',
-    loc_txt = {
-        name = 'A Bad Time',
-        text = {
-            'Each blind, face {C:attention}one attack{}',
-            'Remaining {C:red}HP{} becomes',
-            '{X:mult,C:white} X#1# {} Mult',
-            '{C:green}#2# in #3#{} chance the',
-            'blasters fire {C:attention}in reverse{}',
-            '{C:red}Die{} and the run is over',
-        },
-    },
-    atlas = 'Aredl_jokers',     -- must match your atlas key (SMODS adds the prefix for you in most versions)
-    rarity = 'gcbm_aredl',      -- must match your rarity's key; if it errors try 'GCBM_aredl'
-    pos = { x = 0, y = 0 },
-    cost = 10,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = true,
-    eternal_compat = true,
-    perishable_compat = true,
-    config = { extra = { xmult = 1 } },   -- was missing
-    loc_vars = function(self, info_queue, card)
-        local normal = (G.GAME and G.GAME.probabilities and G.GAME.probabilities.normal) or 1
-        return { vars = { card.ability.extra.xmult, normal, cfg.reverse_chance } }
-    end,
-    calculate = function(self, card, context)
-        if context.setting_blind and not context.blueprint then
-            Fight.queue(card)
-        end
-        if context.joker_main then
-            return { xmult = card.ability.extra.xmult }
-        end
-    end,
-}
 
 SMODS.Joker{
     key = 'apple',
@@ -457,6 +420,7 @@ SMODS.Joker{
         name = 'Apple Salt',
         text = {
             '{C:attention}MOO{}',
+            '{s:0.8}{C:inactive}Art by Apple Salt{}',
         }
     },
     atlas = 'Aredl_jokers', --atlas' key
@@ -524,6 +488,43 @@ SMODS.Joker{
     in_pool = function(self)
         --whether or not this card is in the pool, return true if it is, return false if its not
         return true
+    end,
+}
+
+SMODS.Joker {
+    key = 'sans',
+    loc_txt = {
+        name = 'dat_one_cursed_one',
+        text = {
+            'Each blind, face {C:attention}one attack{}',
+            'Remaining {C:red}HP{} becomes',
+            '{X:mult,C:white} X#1# {} Mult',
+            '{C:attention}1 in 100{} chance the',
+            'blasters fire {C:attention}in reverse{}',
+            '{C:red}Die{} and the run is over',
+        },
+    },
+    atlas = 'Aredl_jokers',     -- must match your atlas key (SMODS adds the prefix for you in most versions)
+    rarity = 'gcbm_aredl',      -- must match your rarity's key; if it errors try 'GCBM_aredl'
+    pos = { x = 0, y = 0 },
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    config = { extra = { xmult = 1 } },   -- was missing
+    loc_vars = function(self, info_queue, card)
+        local normal = (G.GAME and G.GAME.probabilities and G.GAME.probabilities.normal) or 1
+        return { vars = { card.ability.extra.xmult} }
+    end,
+    calculate = function(self, card, context)
+        if context.setting_blind and not context.blueprint then
+            Fight.queue(card)
+        end
+        if context.joker_main then
+            return { xmult = card.ability.extra.xmult }
+        end
     end,
 }
 
@@ -690,7 +691,7 @@ SMODS.Joker{
                     local chance = BASE_CHANCE
                     if is_last_hand then chance = chance * 2 end
 
-                    if pseudorandom('lucky_editioner') < chance then
+                    if pseudorandom('lucky_editioner') < 1 then
                         played_card:set_edition({ [gcbm_random_edition()] = true }, true)
                     end
                 end
@@ -750,6 +751,7 @@ SMODS.Joker{
         name = 'Shyne',
         text = {
           '{C:attention}Rate AREDL Rate Channel{}',
+          '{s:0.8}{C:inactive}Art by Memtheturtle{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

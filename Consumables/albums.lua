@@ -168,7 +168,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Back in Black', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -187,7 +188,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Eye in the Sky', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -244,7 +246,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'BRAT', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by Memtheturtle{}',
         }
     },
     can_use = function(self,card)
@@ -282,7 +285,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'i think you think too much of me', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -320,7 +324,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Appetite for Destruction', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -358,7 +363,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Metallica', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -377,7 +383,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Dark Side of the Moon', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -396,7 +403,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'The Wall', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -495,7 +503,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Ladies and gentlemen we are floating in space', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -514,7 +523,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Sweet Heart, Sweet Life', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -552,7 +562,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Currents', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)
@@ -609,7 +620,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Weezer', --name of card
         text = { --text of card
-            'Placeholder'
+            'Placeholder',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self,card)

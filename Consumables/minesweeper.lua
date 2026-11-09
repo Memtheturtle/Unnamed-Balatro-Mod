@@ -39,7 +39,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '1',
         text = {
-            'Gives $20, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $20, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -79,7 +80,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '2',
         text = {
-            'Gives $40, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $40, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -119,7 +121,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '3',
         text = {
-            'Gives $60, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $60, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -159,7 +162,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '4',
         text = {
-            'Gives $80, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $80, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -199,7 +203,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '5',
         text = {
-            'Gives $100, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $100, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -239,7 +244,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '6',
         text = {
-            'Gives $120, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $120, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -279,7 +285,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '7',
         text = {
-            'Gives $140, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $140, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -319,7 +326,8 @@ SMODS.Consumable{
     loc_txt = {
         name = '8',
         text = {
-            'Gives $160, {C:green}#1# in 8{} chance to give a Mine'
+            'Gives $160, {C:green}#1# in 8{} chance to give a Mine',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -360,7 +368,8 @@ SMODS.Consumable{
         name = 'Flag',
         text = {
             'Saves you from 1 Mine',
-            'Self-destructs afterwards'
+            'Self-destructs afterwards',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       
@@ -392,7 +401,8 @@ SMODS.Consumable{
         name = 'Mine',
         text = {
             'Removes half of your Jokers',
-            'and half of your Consumables'
+            'and half of your Consumables',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
       

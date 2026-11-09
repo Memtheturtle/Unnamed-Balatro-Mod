@@ -43,7 +43,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Boron', --name of card
         text = { --text of card
-            'Convert {C:attention}4{} cards into {C:attention}Jacks{}'
+            'Convert {C:attention}4{} cards into {C:attention}Jacks{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {
@@ -90,7 +91,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Estrogen', --name of card
         text = { --text of card
-            'Convert {C:attention}4{} cards into {C:attention}Queens{}'
+            'Convert {C:attention}4{} cards into {C:attention}Queens{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {
@@ -137,7 +139,8 @@ SMODS.Consumable{
     loc_txt = {
         name = 'Testosterone', --name of card
         text = { --text of card
-            'Convert {C:attention}4{} cards into {C:attention}Kings{}'
+            'Convert {C:attention}4{} cards into {C:attention}Kings{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {
@@ -186,6 +189,7 @@ SMODS.Consumable{
         text = {
             'Remove all cards',
             'of a {C:attention}random suit{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {},
@@ -345,6 +349,7 @@ SMODS.Consumable{
         text = {
            'Remove all cards',
             'of a {C:attention}random rank{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {},

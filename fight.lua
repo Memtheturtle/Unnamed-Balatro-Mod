@@ -4,13 +4,13 @@
 -- Logical screen is 640x480, scaled to fit the window.
 --------------------------------------------------------------------
 local cfg = ... or {
-    max_hp = 100, damage = 5, iframes = 0.6, reverse_chance = 100,
+    max_hp = 100, damage = 1, iframes = 0.01,
     gameover_seconds = 6, real_game_over = true,
 }
 
 -- Undertale-style beam damage: lose 1 HP every `beam_tick` seconds while inside a beam.
 -- 1/30 = 1 HP per game tick (30 fps). Use 2/30 for 1 HP every 2 ticks, etc.
-local BEAM_TICK = cfg.beam_tick or (1 / 30)
+local BEAM_TICK = cfg.beam_tick or (1 / 100)
 local BONE_DMG  = cfg.damage or 5     -- HP lost per bone hit (has i-frames)
 
 local F = { cur = nil, active = false }
@@ -65,9 +65,7 @@ end
 local function clamp(v, lo, hi) return math.max(lo, math.min(hi, v)) end
 
 local function roll_reverse()
-    local chance = tonumber(cfg and cfg.reverse_chance) or 100
-    local normal = (G.GAME and G.GAME.probabilities and G.GAME.probabilities.normal) or 1
-    return pseudorandom('gcbm_sans_reverse') < normal / chance
+    return pseudorandom('gcbm_sans_reverse') < 0.01
 end
 
 local function safe_sound(key, pitch, vol)

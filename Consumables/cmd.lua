@@ -116,6 +116,113 @@ G.FUNCS.tracert_search = function(e)
     }))
 end
 
+GCBM = GCBM or {}
+GCBM.cd_state = GCBM.cd_state or { history = {} }
+
+-- Every time a blind actually starts, remember it (ante + slot + P_BLINDS key).
+-- We keep our own history because Balatro overwrites blind_choices.Boss on
+-- each ante-up, so there's no native way to recover a past ante's boss.
+local cd_new_round_ref = new_round
+---@diagnostic disable-next-line: lowercase-global
+function new_round()
+    local key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
+    table.insert(GCBM.cd_state.history, {
+        ante = G.GAME.round_resets.ante,
+        blind_on_deck = G.GAME.blind_on_deck,
+        key = key,
+    })
+    while #GCBM.cd_state.history > 10 do
+        table.remove(GCBM.cd_state.history, 1)
+    end
+    return cd_new_round_ref()
+end
+
+GCBM = GCBM or {}
+GCBM.rmdir_state = GCBM.rmdir_state or {
+    current_blind_used = {}, -- uids used so far in the in-progress round
+    history = {},            -- up to 5 snapshots of completed rounds, newest first
+    last_round = nil,
+    next_uid = 1,
+}
+
+local function rmdir_ensure_uid(c)
+    if not c then return nil end
+    c.ability = c.ability or {}
+    if not c.ability.gcbm_rmdir_uid then
+        c.ability.gcbm_rmdir_uid = GCBM.rmdir_state.next_uid
+        GCBM.rmdir_state.next_uid = GCBM.rmdir_state.next_uid + 1
+    end
+    return c.ability.gcbm_rmdir_uid
+end
+
+-- Rolls current_blind_used into history whenever G.GAME.round has moved on
+local function rmdir_sync_round()
+    local round = G.GAME and G.GAME.round
+    if round == nil then return end
+
+    if GCBM.rmdir_state.last_round == nil then
+        GCBM.rmdir_state.last_round = round
+        return
+    end
+
+    if round ~= GCBM.rmdir_state.last_round then
+        table.insert(GCBM.rmdir_state.history, 1, GCBM.rmdir_state.current_blind_used)
+        while #GCBM.rmdir_state.history > 5 do
+            table.remove(GCBM.rmdir_state.history)
+        end
+        GCBM.rmdir_state.current_blind_used = {}
+        GCBM.rmdir_state.last_round = round
+    end
+end
+
+local function rmdir_mark_used(cards)
+    rmdir_sync_round()
+    if not cards then return end
+    for _, c in ipairs(cards) do
+        local uid = rmdir_ensure_uid(c)
+        if uid then
+            GCBM.rmdir_state.current_blind_used[uid] = true
+        end
+    end
+end
+
+local function rmdir_recent_used_lookup()
+    rmdir_sync_round()
+    local used = {}
+    for _, snapshot in ipairs(GCBM.rmdir_state.history) do
+        for uid in pairs(snapshot) do
+            used[uid] = true
+        end
+    end
+    return used
+end
+
+local function rmdir_get_unused_playing_cards()
+    local used_lookup = rmdir_recent_used_lookup()
+    local unused = {}
+    for _, c in ipairs(G.playing_cards or {}) do
+        local uid = rmdir_ensure_uid(c)
+        if uid and not used_lookup[uid] then
+            unused[#unused + 1] = c
+        end
+    end
+    return unused
+end
+
+-- Hook the real "play hand" callback so we know which cards were used,
+-- without needing a phantom joker sitting in G.jokers.
+local rmdir_play_ref = G.FUNCS.play_cards_from_highlighted
+---@diagnostic disable-next-line: duplicate-set-field
+G.FUNCS.play_cards_from_highlighted = function(e)
+    local played = {}
+    for _, c in ipairs(G.hand.highlighted) do
+        played[#played + 1] = c
+    end
+    rmdir_mark_used(played)
+    return rmdir_play_ref(e)
+end
+
+
 SMODS.ConsumableType{
     key = 'CMD', --consumable type key
 
@@ -149,6 +256,7 @@ SMODS.Consumable{
         name = 'C:\\_ipconfig', --name of card
         text = { --text of card
             'Disables current Boss Blind',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
 
@@ -179,6 +287,7 @@ SMODS.Consumable{
         name = 'C:\\_clip', --name of card
         text = { --text of card
             'Spawns last used consumable',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
 
@@ -214,6 +323,7 @@ SMODS.Consumable {
         name = "C:\\_nslookup",
         text = {
             'Shows top 5 cards of the deck',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -392,6 +502,7 @@ SMODS.Consumable {
         name = "C:\\_cls",
         text = { --text of card
             'Refreshes your amount of discards',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
        can_use = function(self, card)
@@ -421,6 +532,7 @@ SMODS.Consumable {
         text = {
             'Check device battery and',
             'give money based on %',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -509,6 +621,7 @@ SMODS.Consumable {
         text = {
             'Preview what the next',
             'shop reroll will contain',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -671,6 +784,7 @@ SMODS.Consumable {
             'Spawns {C:green}CHKDSK [ARMED]{} token.',
             'If you would lose, you are saved.',
             'Token expires end of blind.',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -734,6 +848,7 @@ SMODS.Consumable {
             'Summons the negative planet cards',
             'associated with your top 3',
             'most played hand types',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -813,7 +928,8 @@ SMODS.Consumable {
         name = "C:\\_taskkill",
         text = {
             'Destroy any selected cards',
-            '{C:inactive}No limit{}'
+            '{C:inactive}No limit{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     config = {
@@ -875,6 +991,7 @@ SMODS.Consumable {
         text = {
             'holder',
             'of place',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -910,6 +1027,7 @@ SMODS.Consumable {
         text = {
             'Search the deck for a card',
             'by rank and suit',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -1051,6 +1169,7 @@ SMODS.Consumable {
         text = {
             'holder',
             'of place',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     can_use = function(self, card)
@@ -1075,91 +1194,6 @@ SMODS.Consumable {
     end,
 }
 
-GCBM = GCBM or {}
-GCBM.rmdir_state = GCBM.rmdir_state or {
-    current_blind_used = {}, -- uids used so far in the in-progress round
-    history = {},            -- up to 5 snapshots of completed rounds, newest first
-    last_round = nil,
-    next_uid = 1,
-}
-
-local function rmdir_ensure_uid(c)
-    if not c then return nil end
-    c.ability = c.ability or {}
-    if not c.ability.gcbm_rmdir_uid then
-        c.ability.gcbm_rmdir_uid = GCBM.rmdir_state.next_uid
-        GCBM.rmdir_state.next_uid = GCBM.rmdir_state.next_uid + 1
-    end
-    return c.ability.gcbm_rmdir_uid
-end
-
--- Rolls current_blind_used into history whenever G.GAME.round has moved on
-local function rmdir_sync_round()
-    local round = G.GAME and G.GAME.round
-    if round == nil then return end
-
-    if GCBM.rmdir_state.last_round == nil then
-        GCBM.rmdir_state.last_round = round
-        return
-    end
-
-    if round ~= GCBM.rmdir_state.last_round then
-        table.insert(GCBM.rmdir_state.history, 1, GCBM.rmdir_state.current_blind_used)
-        while #GCBM.rmdir_state.history > 5 do
-            table.remove(GCBM.rmdir_state.history)
-        end
-        GCBM.rmdir_state.current_blind_used = {}
-        GCBM.rmdir_state.last_round = round
-    end
-end
-
-local function rmdir_mark_used(cards)
-    rmdir_sync_round()
-    if not cards then return end
-    for _, c in ipairs(cards) do
-        local uid = rmdir_ensure_uid(c)
-        if uid then
-            GCBM.rmdir_state.current_blind_used[uid] = true
-        end
-    end
-end
-
-local function rmdir_recent_used_lookup()
-    rmdir_sync_round()
-    local used = {}
-    for _, snapshot in ipairs(GCBM.rmdir_state.history) do
-        for uid in pairs(snapshot) do
-            used[uid] = true
-        end
-    end
-    return used
-end
-
-local function rmdir_get_unused_playing_cards()
-    local used_lookup = rmdir_recent_used_lookup()
-    local unused = {}
-    for _, c in ipairs(G.playing_cards or {}) do
-        local uid = rmdir_ensure_uid(c)
-        if uid and not used_lookup[uid] then
-            unused[#unused + 1] = c
-        end
-    end
-    return unused
-end
-
--- Hook the real "play hand" callback so we know which cards were used,
--- without needing a phantom joker sitting in G.jokers.
-local rmdir_play_ref = G.FUNCS.play_cards_from_highlighted
----@diagnostic disable-next-line: duplicate-set-field
-G.FUNCS.play_cards_from_highlighted = function(e)
-    local played = {}
-    for _, c in ipairs(G.hand.highlighted) do
-        played[#played + 1] = c
-    end
-    rmdir_mark_used(played)
-    return rmdir_play_ref(e)
-end
-
 SMODS.Consumable {
     key = "rmdir",
     set = "CMD",
@@ -1172,6 +1206,7 @@ SMODS.Consumable {
         text = {
             "Destroys all cards not used",
             "in the past 5 blinds",
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
 
@@ -1196,27 +1231,6 @@ SMODS.Consumable {
 
 }
 
-GCBM = GCBM or {}
-GCBM.cd_state = GCBM.cd_state or { history = {} }
-
--- Every time a blind actually starts, remember it (ante + slot + P_BLINDS key).
--- We keep our own history because Balatro overwrites blind_choices.Boss on
--- each ante-up, so there's no native way to recover a past ante's boss.
-local cd_new_round_ref = new_round
----@diagnostic disable-next-line: lowercase-global
-function new_round()
-    local key = G.GAME.round_resets.blind_choices[G.GAME.blind_on_deck]
-    table.insert(GCBM.cd_state.history, {
-        ante = G.GAME.round_resets.ante,
-        blind_on_deck = G.GAME.blind_on_deck,
-        key = key,
-    })
-    while #GCBM.cd_state.history > 10 do
-        table.remove(GCBM.cd_state.history, 1)
-    end
-    return cd_new_round_ref()
-end
-
 SMODS.Consumable {
     key = "cd",
     set = "CMD",
@@ -1228,6 +1242,7 @@ SMODS.Consumable {
         text = {
             'Changes blind to the previous one',
             'without losing any chip value',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
 
@@ -1312,7 +1327,8 @@ SMODS.Consumable {
     loc_txt = {
         name = "C:\\_shutdown",
         text = {
-            'Gives all required chips to win the blind',          
+            'Gives all required chips to win the blind',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
      can_use = function(self, card)
@@ -1350,6 +1366,7 @@ SMODS.Consumable {
         text = {
             'Choose to create',
             'any other {C:attention}CMD{} card',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
 

@@ -262,6 +262,7 @@ SMODS.Joker{
         name = 'Jimball 2',
         text = {
           'You already know',
+          '{s:0.8}{C:inactive}Art by Memtheturtle{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -301,6 +302,7 @@ SMODS.Joker{
         text = {
           'Plays Thick of It',
           'Thats all.',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -338,7 +340,8 @@ SMODS.Joker{
     loc_txt = { -- local text
         name = 'Sigmacide',
         text = {
-          '{C:attention}Oh No{}', 
+          '{C:attention}Oh No{}',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

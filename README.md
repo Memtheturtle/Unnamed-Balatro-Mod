@@ -6,14 +6,35 @@ CONTRIBUTORS:
 
 Coding: Memtheturtle, PerfectLKM
 
-Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, Bluegrass2222, Raindear, and SingularityXVI
+Art: Memtheturtle, Theskycrusher6, StayReal, PerfectLKM, Starlightlillie, Ludtropolis, Raindear, and SingularityXVI
 
-Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise, Blueshift, Taiga, FsInTheChat
+Ideas/Inspiration: Starlightlillie, Memtheturtle, Theskycrusher6, SingularityXVI, BiometryGD, tTonk, Ludtropolis, Dxv3d, Avocat0, PerfectLKM, Tryingdino7, Echofallenn, StayReal, Raindear, Chaken, Makzuisbad, Wushady, Bean, Mental, Legacy5, dat_one_cursed_one, Shyne, Pivit, Apple Salt, AVRG, Mrhumanlimitz, Simarlet, Waterbound, Magmeta, Dubo, Littleram1009, Anise, Blueshift, Taiga, FsInTheChat, Sphericle, Bleepable
+
 
 This is purely for testing purposes right now, so if you found this somehow congrats ig feel free to try it. Some art is not implemented yet but will be for the final release.
 
+
+IMPORTANT NOTES:
+The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We have tested this and it doesn't seem to harm anything but use it at your own risk.
+
+THERE ARE JUMPSCARES.
+
+PLEASE GO TO MODS AND CHECK THE MOD OPTIONS BEFORE PLAYING TO FULLY SET IT UP.
+
+Some cards may open certain things on your computer. There is a streamer mode to prevent this.
+
+For the AREDL joker, you must enter the username that appears in the url of your profile, not just your display name on the site.
+
+
+INSTALLATION:
+Mod your game via Steammodded/Lovely, and then put the entire folder in your Mods folder (Works on Windows, Mac, and Linux)
+
+YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds the version number to the downlaod and I can't disable it, I'm looking for workarounds but for now just do that please
   
+
 VERSION HISTORY:
+
+0.8.1.0 - Brown Note Joker, Nightmare Freddy Joker Now Functional, Improved dat_one_cursed_one Joker, Fixed Discord Joker, Added Art Credits, Fixed Craig
 
 0.8.0.0 - Custom Booster Packs (5 So Far), dat_one_cursed_one Joker, Chnged Waterbound from Backyardigan to Aredl Staff, Added Quotes, Added Art, Fixed Craig
 
@@ -206,20 +227,4 @@ PLANNED FEATURES:
 10+ Custom Decks
 
 Custom Art for All Cards!
-
-
-IMPORTANT NOTES:
-The Crash Trigger Joker WILL CRASH YOUR GAME if you get the 1 in 19 chance. We have tested this and it doesn't seem to harm anything but use it at your own risk.
-
-THERE ARE JUMPSCARES and if you have a heart attack you cant sue me.
-
-Some cards may open certain things. There is a streamer mode to prevent this.
-
-For the AREDL joker, you must enter the username that appears in the url of your profile, not just your display name on the site.
-
-
-INSTALLATION:
-Mod your game via Steammodded/Lovely, and then put the entire folder in your Mods folder (Works on Windows, Mac, and Linux)
-
-YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds the version number to the downlaod and I can't disable it, I'm looking for workarounds but for now just do that please
 

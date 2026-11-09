@@ -630,26 +630,22 @@ SMODS.Joker{
 
 SMODS.Joker{
     key = 'craig',
-
     loc_txt = {
         name = 'Craig',
         text = {
-            'NOW RECORDING'
+            'NOW RECORDING',
+            '{s:0.8}{C:inactive}Art by PerfectLKM{}',
         }
     },
-
     atlas = 'Backyardigans_jokers',
     rarity = 'gcbm_yard',
     cost = 50,
-
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
-
     pos = { x = 6, y = 0 },
-
     calculate = function(self, card, context)
         if context.setting_blind then
              play_sound('gcbm_randombsgo')
@@ -932,7 +928,8 @@ SMODS.Joker{
             'At the start of each blind,',
             'gain {C:money}$1-$150{}.',
             '{C:green}#1# in 20{} chance',
-            'to lose all money.'
+            'to lose all money.',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     atlas = 'Backyardigans_jokers',
@@ -986,6 +983,7 @@ SMODS.Joker{
         text = {
             'Spawns 10 Gooby!',
             'Kills itself',
+            '{s:0.8}{C:inactive}Art by Ludtropolis{}',
         }
     },
     atlas = 'Backyardigans_jokers',
@@ -1066,6 +1064,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -1159,7 +1158,8 @@ SMODS.Joker{
     loc_txt = {
         name = 'PerfectLKM',
         text = {
-            '{C:money}$1{}'
+            '{C:money}$1{}',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     atlas = 'Backyardigans_jokers',
@@ -1171,12 +1171,6 @@ SMODS.Joker{
     eternal_compat = false,
     perishable_compat = true,
     pos = { x = 6, y = 0 },
-
-    loc_vars = function(self, info_queue, center)
-        return {
-            vars = { G.GAME.probabilities.normal }
-        }
-    end,
 
     calculate = function(self, card, context)
         self.select_music_track = "music_animal"
@@ -1390,6 +1384,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'Create a Negative {C:attention}Black Hole{}',
+          '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -1429,6 +1424,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'Create {C:attention}2{} Negative {C:attention}Anime Women{}',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',
@@ -1470,6 +1466,7 @@ SMODS.Joker{
           'Played Queen of Hearts give',
           '{X:mult,C:white}X#1#{} Mult, {C:green}#2# in 5{}',
           'chance of giving {C:attention}Estrogen{}',
+          '{s:0.8}{C:inactive}Art by Starlightlillie{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

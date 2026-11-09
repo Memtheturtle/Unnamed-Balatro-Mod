@@ -8,8 +8,6 @@ SMODS.Atlas{
     py = 95 -- height of one card
 }
 
-
-
 SMODS.Sound({
 	key = "music_criminal",
 	path = "music_criminal.mp3",
@@ -19,8 +17,6 @@ SMODS.Sound({
 		return next(find_joker("j_gcbm_criminal")) 
 	end,
 })
-
-
 
 SMODS.Rarity{
     key = "unh",
@@ -34,8 +30,6 @@ SMODS.Rarity{
     end,
 }
 
-
-
 SMODS.Joker{
     key = 'criminal', --joker key
     loc_txt = { -- local text
@@ -43,7 +37,8 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'create a Negative Joker of',
-          'everyone who had a part in Criminal'
+          'everyone who had a part in Criminal',
+          '{s:0.8}{C:inactive}Art by Theskycrusher{}',
           
         },
         --[[unlock = {
@@ -113,7 +108,8 @@ SMODS.Joker{
         name = 'Minesweeper',
         text = {
             'At the start of each blind,',
-            'open a cell'
+            'open a cell',
+            '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
     atlas = 'Unhinged_jokers',
@@ -176,6 +172,7 @@ SMODS.Joker{
         text = {
           'When blind is selected,',
           'Create {C:attention}16{} Negative {C:attention}Black Holes{}',
+          '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

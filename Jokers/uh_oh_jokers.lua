@@ -30,7 +30,8 @@ SMODS.Joker{
         name = 'Blue Screen',
         text = {
           'If you can read this',
-          'its already too late'
+          'its already too late',
+          '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
         --[[unlock = {
             'Be {C:legendary}cool{}',

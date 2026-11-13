@@ -1,10 +1,8 @@
-local config = SMODS.current_mod.config
-
 SMODS.Atlas{
-    key = 'Booster', --atlas key
-    path = 'Booster.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Booster',
+    path = 'Booster.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.Booster {

@@ -16,8 +16,6 @@ function GCBM_NET.touch(name)
     if f then f:write(tostring(os.time())); f:close() end
 end
 
--- Runs fn(done) only if the cache is stale. Call done() on success
--- so the stamp is only updated when the refresh actually worked.
 function GCBM_NET.queue(name, fn)
     if stale(name) then
         fn(function() GCBM_NET.touch(name) end)

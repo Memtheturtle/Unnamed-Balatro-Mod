@@ -1,14 +1,16 @@
-SMODS.Atlas{
-    key = 'Delete_jokers', --atlas key
-    path = 'Rare_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
-}
+-- Delete Joker
 
-local function gcbm_delete()
+    local function gcbm_delete()
         os.remove("mods/Unnamed-Balatro-Mod/Jokers/delete.lua")
         io.open("mods/Unnamed-Balatro-Mod/Jokers/delete.lua", "w"):close()
-end
+    end
+
+SMODS.Atlas{
+    key = 'Delete_jokers',
+    path = 'Rare_jokers.png',
+    px = 71,
+    py = 95
+}
 
 SMODS.Joker{
     key = 'bye',
@@ -27,23 +29,20 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
-
     calculate = function(self, card, context)
         if context.joker_main then
             gcbm_delete()
             G.E_MANAGER:add_event(Event({
-                    trigger = 'after',
-                    delay = 0.1,
-                    func = function()
-                        card:start_dissolve({ G.C.RED }, nil, 1.6)
-                        return true
-                    end
-                }))
+                trigger = 'after',
+                delay = 0.1,
+                func = function()
+                    card:start_dissolve({ G.C.RED }, nil, 1.6)
+                    return true
+                end
+            }))
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }

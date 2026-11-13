@@ -1,11 +1,8 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Unhinged_jokers', --atlas key
-    path = 'Unhinged_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Unhinged_jokers',
+    path = 'Unhinged_jokers.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.Sound({
@@ -31,73 +28,41 @@ SMODS.Rarity{
 }
 
 SMODS.Joker{
-    key = 'criminal', --joker key
-    loc_txt = { -- local text
+    key = 'criminal',
+    loc_txt = {
         name = 'Criminal',
         text = {
           'When blind is selected,',
           'create a Negative Joker of',
           'everyone who had a part in Criminal',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
-          
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Unhinged_jokers', --atlas' key
-    rarity = 'gcbm_unh', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Unhinged_jokers',
+    rarity = 'gcbm_unh',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     calculate = function(self,card,context) 
         self.select_music_track = "music_criminal"
+        local NEGATIVE_SPAWN_KEYS = {
+            'j_gcbm_mem', 'j_gcbm_whisk', 'j_gcbm_sky', 'j_gcbm_leg',
+            'j_gcbm_avo', 'j_gcbm_lig', 'j_gcbm_dave',
+        }
         if context.setting_blind then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_whisk')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sky')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lig')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dave')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            for _, key in ipairs(NEGATIVE_SPAWN_KEYS) do
+                local new_card = create_card('Joker', G.jokers, nil, nil, nil, nil, key)
+                new_card:set_edition({ negative = true }, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+            end
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -121,10 +86,8 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 2, y = 0},
-
     calculate = function(self, card, context)
         if context.setting_blind then
-            -- List of 9 consumables to choose from (8 safe + 1 mine)
             local consumables = {
                 'c_gcbm_one',
                 'c_gcbm_two',
@@ -136,11 +99,7 @@ SMODS.Joker{
                 'c_gcbm_eight',
                 'c_gcbm_flag'
             }
-            
-            -- Pick one at random
             local random_consumable = pseudorandom_element(consumables, pseudoseed('cellopen'))
-            
-            -- Create the card
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.4,
@@ -151,7 +110,6 @@ SMODS.Joker{
                     return true
                 end
             }))
-            
             return {
                 message = 'Cell Opened!',
                 colour = G.C.PURPLE,
@@ -159,54 +117,38 @@ SMODS.Joker{
             }
         end
     end,
-
     in_pool = function(self)
         return true
     end
 }
 
 SMODS.Joker{
-    key = 'xvi', --joker key
-    loc_txt = { -- local text
+    key = 'xvi',
+    loc_txt = {
         name = 'XVI',
         text = {
           'When blind is selected,',
           'Create {C:attention}16{} Negative {C:attention}Black Holes{}',
           '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Unhinged_jokers', --atlas' key
-    rarity = 'gcbm_unh', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Unhinged_jokers',
+    rarity = 'gcbm_unh',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
             for i = 1, 16 do
-            SMODS.add_card({ set = "Spectral", key = 'c_black_hole', area = G.spectrals, edition = 'e_negative' })
+                SMODS.add_card({ set = "Spectral", key = 'c_black_hole', area = G.spectrals, edition = 'e_negative' })
             end
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
-
-
-----------------------------------------------
-------------MOD CODE END----------------------

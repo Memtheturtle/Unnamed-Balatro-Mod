@@ -1,34 +1,21 @@
---------------------------------------------------------------------
--- fight.lua : "intro attack" dodge fight, drawn as an overlay.
--- Order: blue-soul floor slam -> bone hallway -> 4 blaster sets
--- Logical screen is 640x480, scaled to fit the window.
---------------------------------------------------------------------
 local cfg = ... or {
     max_hp = 100, damage = 1, iframes = 0.01,
     gameover_seconds = 6, real_game_over = true,
 }
-
--- Undertale-style beam damage: lose 1 HP every `beam_tick` seconds while inside a beam.
--- 1/30 = 1 HP per game tick (30 fps). Use 2/30 for 1 HP every 2 ticks, etc.
 local BEAM_TICK = cfg.beam_tick or (1 / 100)
-local BONE_DMG  = cfg.damage or 5     -- HP lost per bone hit (has i-frames)
-
+local BONE_DMG  = cfg.damage or 5
 local F = { cur = nil, active = false }
-
 local W, H  = 640, 480
-local A     = 240                                   -- arena is an A x A square
+local A     = 240
 local ARENA = { x = (W - A) / 2, y = 190, w = A, h = A }
 local CX, CY = ARENA.x + A / 2, ARENA.y + A / 2
-
-local CHARGE, BEAM = 0.4, 0.3         -- blaster telegraph / live time (faster)
+local CHARGE, BEAM = 0.4, 0.3
 local SOUL, HIT    = 14, 5
 local SPEED        = 190
 local GRAV, JUMP   = 900, 280
 local SLAM_H       = 22
 local BONE_W, BONE_SPEED, BONE_GAP = 10, 420, 34
 local GAPC         = ARENA.y + A * 0.62
-
--- timeline (seconds), compressed from the first version
 local BLUE_ON, SLAM_WARN, SLAM_ON, SLAM_OFF, BLUE_OFF = 0.5, 0.7, 1.1, 1.4, 1.6
 local HALL_START, HALL_N, HALL_STEP = 1.8, 10, 0.12
 local SET_T0, SET_STEP, STAGGER     = 3.5, 0.95, 0.07
@@ -42,8 +29,6 @@ local function fonts()
     end
 end
 
--- Optional sprites. Drop your OWN art in <sprite_dir>/sans.png and blaster.png
--- (blaster art should face RIGHT). Missing files => plain shapes are used.
 local function load_sprites()
     if sprites then return end
     sprites = {}
@@ -77,7 +62,6 @@ local function safe_sound(key, pitch, vol)
     end
 end
 
----------------------------------------------------------------- music
 local function start_music(f)
     if not cfg.music_path or not NFS then return end
     pcall(function()
@@ -100,8 +84,6 @@ local function stop_music(f)
     end
 end
 
----------------------------------------------------------------- attack data
--- size = blaster body scale. Beams are thick so the arena is actually threatened.
 local function box_set()
     local off, w, len = 84, 68, A + 120
     return {
@@ -171,7 +153,6 @@ local function in_beam(b, sx, sy, w)
     return u >= 24 and u <= b.len and math.abs(v) < w / 2 + 1
 end
 
----------------------------------------------------------------- flow
 local function finish(f)
     stop_music(f)
     F.active = false
@@ -209,7 +190,6 @@ function F.start(f)
     G.CONTROLLER.locks.sansjk = true
 end
 
--- Called from the joker: blocks Balatro's event queue until the fight is over.
 function F.queue(card)
     local f = { card = card, started = false, finished = false }
     G.E_MANAGER:add_event(Event({
@@ -224,7 +204,7 @@ end
 local function die(f)
     f.state, f.dt = 'dying', 0
     f.hp = 0
-    stop_music(f)   -- the music cuts out on death, like the real game
+    stop_music(f) 
     if cfg.sound_key then safe_sound(cfg.sound_key, 1, 1) end
 end
 
@@ -252,7 +232,6 @@ end
 
 local function bone_x(f, t0) return ARENA.x + A + BONE_W - (f.t - t0) * BONE_SPEED end
 
----------------------------------------------------------------- update
 function F.update(dt)
     local f = F.cur
     if not f then return end
@@ -276,7 +255,7 @@ function F.update(dt)
             f.soul.x = clamp(f.soul.x + dx * SPEED * dt, minx, maxx)
             f.vy = f.vy + GRAV * dt
             if up and f.soul.y >= maxy - 0.5 then f.vy = -JUMP end
-            if not up and f.vy < -80 then f.vy = -80 end     -- release early = short hop
+            if not up and f.vy < -80 then f.vy = -80 end
             f.soul.y = f.soul.y + f.vy * dt
             if f.soul.y >= maxy then f.soul.y, f.vy = maxy, 0 end
             if f.soul.y <= miny then f.soul.y, f.vy = miny, 0 end
@@ -290,12 +269,10 @@ function F.update(dt)
         if f.iframes > 0 then f.iframes = f.iframes - dt end
         local sx, sy = f.soul.x, f.soul.y
 
-        -- floor slam
         if t >= SLAM_ON and t < SLAM_OFF and sy + HIT > ARENA.y + A - SLAM_H then
             bone_hit(f)
         end
 
-        -- bone hallway
         if f.state == 'fight' then
             local top_h, bot_y = bone_geometry()
             for _, t0 in ipairs(f.bones) do
@@ -311,7 +288,6 @@ function F.update(dt)
             end
         end
 
-        -- blasters: blaster SFX on fire, 1 HP every BEAM_TICK seconds while inside a beam
         if f.state == 'fight' then
             local burning = false
             for _, b in ipairs(f.beams) do
@@ -363,7 +339,6 @@ function F.update(dt)
     end
 end
 
----------------------------------------------------------------- draw
 local function draw_soul(x, y)
     love.graphics.circle('fill', x - 3.5, y - 2, 4)
     love.graphics.circle('fill', x + 3.5, y - 2, 4)
@@ -374,8 +349,6 @@ local function draw_blaster_body(b, alpha)
     local img = sprites and sprites.blaster
     love.graphics.push()
     love.graphics.translate(b.ox, b.oy)
-    -- cfg.blaster_rot: which way YOUR sprite faces. Right = 0 (default), down = -math.pi/2,
-    -- left = math.pi, up = math.pi/2
     love.graphics.rotate(b.ang + (cfg.blaster_rot or 0))
     if img then
         local sc = (36 * b.size) / img:getHeight()
@@ -419,7 +392,6 @@ function F.draw()
     love.graphics.translate((sw - W * s) / 2, (sh - H * s) / 2)
     love.graphics.scale(s)
 
-    -- Game over screen
     if f.state == 'dying' and f.dt >= 1.0 then
         local a = math.min(1, (f.dt - 1.0) / 1.5)
         love.graphics.setColor(1, 1, 1, a)
@@ -433,7 +405,6 @@ function F.draw()
         love.graphics.translate(love.math.random(-3, 3), love.math.random(-3, 3))
     end
 
-    -- opponent sprite (only if you supplied sans.png)
     if sprites and sprites.sans then
         local img = sprites.sans
         local sc = 110 / img:getHeight()
@@ -441,7 +412,6 @@ function F.draw()
         love.graphics.draw(img, CX, 80, 0, sc, sc, img:getWidth() / 2, img:getHeight() / 2)
     end
 
-    -- arena
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setLineWidth(4)
     love.graphics.rectangle('line', ARENA.x - 2, ARENA.y - 2, A + 4, A + 4)
@@ -450,7 +420,6 @@ function F.draw()
     if alive then
         local t = f.t
 
-        -- floor slam
         local fy = ARENA.y + A - SLAM_H
         if t >= SLAM_WARN and t < SLAM_ON then
             love.graphics.setColor(1, 1, 1, 0.25 + 0.25 * (math.floor(t / 0.1) % 2))
@@ -460,7 +429,6 @@ function F.draw()
             love.graphics.rectangle('fill', ARENA.x, fy, A, SLAM_H)
         end
 
-        -- bone hallway
         local top_h, bot_y = bone_geometry()
         love.graphics.setColor(1, 1, 1, 1)
         for _, t0 in ipairs(f.bones) do
@@ -474,7 +442,6 @@ function F.draw()
             end
         end
 
-        -- blasters + beams (clipped to the screen, not the arena, like the real thing)
         for _, b in ipairs(f.beams) do
             local st, p, w = beam_state(b, t)
             if st then
@@ -491,7 +458,6 @@ function F.draw()
         end
     end
 
-    -- soul
     if f.state == 'dying' then
         if f.dt < 0.6 then
             love.graphics.setColor(1, 0, 0, 1)
@@ -509,8 +475,7 @@ function F.draw()
         else love.graphics.setColor(1, 0, 0, 1) end
         draw_soul(f.soul.x, f.soul.y)
     end
-
-    -- HP bar
+    
     local shown = math.max(0, math.ceil(f.hp))
     local frac = math.max(0, f.hp) / cfg.max_hp
     local by = ARENA.y + A + 16

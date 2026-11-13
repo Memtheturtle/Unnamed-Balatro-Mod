@@ -1,43 +1,40 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Roles', --atlas key
-    path = 'Roles.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Roles',
+    path = 'Roles.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.ConsumableType{
-    key = 'Roles', --consumable type key
-    collection_rows = {5,6}, --amount of cards in one page
-    primary_colour = G.C.WHITE, --first color
-    secondary_colour = G.C.GREY, --second color
+    key = 'Roles',
+    collection_rows = {5,6},
+    primary_colour = G.C.WHITE,
+    secondary_colour = G.C.GREY,
     loc_txt = {
-        collection = 'Roles', --name displayed in collection
-        name = 'Roles', --name displayed in badge
+        collection = 'Roles',
+        name = 'Roles',
         undiscovered = {
-            name = 'Unearned Roles', --undiscovered name
-            text = {'Check Discord'} --undiscovered text
+            name = 'Unearned Roles',
+            text = {'Check Discord'}
         }
     },
-    shop_rate = 1, --rate in shop out of 100
+    shop_rate = 1,
 }
 
 SMODS.UndiscoveredSprite{
-    key = 'Roles', --must be the same key as the consumabletype
+    key = 'Roles',
     atlas = 'Roles',
     pos = {x = 0, y = 2}
 }
 
 SMODS.Consumable{
-    key = 'p', --key
-    set = 'Roles', --the set of the card: corresponds to a consumable type
-    atlas = 'Roles', --atlas
-    pos = {x = 9, y = 0}, --position in atlas
+    key = 'p',
+    set = 'Roles',
+    atlas = 'Roles',
+    pos = {x = 9, y = 0},
     loc_txt = {
-        name = '@p', --name of card
-        text = { --text of card
+        name = '@p',
+        text = {
             'Gives everyone in @p'
         }
     },
@@ -45,15 +42,13 @@ SMODS.Consumable{
        return true
     end,
     use = function(self,card,area,copier)
-        local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lillie')
-        new_card:add_to_deck()
-        G.jokers:emplace(new_card)
-        local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
-        new_card:add_to_deck()
-        G.jokers:emplace(new_card)
+        local SPAWN_KEYS = {
+            'j_gcbm_lillie', 'j_gcbm_per',
+        }
+        for _, key in ipairs(SPAWN_KEYS) do
+            local new_card = create_card('Joker', G.jokers, nil, nil, nil, nil, key)
+            new_card:add_to_deck()
+            G.jokers:emplace(new_card)
+        end
     end,
 }
-
-
-----------------------------------------------
-------------MOD CODE END----------------------

@@ -1,44 +1,42 @@
-----------------------------------------------
-------------MOD CODE -------------------------
 local config = SMODS.current_mod.config
 
 SMODS.Atlas{
-    key = 'Food', --atlas key
-    path = 'Food.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Food',
+    path = 'Food.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.ConsumableType{
-    key = 'Food', --consumable type key
-    collection_rows = {5,6}, --amount of cards in one page
-    primary_colour = G.C.WHITE, --first color
-    secondary_colour = G.C.GREY, --second color
+    key = 'Food',
+    collection_rows = {5,6},
+    primary_colour = G.C.WHITE,
+    secondary_colour = G.C.GREY,
     loc_txt = {
-        collection = 'Food', --name displayed in collection
-        name = 'Food', --name displayed in badge
+        collection = 'Food',
+        name = 'Food',
         undiscovered = {
-            name = 'Hidden Food', --undiscovered name
-            text = {'Go to Walmart'} --undiscovered text
+            name = 'Hidden Food',
+            text = {'Go to Walmart'}
         }
     },
-    shop_rate = 1, --rate in shop out of 100
+    shop_rate = 1,
 }
 
 SMODS.UndiscoveredSprite{
-    key = 'Food', --must be the same key as the consumabletype
+    key = 'Food',
     atlas = 'Food',
     pos = {x = 0, y = 2}
 }
 
 SMODS.Consumable{
-    key = 'fried_chicken', --key
-    set = 'Food', --the set of the card: corresponds to a consumable type
-    atlas = 'Food', --atlas
-    pos = {x = 9, y = 0}, --position in atlas
+    key = 'fried_chicken',
+    set = 'Food',
+    atlas = 'Food',
+    pos = {x = 9, y = 0},
     loc_txt = {
-        name = 'Fried Chicken', --name of card
-        text = { --text of card
+        name = 'Fried Chicken',
+        text = {
             'Placeholder'
         }
     },
@@ -46,17 +44,17 @@ SMODS.Consumable{
        return true
     end,
     use = function(self,card,area,copier)
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'yogurt', --key
-    set = 'Food', --the set of the card: corresponds to a consumable type
-    atlas = 'Food', --atlas
-    pos = {x = 9, y = 0}, --position in atlas
+    key = 'yogurt',
+    set = 'Food',
+    atlas = 'Food',
+    pos = {x = 9, y = 0},
     loc_txt = {
-        name = 'Yogurt', --name of card
-        text = { --text of card
+        name = 'Yogurt',
+        text = {
             'Tastes Good'
         }
     },
@@ -65,11 +63,9 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         local streamer_mode_enabled = config ~= nil
-                and config.streamer_mode == true
-            if not streamer_mode_enabled then
-                local opened = love.system.openURL("https://youtu.be/eTE-gFPsTgw?si=j9oOHmXoc8MGYP27")
-            end
-    end, 
+            and config.streamer_mode == true
+        if not streamer_mode_enabled then
+            local opened = love.system.openURL("https://youtu.be/eTE-gFPsTgw?si=j9oOHmXoc8MGYP27")
+        end
+    end,
 }
-
-

@@ -1,12 +1,6 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Later_levels', --atlas key
-    path = 'Later_levels.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Later_levels',
+    path = 'Later_levels.png',
+    px = 71,
+    py = 95
 }
-
-----------------------------------------------
-------------MOD CODE END----------------------

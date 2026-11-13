@@ -1,14 +1,9 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Bunny_jokers', --atlas key
-    path = 'Bunny_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Bunny_jokers',
+    path = 'Bunny_jokers.png',
+    px = 71,
+    py = 95
 }
-
-
 
 SMODS.Rarity{
     key = "bunny",
@@ -20,6 +15,7 @@ SMODS.Rarity{
     get_weight = function(self, weight, object_type)
         return weight
     end,
+    shop_rate = 1,
 }
 
 SMODS.Joker{
@@ -39,16 +35,14 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 1, y = 0},
-    config = { 
+    config = {
         extra = {
             chips = 6767,
         }
     },
-
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.chips, G.GAME.probabilities.normal or 1}}
     end,
-
     calculate = function(self, card, context)
         if context.joker_main then
             return {
@@ -57,7 +51,6 @@ SMODS.Joker{
         end
         return {calculated = true}
     end,
-
     in_pool = function(self)
         return true
     end

@@ -1,32 +1,28 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Minesweepers', --atlas key
-    path = 'Minesweepers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Minesweepers',
+    path = 'Minesweepers.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.ConsumableType{
-    key = 'minesweep', --consumable type key
-
-    collection_rows = {5,6}, --amount of cards in one page
-    primary_colour = G.C.WHITE, --first color
-    secondary_colour = G.C.GREY, --second color
+    key = 'minesweep',
+    collection_rows = {5,6},
+    primary_colour = G.C.WHITE,
+    secondary_colour = G.C.GREY,
     loc_txt = {
-        collection = 'Minesweeper', --name displayed in collection
-        name = 'Minesweeper', --name displayed in badge
+        collection = 'Minesweeper',
+        name = 'Minesweeper',
         undiscovered = {
-            name = 'Hidden Mines', --undiscovered name
-            text = {'Boom'} --undiscovered text
+            name = 'Hidden Mines',
+            text = {'Boom'}
         }
     },
-    shop_rate = 0, --rate in shop out of 100
+    shop_rate = 0,
 }
 
 SMODS.UndiscoveredSprite{
-    key = 'minesweep', --must be the same key as the consumabletype
+    key = 'minesweep',
     atlas = 'Minesweepers',
     pos = {x = 0, y = 2}
 }
@@ -43,27 +39,20 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
+    loc_vars = function(self,info_queue,center)
         return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(20)
         if pseudorandom('onemine') < G.GAME.probabilities.normal / 8 then
@@ -84,30 +73,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {2 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(40)
-        if pseudorandom('onemine') < (2 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('twomine') < (2 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -125,30 +107,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {3 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(60)
-        if pseudorandom('onemine') < (3 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('threemine') < (3 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -166,30 +141,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {4 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(80)
-        if pseudorandom('onemine') < (4 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('fourmine') < (4 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -207,30 +175,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {5 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(100)
-        if pseudorandom('onemine') < (5 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('fivemine') < (5 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -248,30 +209,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {6 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(120)
-        if pseudorandom('onemine') < (6 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('sixmine') < (6 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -289,30 +243,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {7 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(140)
-        if pseudorandom('onemine') < (7 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('sevenmine') < (7 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -330,30 +277,23 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
- loc_vars = function(self,info_queue,center)
-        return {vars = {8 * G.GAME.probabilities.normal}} 
+    loc_vars = function(self,info_queue,center)
+        return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
-   
-
- can_use = function(self,card)
-                return true
-    end,
-    
- auto_use = function(self, card, area, copier)
+    can_use = function(self,card)
         return true
     end,
-
+    auto_use = function(self, card, area, copier)
+        return true
+    end,
     use = function(self, card, area, copier)
         ease_dollars(160)
-        if pseudorandom('onemine') < (8 * G.GAME.probabilities.normal) / 8 then
+        if pseudorandom('eightmine') < (8 * G.GAME.probabilities.normal) / 8 then
             SMODS.add_card({ set = "minesweep", key = 'c_gcbm_mine', area = G.consumeables})
         end
     end,
@@ -363,7 +303,7 @@ SMODS.Consumable{
     key = 'flag',
     set = 'minesweep',
     atlas = 'Minesweepers',
-    pos = {x = 3, y = 1},  -- Changed position so it's different from mine
+    pos = {x = 3, y = 1},
     loc_txt = {
         name = 'Flag',
         text = {
@@ -372,23 +312,16 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
     loc_vars = function(self, info_queue, center)
         return {vars = {G.GAME.probabilities.normal}} 
     end,
-    
     can_use = function(self, card)
-        return false  -- Can't manually use flags
-    end,
-
-    use = function(self, card, area, copier)
-        -- Flag doesn't do anything when used directly
+        return false 
     end,
 }
 
@@ -405,28 +338,22 @@ SMODS.Consumable{
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
     },
-      
     config = {
         extra = {
             cards = 4,
         }
     },
-    
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.cards}}
     end,
-    
     can_use = function(self, card)
         return true
     end,
-
     add_to_deck = function(self, card, from_debuff)
-        -- Auto-trigger when added to deck
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = 0.1,
             func = function()
-                -- Check if player has a flag
                 local has_flag = false
                 local flag_card = nil
                 local flag_index = nil
@@ -441,12 +368,10 @@ SMODS.Consumable{
                 end
 
                 if has_flag and flag_card and flag_index then
-                    -- Flag blocks the mine - both dissolve
                     flag_card:start_dissolve()
                     table.remove(G.consumeables.cards, flag_index)
                     card:start_dissolve()
                 else
-                    -- No flag - mine activates normally
                     card:use_consumeable()
                     card:start_dissolve()
                 end
@@ -456,7 +381,6 @@ SMODS.Consumable{
     end,
 
     use = function(self, card, area, copier)
-        -- Remove half of jokers
         local jokers_to_remove = math.floor(#G.jokers.cards / 2)
         for i = 1, jokers_to_remove do
             if G.jokers.cards[1] then
@@ -465,8 +389,7 @@ SMODS.Consumable{
                 table.remove(G.jokers.cards, 1)
             end
         end
-        
-        -- Remove half of consumables
+
         local consumables_to_remove = math.floor(#G.consumeables.cards / 2)
         for i = 1, consumables_to_remove do
             if G.consumeables.cards[1] then
@@ -477,5 +400,3 @@ SMODS.Consumable{
         end
     end,
 }
-----------------------------------------------
-------------MOD CODE END----------------------

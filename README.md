@@ -35,6 +35,8 @@ YOU MUST RENAME THE FOLDER TO REMOVE THE VERSION NUMBER. Github always adds the 
 
 VERSION HISTORY:
 
+0.8.2.0 - The Sisyphus Tarot Card, Cleaned Up Code, Added Art, Fixed Craig
+
 0.8.1.0 - Brown Note Joker, Nightmare Freddy Joker Now Functional, Improved dat_one_cursed_one Joker, Fixed Discord Joker, Added Art Credits, Fixed Craig
 
 0.8.0.0 - Custom Booster Packs (5 So Far), dat_one_cursed_one Joker, Chnged Waterbound from Backyardigan to Aredl Staff, Added Quotes, Added Art, Fixed Craig
@@ -228,4 +230,3 @@ PLANNED FEATURES:
 10+ Custom Decks
 
 Custom Art for All Cards!
-

@@ -1,31 +1,28 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Albums', --atlas key
-    path = 'Albums.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Albums',
+    path = 'Albums.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.ConsumableType{
-    key = 'Albums', --consumable type key
-    collection_rows = {5,6}, --amount of cards in one page
-    primary_colour = G.C.WHITE, --first color
-    secondary_colour = G.C.GREY, --second color
+    key = 'Albums',
+    collection_rows = {5,6},
+    primary_colour = G.C.WHITE,
+    secondary_colour = G.C.GREY,
     loc_txt = {
-        collection = 'Albums', --name displayed in collection
-        name = 'Albums', --name displayed in badge
+        collection = 'Albums',
+        name = 'Albums',
         undiscovered = {
-            name = 'Hidden Albums', --undiscovered name
-            text = {'Go to Barnes and Noble'} --undiscovered text
+            name = 'Hidden Albums',
+            text = {'Go to Barnes and Noble'}
         }
     },
-    shop_rate = 1, --rate in shop out of 100
+    shop_rate = 1,
 }
 
 SMODS.UndiscoveredSprite{
-    key = 'Albums', --must be the same key as the consumabletype
+    key = 'Albums',
     atlas = 'Albums',
     pos = {x = 0, y = 2}
 }
@@ -161,13 +158,13 @@ SMODS.Sound({
 })
 
 SMODS.Consumable{
-    key = 'back_in_black', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 9, y = 0}, --position in atlas
+    key = 'back_in_black',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 9, y = 0},
     loc_txt = {
-        name = 'Back in Black', --name of card
-        text = { --text of card
+        name = 'Back in Black',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -177,17 +174,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_back_in_black')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'eits', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 2, y = 0}, --position in atlas
+    key = 'eits',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 2, y = 0},
     loc_txt = {
-        name = 'Eye in the Sky', --name of card
-        text = { --text of card
+        name = 'Eye in the Sky',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -197,17 +194,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_eits')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'minecraft_volume_alpha', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'minecraft_volume_alpha',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'Minecraft Volume Alpha', --name of card
-        text = { --text of card
+        name = 'Minecraft Volume Alpha',
+        text = {
             'Placeholder'
         }
     },
@@ -216,17 +213,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_minecraft_volume_alpha')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'minecraft_volume_beta', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'minecraft_volume_beta',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'Minecraft Volume Beta', --name of card
-        text = { --text of card
+        name = 'Minecraft Volume Beta',
+        text = {
             'Placeholder'
         }
     },
@@ -235,17 +232,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_minecraft_volume_beta')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'brat', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'brat',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'BRAT', --name of card
-        text = { --text of card
+        name = 'BRAT',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by Memtheturtle{}',
         }
@@ -255,17 +252,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_brat')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'styan', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'styan',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'Stranger Than You Are Now', --name of card
-        text = { --text of card
+        name = 'Stranger Than You Are Now',
+        text = {
             'Placeholder'
         }
     },
@@ -274,17 +271,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_styan')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'ityttmom', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 0}, --position in atlas
+    key = 'ityttmom',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 0},
     loc_txt = {
-        name = 'i think you think too much of me', --name of card
-        text = { --text of card
+        name = 'i think you think too much of me',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -294,17 +291,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_ityttmom')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'getting_killed', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 0}, --position in atlas
+    key = 'getting_killed',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 0},
     loc_txt = {
-        name = 'Getting Killed', --name of card
-        text = { --text of card
+        name = 'Getting Killed',
+        text = {
             'Placeholder'
         }
     },
@@ -313,17 +310,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_getting_killed')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'appetite_for_destruction', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 0}, --position in atlas
+    key = 'appetite_for_destruction',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 0},
     loc_txt = {
-        name = 'Appetite for Destruction', --name of card
-        text = { --text of card
+        name = 'Appetite for Destruction',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -333,17 +330,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_appetite_for_destruction')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'revengeseekerz', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 0}, --position in atlas
+    key = 'revengeseekerz',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 0},
     loc_txt = {
-        name = 'Revengeseekerz', --name of card
-        text = { --text of card
+        name = 'Revengeseekerz',
+        text = {
             'Placeholder'
         }
     },
@@ -352,17 +349,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_revengeseekerz')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'metallica', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 10, y = 0}, --position in atlas
+    key = 'metallica',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 10, y = 0},
     loc_txt = {
-        name = 'Metallica', --name of card
-        text = { --text of card
+        name = 'Metallica',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -372,17 +369,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_metallica')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'dsotm', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 8, y = 1}, --position in atlas
+    key = 'dsotm',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 8, y = 1},
     loc_txt = {
-        name = 'Dark Side of the Moon', --name of card
-        text = { --text of card
+        name = 'Dark Side of the Moon',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -392,17 +389,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_dsotm')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'the_wall', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 7, y = 1}, --position in atlas
+    key = 'the_wall',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 7, y = 1},
     loc_txt = {
-        name = 'The Wall', --name of card
-        text = { --text of card
+        name = 'The Wall',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -412,17 +409,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_the_wall')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'ok_computer', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 7, y = 1}, --position in atlas
+    key = 'ok_computer',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 7, y = 1},
     loc_txt = {
-        name = 'OK Computer', --name of card
-        text = { --text of card
+        name = 'OK Computer',
+        text = {
             'Placeholder'
         }
     },
@@ -439,13 +436,13 @@ SMODS.Consumable{
 }
 
 SMODS.Consumable{
-    key = 'kid_a', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 7, y = 1}, --position in atlas
+    key = 'kid_a',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 7, y = 1},
     loc_txt = {
-        name = 'Kid A', --name of card
-        text = { --text of card
+        name = 'Kid A',
+        text = {
             'Placeholder'
         }
     },
@@ -454,17 +451,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_kid_a')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'in_rainbows', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 7, y = 1}, --position in atlas
+    key = 'in_rainbows',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 7, y = 1},
     loc_txt = {
-        name = 'In Rainbows', --name of card
-        text = { --text of card
+        name = 'In Rainbows',
+        text = {
             'Placeholder'
         }
     },
@@ -473,17 +470,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_in_rainbows')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'wyns', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 7, y = 1}, --position in atlas
+    key = 'wyns',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 7, y = 1},
     loc_txt = {
-        name = 'Whenever You Need Somebody', --name of card
-        text = { --text of card
+        name = 'Whenever You Need Somebody',
+        text = {
             'Placeholder'
         }
     },
@@ -492,17 +489,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_wyns')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'lagwafis', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 3, y = 1}, --position in atlas
+    key = 'lagwafis',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 3, y = 1},
     loc_txt = {
-        name = 'Ladies and gentlemen we are floating in space', --name of card
-        text = { --text of card
+        name = 'Ladies and gentlemen we are floating in space',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -512,17 +509,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_lagwafis')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'shsl', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 5, y = 1}, --position in atlas
+    key = 'shsl',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 5, y = 1},
     loc_txt = {
-        name = 'Sweet Heart, Sweet Life', --name of card
-        text = { --text of card
+        name = 'Sweet Heart, Sweet Life',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -532,17 +529,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_shsl')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'l_faps', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 5, y = 1}, --position in atlas
+    key = 'l_faps',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 5, y = 1},
     loc_txt = {
-        name = 'L Faps (Diss Track)', --name of card
-        text = { --text of card
+        name = 'L Faps (Diss Track)',
+        text = {
             'Placeholder'
         }
     },
@@ -551,17 +548,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_l_faps')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'currents', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'currents',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'Currents', --name of card
-        text = { --text of card
+        name = 'Currents',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -571,17 +568,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_currents')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'u', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'u',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'U', --name of card
-        text = { --text of card
+        name = 'U',
+        text = {
             'Placeholder'
         }
     },
@@ -590,17 +587,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_u')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'a_waterlogged_letter', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'a_waterlogged_letter',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'A Waterlogged Letter', --name of card
-        text = { --text of card
+        name = 'A Waterlogged Letter',
+        text = {
             'Placeholder'
         }
     },
@@ -609,17 +606,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_a_waterlogged_letter')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'weezer_blue', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 1, y = 0}, --position in atlas
+    key = 'weezer_blue',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 1, y = 0},
     loc_txt = {
-        name = 'Weezer', --name of card
-        text = { --text of card
+        name = 'Weezer',
+        text = {
             'Placeholder',
             '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         }
@@ -629,17 +626,17 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_weezer')
-    end, 
+    end,
 }
 
 SMODS.Consumable{
-    key = 'wetdream', --key
-    set = 'Albums', --the set of the card: corresponds to a consumable type
-    atlas = 'Albums', --atlas
-    pos = {x = 0, y = 1}, --position in atlas
+    key = 'wetdream',
+    set = 'Albums',
+    atlas = 'Albums',
+    pos = {x = 0, y = 1},
     loc_txt = {
-        name = 'wetdream', --name of card
-        text = { --text of card
+        name = 'wetdream',
+        text = {
             'Placeholder'
         }
     },
@@ -648,8 +645,5 @@ SMODS.Consumable{
     end,
     use = function(self,card,area,copier)
         play_sound('gcbm_wetdream')
-    end, 
+    end,
 }
-
-----------------------------------------------
-------------MOD CODE END----------------------

@@ -11,7 +11,7 @@ local mod = SMODS.current_mod
 ---@cast mod -nil
 G.gorb_count = 0
 G.whale = 1
-G.gacha = 1
+G.adobe = 1
 
 local function load(path)
     local chunk = love.filesystem.load(path)
@@ -121,7 +121,7 @@ end
 local has_albums_mod = love.filesystem.getInfo("mods/Albums", "directory") ~= nil
 
 load("mods/Unnamed-Balatro-Mod/Cache/net.lua")
-load("mods/Unnamed-Balatro-Mod/fight.lua")
+load("mods/Unnamed-Balatro-Mod/Other/fight.lua")
 load("mods/Unnamed-Balatro-Mod/Other/decks.lua")
 load("mods/Unnamed-Balatro-Mod/Other/booster.lua")
 load("mods/Unnamed-Balatro-Mod/Consumables/minesweeper.lua")

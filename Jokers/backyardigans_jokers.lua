@@ -1,49 +1,217 @@
-----------------------------------------------
-------------MOD CODE -------------------------
 local config = SMODS.current_mod.config
 local gcbm_mod_path = SMODS.current_mod.path
 local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-
 local https = require "SMODS.https"
 
+-- Makzu Joker
+
+    if not GCBM_screen_flip_installed then
+        GCBM_screen_flip_installed = true
+        local gcbm_draw_ref = love.draw
+        function love.draw()
+            if GCBM.screen_flipped then
+                love.graphics.push()
+                love.graphics.translate(love.graphics.getWidth(), 0)
+                love.graphics.scale(-1, 1)
+            end
+            gcbm_draw_ref()
+            if GCBM.screen_flipped then
+                love.graphics.pop()
+            end
+        end
+    end
+
+    if not GCBM_screen_flip2_installed then
+        GCBM_screen_flip2_installed = true
+        local gcbm_draw_ref = love.draw
+        function love.draw()
+            if GCBM.screen_flipped2 then
+                love.graphics.push()
+                love.graphics.translate(0, love.graphics.getHeight())
+                love.graphics.scale(1, -1)
+            end
+            gcbm_draw_ref()
+            if GCBM.screen_flipped2 then
+                love.graphics.pop()
+            end
+        end
+    end
+
+--SendDB Joker
+
+    local senddb_cache_path = gcbm_cache_dir .. "senddb_combined_sends_cache.txt"
+
+    local function senddb_read_cache()
+        local file = io.open(senddb_cache_path, "r")
+        if not file then return nil end
+        local value = tonumber(file:read("*a"))
+        file:close()
+        if value and value >= 0 then return value end
+        return nil
+    end
+
+    local function senddb_write_cache(total_sends)
+        local file = io.open(senddb_cache_path, "w")
+        if not file then return false end
+        file:write(tostring(total_sends))
+        file:close()
+        return true
+    end
+
+    local function get_creator_total_sends(creator_id, cb)
+        ---@diagnostic disable-next-line: undefined-global
+        https.asyncRequest("https://api.senddb.dev/api/v1/creator/" .. tostring(creator_id),
+            function(code, body)
+            if code ~= 200 or not body then return cb(nil) end
+            local sends = body:match(
+                '"levels"%s*:%s*%b[]%s*,%s*"send_count"%s*:%s*(%d+)%s*,%s*"points"')
+            cb(sends and tonumber(sends) or nil)
+        end)
+    end
+
+
+    local creator_ids = {
+        120151711, -- makzuisbad
+        276735696, -- Ludtropolis
+        133466003, -- Perfect
+        93438679,  -- Waterbound
+        53310466,  -- Theskycrusher6
+        115847777, -- Raindear
+        95502357,  -- AVRG
+        236798208, -- Tryingdino7
+        57118545,  -- Chaken
+        182577111, -- Simarlet
+    }
+
+    local senddb_combined_sends = senddb_read_cache() or 0
+
+    GCBM_NET.queue("senddb", function(done)
+        local total, pending, ok = 0, #creator_ids, true
+        for _, id in ipairs(creator_ids) do
+            get_creator_total_sends(id, function(n)
+                if n == nil then ok = false else total = total + n end
+                pending = pending - 1
+                if pending == 0 and ok then
+                    senddb_combined_sends = total
+                    senddb_write_cache(total)
+                    done()
+                end
+            end)
+        end
+    end)
+
+-- Timer Bot Joker
+
+    local function gcbm_timer_shutdown_computer()
+        local os_name = love.system.getOS()
+
+        if os_name == "OS X" then
+            os.execute('osascript -e \'tell app "System Events" to shut down\'')
+        elseif os_name == "Windows" then
+            os.execute('shutdown /s /t 0')
+        end
+    end
+
+-- FMbot Joker
+
+    SMODS.current_mod.calculate = function(self, context)
+        if context.using_consumeable and context.consumeable then
+            local c = context.consumeable
+            ---@cast c -nil
+            local set = c.ability and c.ability.set
+            if set == 'Albums' then
+                G.GAME.gcbm_album_uses = G.GAME.gcbm_album_uses or {}
+                ---@cast c -nil
+                local key = c.config.center.key
+                G.GAME.gcbm_album_uses[key] = (G.GAME.gcbm_album_uses[key] or 0) + 1
+            end
+        end
+    end
+
+-- Make it a Quote Joker
+
+    local QUOTE_VOICE = "Fred"
+    local QUOTE_RATE = 150
+    local QUOTE_PITCH = 35
+
+    local function quote_wrap(text, width)
+        local rows, row = {}, ""
+        for word in text:gmatch("%S+") do
+            if #row + #word + 1 > width and #row > 0 then
+                rows[#rows + 1] = row
+                row = word
+            else
+                row = (#row > 0) and (row .. " " .. word) or word
+            end
+        end
+        if #row > 0 then rows[#rows + 1] = row end
+        return rows
+    end
+
+    local function quote_show_line(line)
+        local rows = quote_wrap(line, 32)
+        local words = select(2, line:gsub("%S+", ""))
+        local real_seconds = math.max(6, words / (QUOTE_RATE / 60))
+        local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)
+        local scale = (#rows > 3) and 0.55 or 0.7
+
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                for i, row in ipairs(rows) do
+                    attention_text({
+                        text = row,
+                        scale = scale,
+                        hold = hold,
+                        major = G.play,
+                        align = "cm",
+                        offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
+                    })
+                end
+                return true
+            end,
+        }))
+    end
+
+    local function quote_speak(text)
+        local os_name = love.system.getOS()
+        if os_name == "OS X" then
+            local safe = text:gsub("'", "'\\''")
+            local cmd = "(say -v '" .. QUOTE_VOICE .. "' -r " .. QUOTE_RATE ..
+                " '[[pbas " .. QUOTE_PITCH .. "]] " .. safe .. "') &"
+            os.execute(cmd)
+        elseif os_name == "Windows" then
+            local safe = text:gsub("[^%w%s%.,!%?]", "")
+            os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
+        end
+    end
+
+    local quote_lines = {}
+
+    local function quote_load_lines()
+        local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
+        local data = NFS.read(gcbm_text_dir .. "quotes.txt")
+        if data then
+            ---@diagnostic disable-next-line: param-type-mismatch
+            for line in data:gmatch("[^\r\n]+") do
+                if line:match("%S") then
+                    quote_lines[#quote_lines + 1] = line
+                end
+            end
+        end
+        if #quote_lines == 0 then
+            quote_lines[1] = "quotes.txt is missing or empty!"
+        end
+    end
+    quote_load_lines()
+
 SMODS.Atlas{
-    key = 'Backyardigans_jokers', --atlas key
-    path = 'Backyardigans_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Backyardigans_jokers',
+    path = 'Backyardigans_jokers.png',
+    px = 71,
+    py = 95
 }
-
-if not GCBM_screen_flip_installed then
-    GCBM_screen_flip_installed = true
-    local gcbm_draw_ref = love.draw
-    function love.draw()
-        if GCBM.screen_flipped then
-            love.graphics.push()
-            love.graphics.translate(love.graphics.getWidth(), 0)
-            love.graphics.scale(-1, 1)
-        end
-        gcbm_draw_ref()
-        if GCBM.screen_flipped then
-            love.graphics.pop()
-        end
-    end
-end
-
-if not GCBM_screen_flip2_installed then
-    GCBM_screen_flip2_installed = true
-    local gcbm_draw_ref = love.draw
-    function love.draw()
-        if GCBM.screen_flipped2 then
-            love.graphics.push()
-            love.graphics.translate(0, love.graphics.getHeight())
-            love.graphics.scale(1, -1)
-        end
-        gcbm_draw_ref()
-        if GCBM.screen_flipped2 then
-            love.graphics.pop()
-        end
-    end
-end
 
 SMODS.Sound({
 	key = "music_animal",
@@ -102,7 +270,6 @@ SMODS.Sound({
     end,
 })
 
-
 SMODS.Sound({
 	key = "music_choppa",
 	path = "music_choppa.mp3",
@@ -113,11 +280,11 @@ SMODS.Sound({
 	end,
 })
 
-
 SMODS.Sound({
     key = "legacymoneygain",
     path = "legacymoneygain.mp3",
 })
+
 SMODS.Sound({
     key = "1984",
     path = "1984.mp3",
@@ -133,8 +300,6 @@ SMODS.Sound({
     path = "randombsgo.mp3",
 })
 
-
-
 SMODS.Rarity{
     key = "yard",
     loc_txt = {
@@ -147,209 +312,24 @@ SMODS.Rarity{
     end,
 }
 
-
--- =========================
--- SENDDB (combined sends)
--- =========================
-local senddb_cache_path = gcbm_cache_dir .. "senddb_combined_sends_cache.txt"
-
-local function senddb_read_cache()
-    local file = io.open(senddb_cache_path, "r")
-    if not file then return nil end
-    local value = tonumber(file:read("*a"))
-    file:close()
-    -- 0 is valid, so only reject invalid or negative values
-    if value and value >= 0 then return value end
-    return nil
-end
-
-local function senddb_write_cache(total_sends)
-    local file = io.open(senddb_cache_path, "w")
-    if not file then return false end
-    file:write(tostring(total_sends))
-    file:close()
-    return true
-end
-
--- Gets ONLY the creator-wide send_count (not the per-level ones)
-local function get_creator_total_sends(creator_id, cb)
-    ---@diagnostic disable-next-line: undefined-global
-    https.asyncRequest("https://api.senddb.dev/api/v1/creator/" .. tostring(creator_id),
-        function(code, body)
-            if code ~= 200 or not body then return cb(nil) end
-            local sends = body:match(
-                '"levels"%s*:%s*%b[]%s*,%s*"send_count"%s*:%s*(%d+)%s*,%s*"points"')
-            cb(sends and tonumber(sends) or nil)
-        end)
-end
-
-
-local creator_ids = {
-    120151711, -- makzuisbad
-    276735696, -- Ludtropolis
-    133466003, -- Perfect
-    93438679,  -- Waterbound
-    53310466,  -- Theskycrusher6
-    115847777, -- Raindear
-    95502357,  -- AVRG
-    236798208, -- Tryingdino7
-    57118545,  -- Chaken
-    182577111, -- Simarlet
-}
-
--- Instant: use the cached total (or 0)
-local senddb_combined_sends = senddb_read_cache() or 0
-
--- Later: refresh in the background if the cache is old.
--- Only overwrite the cache if EVERY creator succeeds, so a partial
--- total never replaces a good cached one.
-GCBM_NET.queue("senddb", function(done)
-    local total, pending, ok = 0, #creator_ids, true
-    for _, id in ipairs(creator_ids) do
-        get_creator_total_sends(id, function(n)
-            if n == nil then ok = false else total = total + n end
-            pending = pending - 1
-            if pending == 0 and ok then
-                senddb_combined_sends = total
-                senddb_write_cache(total)
-                done()
-            end
-        end)
-    end
-end)
-
-local function gcbm_timer_shutdown_computer()
-    local os_name = love.system.getOS()
-
-    if os_name == "OS X" then
-        os.execute('osascript -e \'tell app "System Events" to shut down\'')
-    elseif os_name == "Windows" then
-        os.execute('shutdown /s /t 0')
-    end
-end
-
-SMODS.current_mod.calculate = function(self, context)
-    if context.using_consumeable and context.consumeable then
-        local c = context.consumeable
-        ---@cast c -nil
-        local set = c.ability and c.ability.set
-        if set == 'Albums' then
-            G.GAME.gcbm_album_uses = G.GAME.gcbm_album_uses or {}
-            ---@cast c -nil
-            local key = c.config.center.key
-            G.GAME.gcbm_album_uses[key] = (G.GAME.gcbm_album_uses[key] or 0) + 1
-        end
-    end
-end
-
-local QUOTE_VOICE = "Fred"
-local QUOTE_RATE = 150
-local QUOTE_PITCH = 35
-
-local function quote_wrap(text, width)
-    local rows, row = {}, ""
-    for word in text:gmatch("%S+") do
-        if #row + #word + 1 > width and #row > 0 then
-            rows[#rows + 1] = row
-            row = word
-        else
-            row = (#row > 0) and (row .. " " .. word) or word
-        end
-    end
-    if #row > 0 then rows[#rows + 1] = row end
-    return rows
-end
-
-local function quote_show_line(line)
-    local rows = quote_wrap(line, 32)
-    local words = select(2, line:gsub("%S+", ""))
-    local real_seconds = math.max(6, words / (QUOTE_RATE / 60))
-    local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)
-    local scale = (#rows > 3) and 0.55 or 0.7
-
-    G.E_MANAGER:add_event(Event({
-        trigger = "after",
-        delay = 0.2,
-        func = function()
-            for i, row in ipairs(rows) do
-                attention_text({
-                    text = row,
-                    scale = scale,
-                    hold = hold,
-                    major = G.play,
-                    align = "cm",
-                    offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
-                })
-            end
-            return true
-        end,
-    }))
-end
-
-local function quote_speak(text)
-    local os_name = love.system.getOS()
-    if os_name == "OS X" then
-        local safe = text:gsub("'", "'\\''")
-        local cmd = "(say -v '" .. QUOTE_VOICE .. "' -r " .. QUOTE_RATE ..
-            " '[[pbas " .. QUOTE_PITCH .. "]] " .. safe .. "') &"
-        os.execute(cmd)
-    elseif os_name == "Windows" then
-        local safe = text:gsub("[^%w%s%.,!%?]", "")
-        os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
-    end
-end
-
-local quote_lines = {}
-
-local function quote_load_lines()
-    local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
-    local data = NFS.read(gcbm_text_dir .. "quotes.txt")
-    if data then
-        ---@diagnostic disable-next-line: param-type-mismatch
-        for line in data:gmatch("[^\r\n]+") do
-            if line:match("%S") then
-                quote_lines[#quote_lines + 1] = line
-            end
-        end
-    end
-    if #quote_lines == 0 then
-        quote_lines[1] = "quotes.txt is missing or empty!"
-    end
-end
-quote_load_lines()
-
 SMODS.Joker{
-    key = 'avo', --joker key
-    loc_txt = { -- local text
+    key = 'avo',
+    loc_txt = {
         name = 'Avocat0',
         text = {
           'Spawns {C:attention}1{} Negative {C:attention}Gorb{}',
           'at the start of each blind',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    
-  
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 5, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_gorb')
@@ -359,87 +339,55 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'avrg', --joker key
-    loc_txt = { -- local text
+    key = 'avrg',
+    loc_txt = {
         name = 'AVRG',
         text = {
           '{C:attention}Nothing{}. {C:attention}Ever{}. {C:attention}Happens{}.',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    
-  
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 5, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
     add_to_deck = function(self, card, from_debuff)
        for k, v in pairs(G.GAME.probabilities) do 
             G.GAME.probabilities[k] = v * 0
         end
     end,
-
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'bean', --joker key
-    loc_txt = { -- local text
+    key = 'bean',
+    loc_txt = {
         name = 'Bean',
         text = {
           'Gives 1 {C:attention}Nightmare Freddy{}',
           'at the start of each blind',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    
-  
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 5, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 5, y = 0},
     calculate = function(self, card, context)
         if context.setting_blind then
             local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_nightmare')
@@ -449,7 +397,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -463,9 +410,8 @@ SMODS.Joker{
             '{C:attention}Spawn 1 of that card{} every blind',
         },
     },
-   atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
     cost = 50,
     unlocked = true,
     discovered = true,
@@ -473,156 +419,151 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 1},
-   
-
-
-     calculate = function(self, card, context)
+    calculate = function(self, card, context)
         if context.setting_blind then
+            local month = tonumber(os.date('%m'))
+            local day   = tonumber(os.date('%d'))
 
-        local month = tonumber(os.date('%m'))
-        local day   = tonumber(os.date('%d'))
+            if month == 1 and day == 22 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_craig')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        if month == 1 and day == 22 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_craig')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 1 and day == 27 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dave')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 1 and day == 27 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dave')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 2 and day == 10 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_jockie')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+    
+            elseif month == 2 and day == 18 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_pig')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 2 and day == 10 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_jockie')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-  
-        elseif month == 2 and day == 18 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_pig')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 2 and day == 27 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 2 and day == 27 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lud')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 3 and day == 4 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_makeitaquote')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 3 and day == 4 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_makeitaquote')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 4 and day == 1 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_echo')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 4 and day == 1 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_echo')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 5 and day == 3 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_senddb')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 3 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_senddb')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 5 and day == 10 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_makzu')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 10 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_makzu')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 5 and day == 25 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 25 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_leg')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 5 and day == 27 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dino')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 5 and day == 27 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_dino')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 6 and day == 9 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sin')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 6 and day == 9 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sin')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 6 and day == 15 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sky')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 6 and day == 15 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_sky')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 6 and day == 27 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avrg')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 6 and day == 27 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avrg')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 7 and day == 4 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lillie')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 7 and day == 4 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_lillie')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 7 and day == 22 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_bday')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 7 and day == 22 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_bday')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 8 and day == 11 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 8 and day == 11 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_mem')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 9 and day == 6 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 9 and day == 6 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_per')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 9 and day == 9 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_fmbot')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+            
+            elseif month == 9 and day == 26 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_timer')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 9 and day == 9 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_fmbot')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-        
-        elseif month == 9 and day == 26 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_timer')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 10 and day == 13 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_wushady')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 10 and day == 13 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_wushady')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 11 and day == 17 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_tts')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
 
-        elseif month == 11 and day == 17 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_tts')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-
-        elseif month == 12 and day == 4 then
-          local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            elseif month == 12 and day == 4 then
+            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_avo')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+            end
         end
-    end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -645,42 +586,31 @@ SMODS.Joker{
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
-    pos = { x = 6, y = 0 },
+    pos = { x = 9, y = 0 },
     calculate = function(self, card, context)
         if context.setting_blind then
-             play_sound('gcbm_randombsgo')
-
+            play_sound('gcbm_randombsgo')
             local function gcbm_open_camera()
-                local os_name = love.system.getOS()
-                local streamer_mode_enabled = config ~= nil
-                    and config.streamer_mode == true
+            local os_name = love.system.getOS()
+            local streamer_mode_enabled = config ~= nil
+                and config.streamer_mode == true
 
                 if not streamer_mode_enabled then
                     if os_name == "OS X" then
-                        -- Opens macOS's built-in camera application.
                         local ok = os.execute('open -a "Photo Booth"')
                         return ok == true or ok == 0
                     elseif os_name == "Windows" then
-                        -- Opens the Windows Camera app through its URI protocol.
-                        -- The blank "" after start is the required window title.
                         local ok = os.execute(
                             'start "" "microsoft.windows.camera:"'
                         )
-
                         return ok == true or ok == 0
                     end
                 end
-
-                -- Linux / unsupported operating system.
                 return false
             end
 
             local opened = gcbm_open_camera()
 
-            if not opened then
-                -- Optional debug message:
-                -- send("Could not open the camera app")
-            end
             G.E_MANAGER:add_event(Event({ 
                 trigger = 'after',
                 delay = 0.1,
@@ -691,7 +621,6 @@ SMODS.Joker{
             }))
         end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -707,7 +636,6 @@ SMODS.Joker{
           'all Jokers',
         },
     },
-    
     atlas = 'Backyardigans_jokers',
     rarity = 'gcbm_yard',
     cost = 50,
@@ -722,32 +650,23 @@ SMODS.Joker{
             Xmult = 10,
         }
     },
-
     loc_vars = function(self, info_queue, center)
         -- Fixed: combined both vars into one return
         return {vars = {center.ability.extra.Xmult, G.GAME.probabilities.normal}}
     end,
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self)
-    end,
-
     calculate = function(self, card, context)
         if context.setting_blind then
-             if pseudorandom('dave') < G.GAME.probabilities.normal / 2 then
-            for _, joker in ipairs(G.jokers.cards) do
-                joker.debuff = true
-                card_eval_status_text(joker, 'extra', nil, nil, nil, {
-                    message = 'Debuffed!',
-                    colour = G.C.RED
-                })
+            if pseudorandom('dave') < G.GAME.probabilities.normal / 2 then
+                for _, joker in ipairs(G.jokers.cards) do
+                    joker.debuff = true
+                    card_eval_status_text(joker, 'extra', nil, nil, nil, {
+                        message = 'Debuffed!',
+                        colour = G.C.RED
+                    })
+                end
             end
         end
-        end
-        
+
         if context.joker_main then
             return {
                 card = card,
@@ -763,47 +682,35 @@ SMODS.Joker{
             end
         end
     end,
-
     in_pool = function(self)
         return true
     end,
-} 
+}
 
 SMODS.Joker{
-    key = 'echo', --joker key
-    loc_txt = { -- local text
+    key = 'echo',
+    loc_txt = {
         name = 'Echofallenn',
         text = {
           'When blind is selected,',
           'create {C:attention}1{} {C:attention}CMD Card{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 1},
     calculate = function(self,card,context) 
         if context.setting_blind then
             SMODS.add_card({ set = "CMD", area = G.consumeables})
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -819,7 +726,7 @@ SMODS.Joker{
             '{C:inactive}(Must have room){}',
         },
     },
-    atlas = 'Uncommon_jokers', -- change to your atlas
+    atlas = 'Uncommon_jokers',
     rarity = 2,
     cost = 6,
     unlocked = true,
@@ -827,15 +734,13 @@ SMODS.Joker{
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 0, y = 0}, -- placeholder sprite position
-
+    pos = {x = 0, y = 0},
     calculate = function(self, card, context)
         if context.setting_blind then
             if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then
                 return
             end
 
-            -- Rank by use count, ties broken by key so the order is stable
             local list = {}
             for key, n in pairs(G.GAME.gcbm_album_uses or {}) do
                 list[#list + 1] = { key = key, n = n }
@@ -859,7 +764,6 @@ SMODS.Joker{
                             area = G.consumeables,
                         })
                     else
-                        -- nothing used yet, so give a random album
                         SMODS.add_card({ set = 'Albums', area = G.consumeables })
                     end
                     G.GAME.consumeable_buffer = 0
@@ -874,7 +778,6 @@ SMODS.Joker{
             }
         end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -899,13 +802,6 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 3, y = 0},
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-    end,
-
     calculate = function(self, card, context)
         if context.setting_blind then
             SMODS.add_card({ set = "Albums", area = G.consumeables })
@@ -913,9 +809,7 @@ SMODS.Joker{
             card_eval_status_text(card, 'dollars', -2)
         end
     end,
-
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -937,40 +831,35 @@ SMODS.Joker{
     cost = 50,
     unlocked = true,
     discovered = true,
-    blueprint_compat = true,
+    blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 7, y = 0},
-
     loc_vars = function(self, info_queue, center)
         return {vars = {G.GAME.probabilities.normal}} 
     end,
-
     calculate = function(self, card, context)
-        if context.setting_blind and not context.blueprint then
-            -- Add a flag to prevent multiple triggers in the same blind
+        if context.setting_blind then
             if not card.ability.triggered_this_blind then
                 local money_gain = math.random(1, 150)
                 if pseudorandom('leg') < G.GAME.probabilities.normal / 20 then
                     local money_lost = -G.GAME.dollars
                     G.GAME.dollars = 0
-                    ease_dollars(money_lost) -- Only use ease_dollars to animate the change
+                    ease_dollars(money_lost)
                     card_eval_status_text(card, 'extra', nil, nil, nil, {message = "Lost All Money!", colour = G.C.RED})
                     play_sound('gcbm_legacymoneylost')
                 else
-                    ease_dollars(money_gain) -- Only use ease_dollars to apply the gain
+                    ease_dollars(money_gain)
                     card_eval_status_text(card, 'dollars', money_gain)
                      play_sound('gcbm_legacymoneygain')
                 end
-                card.ability.triggered_this_blind = true -- Mark as triggered
+                card.ability.triggered_this_blind = true
                 return nil
             end
-        elseif context.end_of_round then
-            -- Reset the flag at the end of the round
+            elseif context.end_of_round then
             card.ability.triggered_this_blind = false
         end
     end,
-
     in_pool = function(self)
         return true
     end
@@ -994,9 +883,7 @@ SMODS.Joker{
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 8, y = 0},
-
-
+    pos = {x = 10, y = 0},
     calculate = function(self, card, context)
         if context.setting_blind then
             for _ = 1, 10 do
@@ -1015,7 +902,6 @@ SMODS.Joker{
             }))
         end
     end,
-
     in_pool = function(self)
         return true
     end
@@ -1035,16 +921,10 @@ SMODS.Joker{
     cost = 50,
     unlocked = true,
     discovered = true,
-    blueprint_compat = true,
+    blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 5, y = 0},
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-        unlock_card(self)
-    end,
     calculate = function(self, card, context)
         if context.setting_blind then
             local line = pseudorandom_element(quote_lines, pseudoseed("quote"))
@@ -1058,38 +938,26 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'mem', --joker key
-    loc_txt = { -- local text
+    key = 'mem',
+    loc_txt = {
         name = 'Memtheturtle',
         text = {
           'When blind is selected,',
           '{C:green}#1# in 8{} chance to {C:attention}10x{} {C:money}${}, otherwise lose it all',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     loc_vars = function(self,info_queue,center)
         return {vars = {G.GAME.probabilities.normal}} 
-    end,
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
         if context.setting_blind then
@@ -1101,7 +969,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1124,30 +991,24 @@ SMODS.Joker{
     perishable_compat = false,
     config = {eternal = true},
     pos = {x = 6, y = 0},
-
     loc_vars = function(self, info_queue, center)
         return {vars = {G.GAME.probabilities.normal}} 
     end,
-
-      add_to_deck = function(self, card, from_debuff)
+    add_to_deck = function(self, card, from_debuff)
         GCBM.screen_flipped = true
         GCBM.screen_flipped2 = true
     end,
-
     remove_from_deck = function(self, card, from_debuff)
         GCBM.screen_flipped = false
         GCBM.screen_flipped2 = false
     end,
-
-
     calculate = function(self, card, context)
         self.select_music_track = "music_season"
         if context.setting_blind then
             ease_dollars(2)
-             card_eval_status_text(card, 'dollars', 2)
+            card_eval_status_text(card, 'dollars', 2)
         end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -1171,14 +1032,11 @@ SMODS.Joker{
     eternal_compat = false,
     perishable_compat = true,
     pos = { x = 6, y = 0 },
-
     calculate = function(self, card, context)
         self.select_music_track = "music_animal"
-
         if context.setting_blind then
             ease_dollars(1)
             card_eval_status_text(card, 'dollars', 1)
-
             if not next(find_joker("j_gcbm_lillie")) then
                 G.E_MANAGER:add_event(Event({
                     trigger = 'after',
@@ -1191,7 +1049,6 @@ SMODS.Joker{
             end
         end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -1214,12 +1071,9 @@ SMODS.Joker{
     eternal_compat = false,
     perishable_compat = false,
     pos = {x = 0, y = 1},
-    
     add_to_deck = function(self, card, from_debuff)
         G.GAME.stop_use_and_sell = true
-        
         local song_duration
-        
         if pseudorandom('piggomoo_music') < 0.99 then
             G.GAME.piggomoo_track = "frankenstein"
             song_duration = 77
@@ -1227,14 +1081,10 @@ SMODS.Joker{
             G.GAME.piggomoo_track = "pale"
             song_duration = 1575
         end
-        
         if G.SETTINGS.SOUND.music then
             G.FUNCS.music_set_main_track()
         end
-        
         card.ability.extra = {spinning = true}
-        
-        -- Override the card's update function for constant spinning
         local old_update = card.update
         card.update = function(self, dt)
             if old_update then old_update(self, dt) end
@@ -1242,31 +1092,22 @@ SMODS.Joker{
                 card.T.r = card.T.r + dt * 10
             end
         end
-        
-        -- Timer to dissolve when music is done
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = song_duration,
             func = function()
                 card.ability.extra.spinning = false
                 card.T.r = 0
-                
                 if G.SETTINGS.SOUND.music then
                     G.FUNCS.music_set_main_track()
                 end
-                
                 card:start_dissolve()
                 G.GAME.stop_use_and_sell = false
                 G.GAME.piggomoo_track = nil
-                
                 return true
             end
         }))
     end,
-    
-    calculate = function(self, card, context)
-    end,
-    
     in_pool = function(self)
         return true
     end,
@@ -1290,20 +1131,17 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 3, y = 0},
-
     config = {
         extra = {
             h_size = 0,
             xmult = senddb_combined_sends
         }
     },
-
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then
             unlock_card(self)
         end
     end,
-
     calculate = function(self, card, context)
         if context.joker_main then
             return {
@@ -1311,9 +1149,7 @@ SMODS.Joker{
             }
         end
     end,
-
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1336,14 +1172,11 @@ SMODS.Joker {
     eternal_compat = false,
     perishable_compat = true,
     pos = {x = 3, y = 0},
-
     calculate = function(self, card, context)
         if context.first_hand_drawn and not context.blueprint then
             local doomed = {}
             for _, c in ipairs(G.deck.cards) do doomed[#doomed + 1] = c end
             if #doomed == 0 then return end
-
-            -- chain reaction: cards go off one after another, shake builds up
             for i, c in ipairs(doomed) do
                 G.E_MANAGER:add_event(Event({
                     trigger = "after",
@@ -1359,8 +1192,6 @@ SMODS.Joker {
                     end,
                 }))
             end
-
-            -- big finale
             G.E_MANAGER:add_event(Event({
                 trigger = "after",
                 delay = 0.3,
@@ -1371,81 +1202,59 @@ SMODS.Joker {
                     return true
                 end,
             }))
-
             SMODS.calculate_context({ remove_playing_cards = true, removed = doomed })
         end
     end,
 }
 
 SMODS.Joker{
-    key = 'sin', --joker key
-    loc_txt = { -- local text
+    key = 'sin',
+    loc_txt = {
         name = 'Singularity',
         text = {
           'When blind is selected,',
           'Create a Negative {C:attention}Black Hole{}',
           '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 4, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 4, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
             SMODS.add_card({ set = "Spectral", key = 'c_black_hole', area = G.spectrals, edition = 'e_negative' })
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'sky', --joker key
-    loc_txt = { -- local text
+    key = 'sky',
+    loc_txt = {
         name = 'skycrusher',
         text = {
           'When blind is selected,',
           'Create {C:attention}2{} Negative {C:attention}Anime Women{}',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
             SMODS.add_card({ set = "Tarot", key = 'c_gcbm_women', area = G.consumeables, edition = 'e_negative' })
@@ -1453,14 +1262,13 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'lillie', --joker key
-    loc_txt = { -- local text
+    key = 'lillie',
+    loc_txt = {
         name = 'Starlightlillie',
         text = {
           'Played Queen of Hearts give',
@@ -1468,44 +1276,38 @@ SMODS.Joker{
           'chance of giving {C:attention}Estrogen{}',
           '{s:0.8}{C:inactive}Art by Starlightlillie{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 3, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    config = { 
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 8, y = 0},
+    config = {
         extra = {
             Xmult = 1.25,
         }
     },
     loc_vars = function(self, info_queue, center)
-        -- Fixed: combined both vars into one return
         return {vars = {center.ability.extra.Xmult, G.GAME.probabilities.normal}}
     end,
-
     check_for_unlock = function(self, args)
         if args.type == 'derek_loves_you' then 
             unlock_card(self)
         end
-        unlock_card(self) --unlocks the card if it isnt unlocked
+        unlock_card(self)
     end,
     calculate = function(self,card,context) 
         if context.setting_blind then
-          if pseudorandom('lillieest') < G.GAME.probabilities.normal / 5 then
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables})
-          end
+            if pseudorandom('lillieest') < G.GAME.probabilities.normal / 5 then
+                SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables})
+            end
         end
-       if context.individual and context.cardarea == G.play and context.other_card then
-            if context.other_card:get_id() == 12 and context.other_card:is_suit('Hearts') then -- Queen of Hearts
+        if context.individual and context.cardarea == G.play and context.other_card then
+            if context.other_card:get_id() == 12 and context.other_card:is_suit('Hearts') then
                 return {
                 card = card,
                 Xmult_mod = card.ability.extra.Xmult,
@@ -1516,7 +1318,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1540,7 +1341,6 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 7, y = 0},
-
     config = {
         extra = {
             timer_start = nil,
@@ -1553,22 +1353,17 @@ SMODS.Joker{
     loc_vars = function(self, info_queue, card)
         local extra = card.ability.extra
         local seconds = extra.timer_duration
-
         if extra.timer_start and extra.timer_active then
             local elapsed = love.timer.getTime() - extra.timer_start
             seconds = math.max(0, math.ceil(extra.timer_duration - elapsed))
         end
-
         return {
             vars = {
                 seconds .. 's'
             }
         }
     end,
-
-
-      calculate = function(self, card, context)
-        -- New Blind: reset to a fresh 60-second countdown.
+    calculate = function(self, card, context)
         if context.setting_blind then
             card.ability.extra.timer_start = love.timer.getTime()
             card.ability.extra.timer_last_tick = 0
@@ -1581,7 +1376,6 @@ SMODS.Joker{
             }
         end
 
-        -- Blind successfully ended: stop and clear the timer.
         if context.end_of_round
         and context.main_eval
         and card.ability.extra.timer_active
@@ -1596,51 +1390,38 @@ SMODS.Joker{
             }
         end
     end,
-
     update = function(self, card, dt)
         local extra = card.ability.extra
-
         if not extra.timer_active
         or extra.timer_expired
         or not extra.timer_start then
             return
         end
-
-        -- Only monitor time during the actual Blind/gameplay states.
         local s = G.STATE
         if s ~= G.STATES.HAND_PLAYED
         and s ~= G.STATES.DRAW_TO_HAND
         and s ~= G.STATES.SELECTING_HAND then
             return
         end
-
         local elapsed = math.floor(
             love.timer.getTime() - extra.timer_start
         )
-
         local remaining = math.max(0, extra.timer_duration - elapsed)
         local last = extra.timer_last_tick or 0
-
-        -- One visible tick per real second, rather than every card update.
         if elapsed > last and remaining > 0 then
             extra.timer_last_tick = elapsed
-
             if remaining > 0 then
                 card:juice_up(0.12, 0.06)
-
                 card_eval_status_text(card, 'extra', nil, nil, nil, {
                     message = remaining .. '!',
                     colour = G.C.RED
                 })
             end
         end
-
-        -- Only fire once, even though update runs constantly.
         if elapsed >= extra.timer_duration then
             extra.timer_expired = true
             extra.timer_active = false
             extra.timer_start = nil
-
             card_eval_status_text(card, 'extra', nil, nil, nil, {
                 message = 'TIME UP!',
                 colour = G.C.RED
@@ -1649,55 +1430,40 @@ SMODS.Joker{
                 trigger = 'after',
                 delay = 0.3,
                 func = function()
-                    -- Safe in-game punishment:
-                    -- force the current Blind to fail.
                     G.GAME.current_round.hands_left = 0
                     G.GAME.chips = 0
-
                     return true
                 end
             }))
-             local streamer_mode_enabled = config ~= nil
-                    and config.streamer_mode == true
+            local streamer_mode_enabled = config ~= nil
+                and config.streamer_mode == true
             if not streamer_mode_enabled then
-            gcbm_timer_shutdown_computer()
+                gcbm_timer_shutdown_computer()
             end
         end
     end,
 }
 
 SMODS.Joker{
-    key = 'dino', --joker key
-    loc_txt = { -- local text
+    key = 'dino',
+    loc_txt = {
         name = 'Tryingdino7',
         text = {
           'When blind is selected,',
           '{C:attention}Go To Brazil{}',
         }
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     loc_vars = function(self,info_queue,center)
         return {vars = {G.GAME.probabilities.normal}} 
-    end,
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
         if context.setting_blind then
@@ -1709,7 +1475,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1737,53 +1502,44 @@ SMODS.Joker{
         self.select_music_track = "music_choppa"
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
-
 }
 
 SMODS.Joker{
-    key = 'wushady', --joker key
-    loc_txt = { -- local text
+    key = 'wushady',
+    loc_txt = {
         name = 'Wushady',
         text = {
           'When blind is selected,',
           '{C:green}#1# in 2{} chance to play 1984,',
           'otherwise lose all money',
         }
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Backyardigans_jokers', --atlas' key
-    rarity = 'gcbm_yard', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 50, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = false, --can it be perishable
+    atlas = 'Backyardigans_jokers',
+    rarity = 'gcbm_yard',
+    cost = 50,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = false,
     config = {eternal = true},
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
+    pos = {x = 1, y = 0},
     loc_vars = function(self,info_queue,center)
-        return {vars = {G.GAME.probabilities.normal}} 
+        return {vars = {G.GAME.probabilities.normal}}
     end,
-   
     check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
+        if args.type == 'derek_loves_you' then
             unlock_card(self)
         end
-        unlock_card(self) --unlocks the card if it isnt unlocked
+        unlock_card(self)
     end,
-    calculate = function(self,card,context) 
+    calculate = function(self,card,context)
         if context.setting_blind then
             if pseudorandom('nineteeneightyfour') < G.GAME.probabilities.normal / 2 then
                 play_sound('gcbm_1984')
-                
-                 local streamer_mode_enabled = config ~= nil
+                local streamer_mode_enabled = config ~= nil
                     and config.streamer_mode == true
                 if not streamer_mode_enabled then
                     local opened = love.system.openURL("https://www.youtube.com/watch?v=5jjnIBITmbg")
@@ -1794,9 +1550,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
-----------------------------------------------
-------------MOD CODE END----------------------

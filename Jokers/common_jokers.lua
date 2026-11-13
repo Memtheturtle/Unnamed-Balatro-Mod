@@ -1,86 +1,134 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-GCBM_pointer_dt = 0
-GCBM_jimball2_dt = 0
+-- Jimball 2 Joker
 
-local Game_update_ref = Game.update
----@diagnostic disable-next-line: duplicate-set-field
-function Game:update(dt)
-	Game_update_ref(self, dt)
+    GCBM_pointer_dt = 0
+    GCBM_jimball2_dt = 0
 
-	GCBM_pointer_dt = GCBM_pointer_dt + dt
-	GCBM_jimball2_dt = GCBM_jimball2_dt + dt
+    local Game_update_ref = Game.update
+    ---@diagnostic disable-next-line: duplicate-set-field
+    function Game:update(dt)
+        Game_update_ref(self, dt)
 
-	if G.P_CENTERS and G.P_CENTERS.c_gcbm_pointer and GCBM_pointer_dt > 0.5 then
-		GCBM_pointer_dt = 0
-		local pointerobj = G.P_CENTERS.c_gcbm_pointer
-		pointerobj.pos.x = (pointerobj.pos.x == 4) and 5 or 4
-	end
-	if G.P_CENTERS and G.P_CENTERS.j_gcbm_jimball2 and GCBM_jimball2_dt > 0.1 then
-		GCBM_jimball2_dt = 0
-		local jimball2obj = G.P_CENTERS.j_gcbm_jimball2
-		if jimball2obj.pos.x == 5 and jimball2obj.pos.y == 6 then
-			jimball2obj.pos.x = 0
-			jimball2obj.pos.y = 0
-		elseif jimball2obj.pos.x < 8 then
-			jimball2obj.pos.x = jimball2obj.pos.x + 1
-		elseif jimball2obj.pos.y < 6 then
-			jimball2obj.pos.x = 0
-			jimball2obj.pos.y = jimball2obj.pos.y + 1
-		end
-	end
-end
+        GCBM_pointer_dt = GCBM_pointer_dt + dt
+        GCBM_jimball2_dt = GCBM_jimball2_dt + dt
 
-local hypercam_path = "mods/Unnamed-Balatro-Mod/assets/hypercam.png"
-local hypercam_img = nil
-local hypercam_checked = false
-
-local HYPERCAM_SIZE = 0.5 -- 1 = full size of the image, 0.5 = half, etc.
-
-local old_love_draw = love.draw
----@diagnostic disable-next-line: duplicate-set-field
-love.draw = function(...)
-    old_love_draw(...)
-
-    if G.GCBM_HYPERCAM then
-        -- Load the image once, if it exists
-        if not hypercam_checked then
-            hypercam_checked = true
-            if love.filesystem.getInfo(hypercam_path) then
-                hypercam_img = love.graphics.newImage(hypercam_path)
-                hypercam_img:setFilter('linear', 'linear')
+        if G.P_CENTERS and G.P_CENTERS.c_gcbm_pointer and GCBM_pointer_dt > 0.5 then
+            GCBM_pointer_dt = 0
+            local pointerobj = G.P_CENTERS.c_gcbm_pointer
+            pointerobj.pos.x = (pointerobj.pos.x == 4) and 5 or 4
+        end
+        if G.P_CENTERS and G.P_CENTERS.j_gcbm_jimball2 and GCBM_jimball2_dt > 0.1 then
+            GCBM_jimball2_dt = 0
+            local jimball2obj = G.P_CENTERS.j_gcbm_jimball2
+            if jimball2obj.pos.x == 5 and jimball2obj.pos.y == 6 then
+                jimball2obj.pos.x = 0
+                jimball2obj.pos.y = 0
+            elseif jimball2obj.pos.x < 8 then
+                jimball2obj.pos.x = jimball2obj.pos.x + 1
+            elseif jimball2obj.pos.y < 6 then
+                jimball2obj.pos.x = 0
+                jimball2obj.pos.y = jimball2obj.pos.y + 1
             end
         end
+    end
 
-        if hypercam_img then
-            love.graphics.push('all')
-            love.graphics.setCanvas()
-            love.graphics.setShader()
-            love.graphics.origin()
-            love.graphics.setColor(1, 1, 1, 1)
+-- Unregistered Hypercam 2 Joker
 
-            local scale = (love.graphics.getHeight() / 1080) * HYPERCAM_SIZE
-            love.graphics.draw(hypercam_img, 0, 0, 0, scale, scale)
+    local hypercam_path = "mods/Unnamed-Balatro-Mod/assets/other/hypercam.png"
+    local hypercam_img = nil
+    local hypercam_checked = false
 
-            love.graphics.pop()
+    local HYPERCAM_SIZE = 0.5
+
+    local old_love_draw = love.draw
+    ---@diagnostic disable-next-line: duplicate-set-field
+    love.draw = function(...)
+        old_love_draw(...)
+
+        if G.GCBM_HYPERCAM then
+            if not hypercam_checked then
+                hypercam_checked = true
+                if love.filesystem.getInfo(hypercam_path) then
+                    hypercam_img = love.graphics.newImage(hypercam_path)
+                    hypercam_img:setFilter('linear', 'linear')
+                end
+            end
+
+            if hypercam_img then
+                love.graphics.push('all')
+                love.graphics.setCanvas()
+                love.graphics.setShader()
+                love.graphics.origin()
+                love.graphics.setColor(1, 1, 1, 1)
+
+                local scale = (love.graphics.getHeight() / 1080) * HYPERCAM_SIZE
+                love.graphics.draw(hypercam_img, 0, 0, 0, scale, scale)
+
+                love.graphics.pop()
+            end
         end
     end
-end
+
+-- Gaster Joker
+
+    local gaster_path = "mods/Unnamed-Balatro-Mod/assets/other/Gaster.jpg"
+    local gaster_img = nil
+    local gaster_checked = false
+    local JUMPSCARE_DURATION = 1000000.0
+
+    G.GCBM_GASTER_TIME = 0
+    ---@diagnostic disable-next-line duplicate-set-field
+    function gcbm_trigger_gaster()
+        G.GCBM_GASTER_TIME = JUMPSCARE_DURATION
+    end
+
+    local old_love_draw_gaster = love.draw
+    love.draw = function(...)
+        old_love_draw_gaster(...)
+
+        if G.GCBM_GASTER_TIME and G.GCBM_GASTER_TIME > 0 then
+            G.GCBM_GASTER_TIME = G.GCBM_GASTER_TIME - love.timer.getDelta()
+
+            if not gaster_checked then
+                gaster_checked = true
+                if love.filesystem.getInfo(gaster_path) then
+                    gaster_img = love.graphics.newImage(gaster_path)
+                    gaster_img:setFilter('linear', 'linear')
+                end
+            end
+
+            if gaster_img then
+                love.graphics.push('all')
+                love.graphics.setCanvas()
+                love.graphics.setShader()
+                love.graphics.origin()
+                love.graphics.setColor(1, 1, 1, 1)
+
+                local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+                local iw, ih = gaster_img:getWidth(), gaster_img:getHeight()
+
+                local scale = math.max(sw / iw, sh / ih)
+                local x = (sw - iw * scale) / 2
+                local y = (sh - ih * scale) / 2
+
+                love.graphics.draw(gaster_img, x, y, 0, scale, scale)
+                love.graphics.pop()
+            end
+        end
+    end
 
 SMODS.Atlas{
-    key = 'Common_jokers', --atlas key
-    path = 'Common_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Common_jokers',
+    path = 'Common_jokers.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.Atlas{
-    key = 'Jimball', --atlas key
-    path = 'Jimball.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Jimball',
+    path = 'Jimball.png',
+    px = 71,
+    py = 95
 }
-
 
 SMODS.Sound({
 	key = "music_ksi",
@@ -88,7 +136,7 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_ksi")) 
+		return next(find_joker("j_gcbm_ksi"))
 	end,
 })
 
@@ -98,7 +146,7 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_morty")) 
+		return next(find_joker("j_gcbm_morty"))
 	end,
 })
 
@@ -108,55 +156,9 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_jimball2")) 
+		return next(find_joker("j_gcbm_jimball2"))
 	end,
 })
-
-local gaster_path = "mods/Unnamed-Balatro-Mod/assets/Gaster.jpg"
-local gaster_img = nil
-local gaster_checked = false
-local JUMPSCARE_DURATION = 1000000.0 -- seconds the image stays on screen
-
-G.GCBM_GASTER_TIME = 0
----@diagnostic disable-next-line duplicate-set-field
-function gcbm_trigger_gaster()
-    G.GCBM_GASTER_TIME = JUMPSCARE_DURATION
-end
-
-local old_love_draw_gaster = love.draw
-love.draw = function(...)
-    old_love_draw_gaster(...)
-
-    if G.GCBM_GASTER_TIME and G.GCBM_GASTER_TIME > 0 then
-        G.GCBM_GASTER_TIME = G.GCBM_GASTER_TIME - love.timer.getDelta()
-
-        if not gaster_checked then
-            gaster_checked = true
-            if love.filesystem.getInfo(gaster_path) then
-                gaster_img = love.graphics.newImage(gaster_path)
-                gaster_img:setFilter('linear', 'linear')
-            end
-        end
-
-        if gaster_img then
-            love.graphics.push('all')
-            love.graphics.setCanvas()
-            love.graphics.setShader()
-            love.graphics.origin()
-            love.graphics.setColor(1, 1, 1, 1)
-
-            local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-            local iw, ih = gaster_img:getWidth(), gaster_img:getHeight()
-
-            local scale = math.max(sw / iw, sh / ih)
-            local x = (sw - iw * scale) / 2
-            local y = (sh - ih * scale) / 2
-
-            love.graphics.draw(gaster_img, x, y, 0, scale, scale)
-            love.graphics.pop()
-        end
-    end
-end
 
 SMODS.Sound({
 	key = "gaster",
@@ -164,27 +166,24 @@ SMODS.Sound({
 })
 
 SMODS.Joker{
-    key = 'gaster', --joker key
-    loc_txt = { -- local text
+    key = 'gaster',
+    loc_txt = {
         name = 'W. D. Gaster',
         text = {
           '{C:attention}DARK, DARKER, YET DARKER{}',
         },
     },
-    atlas = 'Common_jokers', --atlas' key
-    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    cost = 1, --cost
+    atlas = 'Common_jokers',
+    rarity = 1,
+    cost = 1,
     unlocked = true,
     discovered = true,
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
     add_to_deck = function(self, card, from_debuff)
-        -- from_debuff is true when a debuff is lifted, which we don't want to trigger on
         if from_debuff then return end
-
         if pseudorandom('gaster') < 0.1 then
             G.SETTINGS.SOUND.music_volume = 0
             play_sound('gcbm_gaster')
@@ -192,23 +191,17 @@ SMODS.Joker{
         else
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
-                delay = 0.8,      -- lets the player see the joker land first
-                blocking = true,  -- pauses the event queue so nothing ticks mid-teardown
+                delay = 0.8,
+                blocking = true,
                 func = function()
-                    -- only fire during a real run
                     if G.STAGE ~= G.STAGES.RUN then return true end
-
                     G.FUNCS.exit_overlay_menu()
-
-                    -- delete the save file so Continue is gone
                     if remove_save then
                         remove_save()
                     else
                         G.SAVED_GAME = nil
                         love.filesystem.remove(G.SETTINGS.profile .. '/save.jkr')
                     end
-
-                    -- tear down the live run, then load the menu
                     G:delete_run()
                     G:main_menu()
                     return true
@@ -219,160 +212,107 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'morty', --joker key
-    loc_txt = { -- local text
+    key = 'morty',
+    loc_txt = {
         name = 'Gucci Morty',
         text = {
           'Swag',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Common_jokers', --atlas' key
-    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 0, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false,  --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Common_jokers',
+    rarity = 1,
+    cost = 0,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     calculate = function(self,card,context) 
-            self.select_music_track = "music_morty"
+        self.select_music_track = "music_morty"
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'jimball2', --joker key
-    loc_txt = { -- local text
+    key = 'jimball2',
+    loc_txt = {
         name = 'Jimball 2',
         text = {
           'You already know',
           '{s:0.8}{C:inactive}Art by Memtheturtle{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Jimball', --atlas' key
-    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 0, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false,  --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 2, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Jimball',
+    rarity = 1,
+    cost = 0,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 2, y = 0},
     calculate = function(self,card,context) 
-            self.select_music_track = "music_jimball"
+        self.select_music_track = "music_jimball"
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'ksi', --joker key
-    loc_txt = { -- local text
+    key = 'ksi',
+    loc_txt = {
         name = 'KSI',
         text = {
           'Plays Thick of It',
           'Thats all.',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Common_jokers', --atlas' key
-    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 0, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false,  --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Common_jokers',
+    rarity = 1,
+    cost = 0,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     calculate = function(self,card,context) 
-            self.select_music_track = "music_ksi"
+        self.select_music_track = "music_ksi"
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'sigma', --joker key
-    loc_txt = { -- local text
+    key = 'sigma',
+    loc_txt = {
         name = 'Sigmacide',
         text = {
           '{C:attention}Oh No{}',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Common_jokers', --atlas' key
-    rarity = 1, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 1, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-
+    atlas = 'Common_jokers',
+    rarity = 1,
+    cost = 1,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
-         card:start_dissolve()
+            card:start_dissolve()
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -394,30 +334,24 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
     add_to_deck = function(self, card, from_debuff)
         G.GCBM_HYPERCAM = true
-        -- Remember the player's original cap so we can put it back
         if not G.SLIDESHOW_ORIGINAL_FPS_CAP then
             G.SLIDESHOW_ORIGINAL_FPS_CAP = G.FPS_CAP or 500
         end
         G.FPS_CAP = 10
     end,
-
     remove_from_deck = function(self, card, from_debuff)
         G.GCBM_HYPERCAM = false
-    -- Only restore if no other copy of this joker is still owned
         local others = 0
         for _, j in ipairs(SMODS.find_card('j_gcbm_hypercam')) do
-         if j ~= card then others = others + 1 end
+            if j ~= card then others = others + 1 end
         end
         if others == 0 then
-          G.FPS_CAP = G.SLIDESHOW_ORIGINAL_FPS_CAP or 500
-          G.SLIDESHOW_ORIGINAL_FPS_CAP = nil
-     end
+            G.FPS_CAP = G.SLIDESHOW_ORIGINAL_FPS_CAP or 500
+            G.SLIDESHOW_ORIGINAL_FPS_CAP = nil
+        end
     end,
-
-    -- Re-apply after loading a save, since add_to_deck may not fire then
     update = function(self, card, dt)
         if card.area == G.jokers and G.FPS_CAP ~= 10 then
             if not G.SLIDESHOW_ORIGINAL_FPS_CAP then
@@ -427,6 +361,3 @@ SMODS.Joker{
         end
     end,
 }
-
-----------------------------------------------
-------------MOD CODE END----------------------

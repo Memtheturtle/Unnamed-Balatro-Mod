@@ -1,14 +1,9 @@
-----------------------------------------------
-------------MOD CODE -------------------------
-
 SMODS.Atlas{
-    key = 'Player_jokers', --atlas key
-    path = 'Player_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Player_jokers',
+    path = 'Player_jokers.png',
+    px = 71,
+    py = 95
 }
-
-
 
 SMODS.Rarity{
     key = "players",
@@ -20,8 +15,8 @@ SMODS.Rarity{
     get_weight = function(self, weight, object_type)
         return weight
     end,
+    shop_rate = 1,
 }
-
 
 SMODS.Sound({
 	key = "music_lefave",
@@ -35,31 +30,32 @@ SMODS.Sound({
 })
 
 SMODS.Joker{
-    key = 'blueskii', --joker key
-    loc_txt = { -- local text
+    key = 'blueskii',
+    loc_txt = {
         name = 'Blueskii',
         text = {
           '{C:attention}BANGER!{}',
         },
     },
-    atlas = 'Player_jokers', --atlas' key
-    rarity = 'gcbm_players', --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    cost = 15, --cost
+    atlas = 'Player_jokers',
+    rarity = 'gcbm_players',
+    cost = 15,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
-    config = { extra = { interval = 0.5, last_shout = 0 } }, -- seconds between shouts
-
+    config = {
+        extra = {
+            interval = 0.5,
+            last_shout = 0
+        }
+    },
     update = function(self, card, dt)
-        -- only shout while it's an active joker during a run
         if G.STAGE ~= G.STAGES.RUN then return end
         if not (card.area and card.area == G.jokers) then return end
         if card.debuff then return end
-
         local now = G.TIMERS.REAL
         if now - card.ability.extra.last_shout >= card.ability.extra.interval then
             card.ability.extra.last_shout = now
@@ -69,7 +65,12 @@ SMODS.Joker{
             })
         end
     end,
+    in_pool = function(self)
+        return true
+    end,
 }
+
+-- Im aware this joker's code is awful, this guy's whole gimmick is that he vibecodes everything so I had Claude make his entire joker to match that
 
 SMODS.Joker({
     key = 'djlefave',
@@ -316,5 +317,3 @@ SMODS.Joker({
         return true
     end,
 })
-----------------------------------------------
-------------MOD CODE END----------------------

@@ -1,19 +1,578 @@
-----------------------------------------------
-------------MOD CODE -------------------------
 local config = SMODS.current_mod.config
+local mod = SMODS.current_mod
+local https = require "SMODS.https"
+
+-- Nightmare Freddy Joker
+
+    local KEY = 'j_' .. SMODS.current_mod.prefix .. '_nightmare'
+
+    local function set_tick_debuff(joker, state)
+        if SMODS.debuff_card then
+            SMODS.debuff_card(joker, state, 'nightmare')
+        else
+            joker:set_debuff(state)
+        end
+    end
+
+    local old_evaluate_play = G.FUNCS.evaluate_play
+    ---@diagnostic disable-next-line duplicate-set-field
+    G.FUNCS.evaluate_play = function(...)
+        local ret = old_evaluate_play(...)
+        if G.jokers then
+            for _, joker in ipairs(G.jokers.cards) do
+                if joker.config.center.key == KEY then
+                    joker.ability.extra.off = not joker.ability.extra.off
+                    set_tick_debuff(joker, joker.ability.extra.off)
+                    sendDebugMessage('Nightmare Freddy Debuff = ' .. tostring(joker.ability.extra.off))
+                end
+            end
+        end
+        return ret
+    end
+
+-- Old Man Rattle Joker
+
+    local VOICE = "Fred"
+    local RATE = 150
+    local PITCH = 35
+
+    local function wrap(text, width)
+        local rows, row = {}, ""
+        for word in text:gmatch("%S+") do
+            if #row + #word + 1 > width and #row > 0 then
+                rows[#rows + 1] = row
+                row = word
+            else
+                row = (#row > 0) and (row .. " " .. word) or word
+            end
+        end
+        if #row > 0 then rows[#rows + 1] = row end
+        return rows
+    end
+
+    local function show_line(line)
+        local rows = wrap(line, 32)
+        local words = select(2, line:gsub("%S+", ""))
+        local real_seconds = math.max(6, words / ((RATE or 175) / 60))
+        local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)
+        local scale = (#rows > 3) and 0.55 or 0.7
+
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                for i, row in ipairs(rows) do
+                    attention_text({
+                        text = row,
+                        scale = scale,
+                        hold = hold,
+                        major = G.play,
+                        align = "cm",
+                        offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
+                    })
+                end
+                return true
+            end,
+        }))
+    end
+
+    local function speak(text)
+        local os_name = love.system.getOS()
+        if os_name == "OS X" then
+            local safe = text:gsub("'", "'\\''")
+            local cmd = "(say -v '" .. VOICE .. "' -r " .. RATE ..
+                " '[[pbas " .. PITCH .. "]] " .. safe .. "') &"
+            os.execute(cmd)
+        elseif os_name == "Windows" then
+            local safe = text:gsub("[^%w%s%.,!%?]", "")
+            os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
+        end
+    end
+
+    local lines = {}
+
+    local function load_lines()
+        local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
+        local data = NFS.read(gcbm_text_dir .. "oldrattle.txt")
+        if data then
+            ---@diagnostic disable-next-line undefined-field
+            for line in data:gmatch("[^\r\n]+") do
+                if line:match("%S") then
+                    lines[#lines + 1] = line
+                end
+            end
+        end
+        if #lines == 0 then
+            lines[1] = "oldrattle.txt is missing or empty!"
+        end
+    end
+    load_lines()
+
+-- Smooth Jazz Joker, A03 Joker, Unnamed List Joker
+
+    function SHEET_joker_key(ref, fallback_key)
+        local raw = SHEET_cell(ref, "")
+        raw = raw:lower():gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", "_")
+        local key = "j_gcbm_" .. raw
+        if raw ~= "" and G.P_CENTERS[key] then
+            return key
+        end
+        return fallback_key
+    end
+
+    local gcbm_mod_path = SMODS.current_mod.path
+    local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
+    local cache_path = gcbm_cache_dir .. "sheet_xmult_cache.txt"
+
+    local SHEET_ID = "176piq1zsNrXs75yhRzGGFaT0kpT6Y6rqgKY24pu0r3o"
+    local SHEET_URL = "https://docs.google.com/spreadsheets/d/" .. SHEET_ID .. "/gviz/tq?tqx=out:csv&sheet=Sheet1"
+
+    SHEET_DATA = {}
+    SHEET_XMULT = 1
+
+    local function parse_csv(body)
+        local rows, row, field = {}, {}, {}
+        local in_quotes = false
+        local i, len = 1, #body
+        while i <= len do
+            local c = body:sub(i, i)
+            if in_quotes then
+                if c == '"' then
+                    if body:sub(i + 1, i + 1) == '"' then
+                        field[#field + 1] = '"'
+                        i = i + 1
+                    else
+                        in_quotes = false
+                    end
+                else
+                    field[#field + 1] = c
+                end
+            else
+                if c == '"' then
+                    in_quotes = true
+                elseif c == "," then
+                    row[#row + 1] = table.concat(field)
+                    field = {}
+                elseif c == "\n" or c == "\r" then
+                    if c == "\r" and body:sub(i + 1, i + 1) == "\n" then i = i + 1 end
+                    row[#row + 1] = table.concat(field)
+                    rows[#rows + 1] = row
+                    row, field = {}, {}
+                else
+                    field[#field + 1] = c
+                end
+            end
+            i = i + 1
+        end
+        if #field > 0 or #row > 0 then
+            row[#row + 1] = table.concat(field)
+            rows[#rows + 1] = row
+        end
+        return rows
+    end
+
+    local function ref_to_rc(ref)
+        local letters, num = ref:upper():match("^([A-Z])(%d+)$")
+        if not letters then return nil end
+        return tonumber(num), letters:byte() - 64
+    end
+
+    function SHEET_cell(ref, default)
+        local r, c = ref_to_rc(ref)
+        local v = r and SHEET_DATA[r] and SHEET_DATA[r][c]
+        if v == nil or v == "" then return default end
+        return v
+    end
+
+    function SHEET_num(ref, default)
+        local v = tonumber((tostring(SHEET_cell(ref, "")):gsub(",", "")))
+        return v or default
+    end
+
+    local function sheet_read_cache()
+        local file = io.open(cache_path, "r")
+        if not file then return nil end
+        local body = file:read("*a")
+        file:close()
+        if body and body ~= "" then return body end
+        return nil
+    end
+
+    local function sheet_write_cache(body)
+        local file = io.open(cache_path, "w")
+        if file then
+            file:write(body)
+            file:close()
+        end
+    end
+
+    local function sheet_fetch(url, cb, depth)
+        depth = depth or 0
+        local started = pcall(https.asyncRequest, url, function(code, body, headers)
+            if (code == 301 or code == 302 or code == 303 or code == 307 or code == 308)
+                and headers and depth < 3 then
+                local loc = headers.Location or headers.location
+                if loc then return sheet_fetch(loc, cb, depth + 1) end
+            end
+            if code == 200 and body and body ~= "" then
+                cb(body)
+            else
+                cb(nil)
+            end
+        end)
+        if not started then cb(nil) end
+    end
+
+    function SHEET_refresh(done)
+        sheet_fetch(SHEET_URL, function(body)
+            if body then
+                SHEET_DATA = parse_csv(body)
+                sheet_write_cache(body)
+                SHEET_XMULT = SHEET_num("A2", 1)
+                if done then done() end
+            end
+        end)
+    end
+
+    local cached_sheet = sheet_read_cache()
+    if cached_sheet then SHEET_DATA = parse_csv(cached_sheet) end
+    SHEET_XMULT = SHEET_num("A2", 1)
+    GCBM_NET.queue("sheet", SHEET_refresh)
+
+-- AREDL Joker
+
+    local aredl_cache_path = gcbm_cache_dir .. "aredl_points_cache.txt"
+
+    AREDL_MULT = 0
+
+    local function url_encode(s)
+        return (s:gsub("([^%w%-_%.~])", function(c)
+            return string.format("%%%02X", string.byte(c))
+        end))
+    end
+
+    local function parse_points(body)
+        local text = body:gsub("<[^>]*>", " ")
+        local raw, suffix = text:match("Total Points%s*([%d,]+%.?%d*)%s*([kKmM]?)")
+        if not raw then return nil end
+        local n = tonumber((raw:gsub(",", "")))
+        if not n then return nil end
+        if suffix == "k" or suffix == "K" then
+            n = n * 1000
+        elseif suffix == "m" or suffix == "M" then
+            n = n * 1000000
+        end
+        return math.floor(n + 0.5)
+    end
+
+    local function aredl_read_cache(username)
+        local file = io.open(aredl_cache_path, "r")
+        if not file then return nil end
+        local cached_name = file:read("*l")
+        local points = file:read("*n")
+        file:close()
+        if cached_name == username and points and points > 0 then return points end
+        return nil
+    end
+
+    local function aredl_write_cache(username, points)
+        local file = io.open(aredl_cache_path, "w")
+        if file then
+            file:write(username .. "\n" .. tostring(points))
+            file:close()
+        end
+    end
+
+    local function aredl_username()
+        ---@diagnostic disable-next-line undefined-field
+        return (mod.config.aredl_username or ""):match("^%s*(.-)%s*$")
+    end
+
+    function AREDL_refresh_points(done)
+        local username = aredl_username()
+        if username == "" then AREDL_MULT = 0 return end
+
+        https.asyncRequest("https://aredl.net/profile/user/" .. url_encode(username),
+            function(code, body)
+                if code == 200 and body then
+                    local points = parse_points(body)
+                    if points then
+                        AREDL_MULT = points
+                        aredl_write_cache(username, points)
+                        if done then done() end
+                    end
+                end
+            end)
+    end
+
+    local u = aredl_username()
+    AREDL_MULT = aredl_read_cache(u) or 0
+    GCBM_NET.queue("aredl_user_" .. u:gsub("[^%w_]", "_"), AREDL_refresh_points)
+
+-- Printer Joker
+
+    local function gcbm_print_text(text)
+        local path = os.tmpname() .. ".txt"
+        local file = io.open(path, "w")
+        if not file then return false end
+        file:write(text)
+        file:close()
+
+        local os_name = love.system.getOS()
+        local ok
+
+        if os_name == "OS X" then
+            ok = os.execute('lp "' .. path .. '"')
+        elseif os_name == "Windows" then
+            ok = os.execute('notepad /p "' .. path .. '"')
+        else
+            return false
+        end
+
+        return ok == true or ok == 0
+    end
+
+-- RNGDLE Joker
+
+    local function rngdle_cache_path(username)
+        return gcbm_cache_dir .. "rngdle_" .. tostring(username) .. "_cache.txt"
+    end
+
+    local function rngdle_read_cache(username)
+        local file = io.open(rngdle_cache_path(username), "r")
+        if file then
+            local val = file:read("*n")
+            file:close()
+            if val and val > 0 then return val end
+        end
+        return nil
+    end
+
+    local function rngdle_write_cache(username, ep)
+        local file = io.open(rngdle_cache_path(username), "w")
+        if file then
+            file:write(tostring(ep))
+            file:close()
+        end
+    end
+
+    local function gcbm_get_rngdle_ep(username, cb)
+        https.asyncRequest("https://www.rngdle.com/u/" .. tostring(username),
+            function(code, body)
+                if code == 200 and body then
+                    local ep_str = body:match('<meta name="description" content="([%d,]+) EP')
+                    local ep = ep_str and tonumber((ep_str:gsub(",", "")))
+                    if ep then
+                        rngdle_write_cache(username, ep)
+                        return cb(ep)
+                    end
+                end
+                cb(nil)
+            end)
+    end
+
+    local memturtle_ep = rngdle_read_cache("memtheturtle") or 0
+    local rngdle_ep = memturtle_ep
+
+    GCBM_NET.queue("rngdle", function(done)
+        gcbm_get_rngdle_ep("memtheturtle", function(ep)
+            if ep then
+                memturtle_ep = ep
+                rngdle_ep = ep
+                done()
+            end
+        end)
+    end)
+
+-- End Joker
+
+    local function gcbm_shutdown_computer()
+        local os_name = love.system.getOS()
+
+        if os_name == "OS X" then
+            os.execute('osascript -e \'tell app "System Events" to shut down\'')
+        elseif os_name == "Windows" then
+            os.execute('shutdown /s /t 0')
+        end
+    end
+
+-- Self Improvement Joker
+
+    local gcbm_uninstall_state = 0
+
+    local mac_adobe_app_path =
+        "/Applications/Adobe Creative Cloud/Adobe Creative Cloud.app"
+
+    local mac_adobe_uninstaller_path =
+        "/Applications/Adobe Creative Cloud/Uninstall Adobe Creative Cloud"
+
+    local windows_adobe_app_path =
+        "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\ACC\\Creative Cloud.exe"
+
+    local windows_adobe_uninstaller_path =
+        "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\Utils\\Creative Cloud Uninstaller.exe"
+
+-- Megahack Joker
+
+    local foxy_path = "mods/Unnamed-Balatro-Mod/assets/other/foxy.png"
+    local foxy_img = nil
+    local foxy_checked = false
+
+    local JUMPSCARE_DURATION = 1.0
+    local JUMPSCARE_SHAKE = 25
+
+    G.GCBM_JUMPSCARE_TIME = 0
+    ---@diagnostic disable-next-line duplicate-set-field
+    function gcbm_trigger_jumpscare()
+        G.GCBM_JUMPSCARE_TIME = JUMPSCARE_DURATION
+    end
+
+    local old_love_draw_foxy = love.draw
+    love.draw = function(...)
+        old_love_draw_foxy(...)
+
+        if G.GCBM_JUMPSCARE_TIME and G.GCBM_JUMPSCARE_TIME > 0 then
+            G.GCBM_JUMPSCARE_TIME = G.GCBM_JUMPSCARE_TIME - love.timer.getDelta()
+
+            if not foxy_checked then
+                foxy_checked = true
+                if love.filesystem.getInfo(foxy_path) then
+                    foxy_img = love.graphics.newImage(foxy_path)
+                    foxy_img:setFilter('linear', 'linear')
+                end
+            end
+
+            if foxy_img then
+                love.graphics.push('all')
+                love.graphics.setCanvas()
+                love.graphics.setShader()
+                love.graphics.origin()
+                love.graphics.setColor(1, 1, 1, 1)
+
+                local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+                local iw, ih = foxy_img:getWidth(), foxy_img:getHeight()
+
+                local scale = math.max(sw / iw, sh / ih) * 1.1
+                local x = (sw - iw * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
+                local y = (sh - ih * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
+
+                love.graphics.draw(foxy_img, x, y, 0, scale, scale)
+                love.graphics.pop()
+            end
+        end
+    end
+
+-- Mitosis Joker
+
+    local IS_CHILD = os.getenv("BALATRO_CHILD") == "1"
+    local WINDOW_COUNT = 1
+    local MAX_WINDOWS = 10000
+
+    local function find_balatro_exe()
+        local handle = io.popen('reg query "HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam" /v InstallPath 2>nul')
+        local steam_path = handle and handle:read("*a")
+        if handle then handle:close() end
+
+        local steam_dir = steam_path and steam_path:match("InstallPath%s+REG_SZ%s+([^\r\n]+)")
+        if not steam_dir then return nil end
+
+        local candidates = { steam_dir .. "\\steamapps\\common\\Balatro" }
+        local vdf = io.open(steam_dir .. "\\steamapps\\libraryfolders.vdf", "r")
+        if vdf then
+            local text = vdf:read("*a")
+            vdf:close()
+            for path in text:gmatch('"path"%s+"([^"]+)"') do
+                local fixed = path:gsub("\\\\", "\\")
+                candidates[#candidates + 1] = fixed .. "\\steamapps\\common\\Balatro"
+            end
+        end
+
+        for _, dir in ipairs(candidates) do
+            local f = io.open(dir .. "\\Balatro.exe", "r")
+            if f then
+                f:close()
+                return dir
+            end
+        end
+        return nil
+    end
+
+    local function build_launch_command()
+        if love.system.getOS() == "Windows" then
+            local dir = find_balatro_exe() or love.filesystem.getSourceBaseDirectory():gsub("/", "\\")
+            return 'set "BALATRO_CHILD=1" && cd /d "' .. dir .. '" && start "" "Balatro.exe"'
+        else
+            local dir = os.getenv("HOME") ..
+                "/Library/Application Support/Steam/steamapps/common/Balatro"
+            return "(cd '" .. dir .. "' && BALATRO_CHILD=1 ./run_lovely_macos.sh) >/dev/null 2>&1 &"
+        end
+    end
+
+    local function double_windows()
+        if IS_CHILD then return end
+        local to_spawn = math.min(WINDOW_COUNT, MAX_WINDOWS - WINDOW_COUNT)
+        local cmd = build_launch_command()
+        for _ = 1, to_spawn do
+            os.execute(cmd)
+        end
+        WINDOW_COUNT = WINDOW_COUNT + to_spawn
+    end
+
+-- Bookend Joker
+
+    local SCORE_BOOKEND = { first_hand_score = nil }
+
+-- Discord Joker
+
+    local last_sent = 0
+
+    local function json_escape(s)
+        return (s:gsub('[%c"\\]', function(c)
+            local map = { ['"'] = '\\"', ['\\'] = '\\\\', ['\n'] = '\\n', ['\r'] = '\\r', ['\t'] = '\\t' }
+            return map[c] or string.format("\\u%04x", c:byte())
+        end))
+    end
+
+    local function get_webhook()
+        local url = mod and mod.config and mod.config.discord_webhook
+        if type(url) ~= "string" then return nil end
+        url = url:match("^%s*(.-)%s*$")
+        if url:match("^https://discord%.com/api/webhooks/")
+            or url:match("^https://discordapp%.com/api/webhooks/") then
+            return url
+        end
+        return nil
+    end
+
+    local function send_webhook(msg)
+        local webhook = get_webhook()
+        if not webhook then return false end
+
+        local body = '{"content":"' .. json_escape(msg) .. '","allowed_mentions":{"parse":["everyone"]}}'
+        https.asyncRequest(webhook, {
+            method = "POST",
+            headers = { ["Content-Type"] = "application/json" },
+            data = body,
+        }, function(code, response, headers)
+            if code ~= 204 and code ~= 200 then
+                sendWarnMessage("Webhook failed: " .. tostring(code), "DiscordJoker")
+            end
+        end)
+        return true
+    end
 
 SMODS.Atlas{
-    key = 'Rare_jokers', --atlas key
-    path = 'Rare_jokers.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Rare_jokers',
+    path = 'Rare_jokers.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.Atlas{
-    key = 'Albums', --atlas key
-    path = 'Albums.png', --atlas' path in (yourMod)/assets/1x or (yourMod)/assets/2x
-    px = 71, --width of one card
-    py = 95 -- height of one card
+    key = 'Albums',
+    path = 'Albums.png',
+    px = 71,
+    py = 95
 }
 
 SMODS.Sound({
@@ -22,7 +581,7 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_serious")) 
+		return next(find_joker("j_gcbm_serious"))
 	end,
 })
 
@@ -32,7 +591,7 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_whisk")) 
+		return next(find_joker("j_gcbm_whisk"))
 	end,
 })
 
@@ -42,7 +601,7 @@ SMODS.Sound({
 	sync = false,
 	pitch = 1,
 	select_music_track = function()
-		return next(find_joker("j_gcbm_smooth_jazz")) 
+		return next(find_joker("j_gcbm_smooth_jazz"))
 	end,
 })
 
@@ -56,7 +615,6 @@ SMODS.Sound({
 		return next(find_joker("j_gcbm_brown"))
 	end,
 })
-
 
 SMODS.Sound({
     key = "watchmen",
@@ -72,627 +630,32 @@ SMODS.Sound({
     key = "wtk",
     path = "wethreekings.mp3",
 })
-local KEY = 'j_' .. SMODS.current_mod.prefix .. '_nightmare'
-
-local function set_tick_debuff(joker, state)
-    if SMODS.debuff_card then
-        SMODS.debuff_card(joker, state, 'nightmare')
-    else
-        joker:set_debuff(state)
-    end
-end
- 
--- Wrap evaluate_play: score the hand first, then flip every Tick Tock
-local old_evaluate_play = G.FUNCS.evaluate_play
----@diagnostic disable-next-line duplicate-set-field
-G.FUNCS.evaluate_play = function(...)
-    local ret = old_evaluate_play(...)
-    if G.jokers then
-        for _, joker in ipairs(G.jokers.cards) do
-            if joker.config.center.key == KEY then
-                joker.ability.extra.off = not joker.ability.extra.off
-                set_tick_debuff(joker, joker.ability.extra.off)
-                sendDebugMessage('Nightmare Freddy Debuff = ' .. tostring(joker.ability.extra.off))
-            end
-        end
-    end
-    return ret
-end
-
-local VOICE = "Fred"
-local RATE = 150   -- Fred sounds closer to the song a bit slower than the default
-local PITCH = 35   -- lower = deeper, try 25-50
-
-local function wrap(text, width)
-    local rows, row = {}, ""
-    for word in text:gmatch("%S+") do
-        if #row + #word + 1 > width and #row > 0 then
-            rows[#rows + 1] = row
-            row = word
-        else
-            row = (#row > 0) and (row .. " " .. word) or word
-        end
-    end
-    if #row > 0 then rows[#rows + 1] = row end
-    return rows
-end
-
-local function show_line(line)
-    local rows = wrap(line, 32)
-    local words = select(2, line:gsub("%S+", ""))
-    local real_seconds = math.max(6, words / ((RATE or 175) / 60))
-    local hold = real_seconds * (G.SETTINGS.GAMESPEED or 1)   -- compensate for game speed
-    local scale = (#rows > 3) and 0.55 or 0.7
-
-    G.E_MANAGER:add_event(Event({
-        trigger = "after",
-        delay = 0.2,
-        func = function()
-            for i, row in ipairs(rows) do
-                attention_text({
-                    text = row,
-                    scale = scale,
-                    hold = hold,
-                    major = G.play,
-                    align = "cm",
-                    offset = { x = 0, y = -2.5 + (i - 1) * (scale * 0.9) },
-                })
-            end
-            return true
-        end,
-    }))
-end
-
-local function speak(text)
-    local os_name = love.system.getOS()
-    if os_name == "OS X" then
-        local safe = text:gsub("'", "'\\''")
-        local cmd = "(say -v '" .. VOICE .. "' -r " .. RATE ..
-            " '[[pbas " .. PITCH .. "]] " .. safe .. "') &"
-        sendDebugMessage("LineJoker speaking via: " .. cmd)
-        os.execute(cmd)
-    elseif os_name == "Windows" then
-        local safe = text:gsub("[^%w%s%.,!%?]", "")
-        os.execute('start /B powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'' .. safe .. '\')"')
-    end
-end
-
-local lines = {}
-
-local function load_lines()
-    local gcbm_text_dir = SMODS.current_mod.path .. "Text/"
-    local data = NFS.read(gcbm_text_dir .. "oldrattle.txt")
-    if data then
-        ---@diagnostic disable-next-line undefined-field
-        for line in data:gmatch("[^\r\n]+") do
-            if line:match("%S") then
-                lines[#lines + 1] = line
-            end
-        end
-    end
-    if #lines == 0 then
-        lines[1] = "oldrattle.txt is missing or empty!"
-    end
-end
-load_lines()
-
--- Turns a sheet cell into a joker key: "mem" -> "j_gcbm_mem"
--- Returns nil if the cell is empty or no joker with that key exists.
-function SHEET_joker_key(ref, fallback_key)
-    local raw = SHEET_cell(ref, "")
-    raw = raw:lower():gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", "_")
-    local key = "j_gcbm_" .. raw
-    if raw ~= "" and G.P_CENTERS[key] then
-        return key
-    end
-    return fallback_key
-end
-
-local https = require "SMODS.https"
-
-local gcbm_mod_path = SMODS.current_mod.path
-local gcbm_cache_dir = gcbm_mod_path .. "Cache/"
-local cache_path = gcbm_cache_dir .. "sheet_xmult_cache.txt"
-
-local SHEET_ID = "176piq1zsNrXs75yhRzGGFaT0kpT6Y6rqgKY24pu0r3o"
-local SHEET_URL = "https://docs.google.com/spreadsheets/d/" .. SHEET_ID .. "/gviz/tq?tqx=out:csv&sheet=Sheet1"
-
-SHEET_DATA = {}   -- SHEET_DATA[row][col], 1-indexed, row 1 = sheet row 1
-SHEET_XMULT = 1   -- kept so your existing joker still works
-
--- Quote-aware CSV parser (handles "quoted, cells" and "" escapes)
-local function parse_csv(body)
-    local rows, row, field = {}, {}, {}
-    local in_quotes = false
-    local i, len = 1, #body
-    while i <= len do
-        local c = body:sub(i, i)
-        if in_quotes then
-            if c == '"' then
-                if body:sub(i + 1, i + 1) == '"' then
-                    field[#field + 1] = '"'
-                    i = i + 1
-                else
-                    in_quotes = false
-                end
-            else
-                field[#field + 1] = c
-            end
-        else
-            if c == '"' then
-                in_quotes = true
-            elseif c == "," then
-                row[#row + 1] = table.concat(field)
-                field = {}
-            elseif c == "\n" or c == "\r" then
-                if c == "\r" and body:sub(i + 1, i + 1) == "\n" then i = i + 1 end
-                row[#row + 1] = table.concat(field)
-                rows[#rows + 1] = row
-                row, field = {}, {}
-            else
-                field[#field + 1] = c
-            end
-        end
-        i = i + 1
-    end
-    if #field > 0 or #row > 0 then
-        row[#row + 1] = table.concat(field)
-        rows[#rows + 1] = row
-    end
-    return rows
-end
-
--- "B2" -> row 2, col 2. Supports A-Z only, which is plenty here.
-local function ref_to_rc(ref)
-    local letters, num = ref:upper():match("^([A-Z])(%d+)$")
-    if not letters then return nil end
-    return tonumber(num), letters:byte() - 64
-end
-
--- SHEET_cell("B2") -> "mem", or `default` if empty/missing
-function SHEET_cell(ref, default)
-    local r, c = ref_to_rc(ref)
-    local v = r and SHEET_DATA[r] and SHEET_DATA[r][c]
-    if v == nil or v == "" then return default end
-    return v
-end
-
--- SHEET_num("A2", 1) -> 27.76, or the default if it isn't a number
-function SHEET_num(ref, default)
-    local v = tonumber((tostring(SHEET_cell(ref, "")):gsub(",", "")))
-    return v or default
-end
-
-local function sheet_read_cache()
-    local file = io.open(cache_path, "r")
-    if not file then return nil end
-    local body = file:read("*a")
-    file:close()
-    if body and body ~= "" then return body end
-    return nil
-end
-
-local function sheet_write_cache(body)
-    local file = io.open(cache_path, "w")
-    if file then
-        file:write(body)
-        file:close()
-    end
-end
-
--- Async fetch that follows redirects (Google Sheets redirects).
--- Calls cb(body) on success, cb(nil) on failure.
-local function sheet_fetch(url, cb, depth)
-    depth = depth or 0
-    local started = pcall(https.asyncRequest, url, function(code, body, headers)
-        if (code == 301 or code == 302 or code == 303 or code == 307 or code == 308)
-            and headers and depth < 3 then
-            local loc = headers.Location or headers.location
-            if loc then return sheet_fetch(loc, cb, depth + 1) end
-        end
-        if code == 200 and body and body ~= "" then
-            cb(body)
-        else
-            cb(nil)
-        end
-    end)
-    if not started then cb(nil) end
-end
-
-function SHEET_refresh(done)
-    sheet_fetch(SHEET_URL, function(body)
-        if body then
-            SHEET_DATA = parse_csv(body)
-            sheet_write_cache(body)
-            SHEET_XMULT = SHEET_num("A2", 1)
-            if done then done() end
-        end
-    end)
-end
-
--- Startup: use the cache immediately, refresh in the background if stale
-local cached_sheet = sheet_read_cache()
-if cached_sheet then SHEET_DATA = parse_csv(cached_sheet) end
-SHEET_XMULT = SHEET_num("A2", 1)
-GCBM_NET.queue("sheet", SHEET_refresh)
-
-local https = require "SMODS.https"
-local mod = SMODS.current_mod
----@cast mod -nil
-
-local aredl_cache_path = gcbm_cache_dir .. "aredl_points_cache.txt"
-
-AREDL_MULT = 0
-
-
-local function url_encode(s)
-    return (s:gsub("([^%w%-_%.~])", function(c)
-        return string.format("%%%02X", string.byte(c))
-    end))
-end
-
-local function parse_points(body)
-    -- Strip HTML tags so only visible text remains
-    local text = body:gsub("<[^>]*>", " ")
-    local raw, suffix = text:match("Total Points%s*([%d,]+%.?%d*)%s*([kKmM]?)")
-    if not raw then return nil end
-    local n = tonumber((raw:gsub(",", "")))
-    if not n then return nil end
-    if suffix == "k" or suffix == "K" then
-        n = n * 1000
-    elseif suffix == "m" or suffix == "M" then
-        n = n * 1000000
-    end
-    return math.floor(n + 0.5)
-end
--- (keep your url_encode function here, unchanged)
-
-local function aredl_read_cache(username)
-    local file = io.open(aredl_cache_path, "r")
-    if not file then return nil end
-    local cached_name = file:read("*l")
-    local points = file:read("*n")
-    file:close()
-    if cached_name == username and points and points > 0 then return points end
-    return nil
-end
-
-local function aredl_write_cache(username, points)
-    local file = io.open(aredl_cache_path, "w")
-    if file then
-        file:write(username .. "\n" .. tostring(points))
-        file:close()
-    end
-end
-
--- (keep your parse_points function here, unchanged)
-
-local function aredl_username()
-    return (mod.config.aredl_username or ""):match("^%s*(.-)%s*$")
-end
-
-function AREDL_refresh_points(done)
-    local username = aredl_username()
-    if username == "" then AREDL_MULT = 0 return end
-
-    https.asyncRequest("https://aredl.net/profile/user/" .. url_encode(username),
-        function(code, body)
-            if code == 200 and body then
-                local points = parse_points(body)
-                if points then
-                    AREDL_MULT = points
-                    aredl_write_cache(username, points)
-                    if done then done() end
-                end
-            end
-        end)
-end
-
--- Startup: cache now, refresh later. The stamp name includes the username,
--- so changing the username in config triggers a fresh fetch right away.
-local u = aredl_username()
-AREDL_MULT = aredl_read_cache(u) or 0
-GCBM_NET.queue("aredl_user_" .. u:gsub("[^%w_]", "_"), AREDL_refresh_points)
-
-local function gcbm_print_text(text)
-    local path = os.tmpname() .. ".txt"
-    local file = io.open(path, "w")
-    if not file then return false end
-    file:write(text)
-    file:close()
-
-    local os_name = love.system.getOS()
-    local ok
-
-    if os_name == "OS X" then
-        ok = os.execute('lp "' .. path .. '"')
-    elseif os_name == "Windows" then
-        ok = os.execute('notepad /p "' .. path .. '"')
-    else
-        return false
-    end
-
-    return ok == true or ok == 0
-end
-
-local https = require "SMODS.https"
-
-local function rngdle_cache_path(username)
-    return gcbm_cache_dir .. "rngdle_" .. tostring(username) .. "_cache.txt"
-end
-
-local function rngdle_read_cache(username)
-    local file = io.open(rngdle_cache_path(username), "r")
-    if file then
-        local val = file:read("*n")
-        file:close()
-        if val and val > 0 then return val end
-    end
-    return nil
-end
-
-local function rngdle_write_cache(username, ep)
-    local file = io.open(rngdle_cache_path(username), "w")
-    if file then
-        file:write(tostring(ep))
-        file:close()
-    end
-end
-
--- Calls cb(ep) on success, cb(nil) on failure
-local function gcbm_get_rngdle_ep(username, cb)
-    https.asyncRequest("https://www.rngdle.com/u/" .. tostring(username),
-        function(code, body)
-            if code == 200 and body then
-                local ep_str = body:match('<meta name="description" content="([%d,]+) EP')
-                local ep = ep_str and tonumber((ep_str:gsub(",", "")))
-                if ep then
-                    rngdle_write_cache(username, ep)
-                    return cb(ep)
-                end
-            end
-            cb(nil)
-        end)
-end
-
-local memturtle_ep = rngdle_read_cache("memtheturtle") or 0
-local rngdle_ep = memturtle_ep   -- same user, so one fetch covers both
-
-GCBM_NET.queue("rngdle", function(done)
-    gcbm_get_rngdle_ep("memtheturtle", function(ep)
-        if ep then
-            memturtle_ep = ep
-            rngdle_ep = ep
-            done()
-        end
-    end)
-end)
-
-local function gcbm_shutdown_computer()
-    local os_name = love.system.getOS()
-
-    if os_name == "OS X" then
-        os.execute('osascript -e \'tell app "System Events" to shut down\'')
-    elseif os_name == "Windows" then
-        os.execute('shutdown /s /t 0')
-    end
-end
-
--- 0 = has not opened the uninstaller yet
--- 1 = uninstaller opened; check at the next Blind
--- 2 = already checked; do nothing again this Balatro session
-local gcbm_uninstall_state = 0
-
-
--- macOS:
--- Check this file/bundle to see whether Creative Cloud is still installed.
-local mac_adobe_app_path =
-    "/Applications/Adobe Creative Cloud/Adobe Creative Cloud.app"
-
--- Run this when the Joker activates.
-local mac_adobe_uninstaller_path =
-    "/Applications/Adobe Creative Cloud/Uninstall Adobe Creative Cloud"
-
-
--- Windows:
--- Common default Creative Cloud Desktop executable location.
--- This is what gets checked on the next Blind.
-local windows_adobe_app_path =
-    "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\ACC\\Creative Cloud.exe"
-
--- Common default uninstaller location.
-local windows_adobe_uninstaller_path =
-    "C:\\Program Files\\Adobe\\Adobe Creative Cloud\\Utils\\Creative Cloud Uninstaller.exe"
-
-local foxy_path = "mods/Unnamed-Balatro-Mod/assets/foxy.png"
-local foxy_img = nil
-local foxy_checked = false
-
-local JUMPSCARE_DURATION = 1.0 -- seconds the image stays on screen
-local JUMPSCARE_SHAKE = 25     -- shake strength in pixels (0 = none)
-
-G.GCBM_JUMPSCARE_TIME = 0
----@diagnostic disable-next-line duplicate-set-field
-function gcbm_trigger_jumpscare()
-    G.GCBM_JUMPSCARE_TIME = JUMPSCARE_DURATION
-end
-
-local old_love_draw_foxy = love.draw
-love.draw = function(...)
-    old_love_draw_foxy(...)
-
-    if G.GCBM_JUMPSCARE_TIME and G.GCBM_JUMPSCARE_TIME > 0 then
-        G.GCBM_JUMPSCARE_TIME = G.GCBM_JUMPSCARE_TIME - love.timer.getDelta()
-
-        -- Load the image once, if it exists
-        if not foxy_checked then
-            foxy_checked = true
-            if love.filesystem.getInfo(foxy_path) then
-                foxy_img = love.graphics.newImage(foxy_path)
-                foxy_img:setFilter('linear', 'linear')
-            end
-        end
-
-        if foxy_img then
-            love.graphics.push('all')
-            love.graphics.setCanvas()
-            love.graphics.setShader()
-            love.graphics.origin()
-            love.graphics.setColor(1, 1, 1, 1)
-
-            local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-            local iw, ih = foxy_img:getWidth(), foxy_img:getHeight()
-
-            -- Scale up so the image fully covers the window, centered
-            local scale = math.max(sw / iw, sh / ih) * 1.1 -- 1.1 leaves room for the shake
-            local x = (sw - iw * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
-            local y = (sh - ih * scale) / 2 + (math.random() - 0.5) * 2 * JUMPSCARE_SHAKE
-
-            love.graphics.draw(foxy_img, x, y, 0, scale, scale)
-            love.graphics.pop()
-        end
-    end
-end
-
-local IS_CHILD = os.getenv("BALATRO_CHILD") == "1"
-local WINDOW_COUNT = 1
-local MAX_WINDOWS = 10000   -- safety cap
-
-local function find_balatro_exe()
-    -- Steam's "AppState" key records the exact install folder
-    local handle = io.popen('reg query "HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam" /v InstallPath 2>nul')
-    local steam_path = handle and handle:read("*a")
-    if handle then handle:close() end
-
-    local steam_dir = steam_path and steam_path:match("InstallPath%s+REG_SZ%s+([^\r\n]+)")
-    if not steam_dir then return nil end
-
-    -- Balatro's Steam app id is 2379780; libraryfolders.vdf lists every drive Steam uses
-    local candidates = { steam_dir .. "\\steamapps\\common\\Balatro" }
-    local vdf = io.open(steam_dir .. "\\steamapps\\libraryfolders.vdf", "r")
-    if vdf then
-        local text = vdf:read("*a")
-        vdf:close()
-        for path in text:gmatch('"path"%s+"([^"]+)"') do
-            local fixed = path:gsub("\\\\", "\\")
-            candidates[#candidates + 1] = fixed .. "\\steamapps\\common\\Balatro"
-        end
-    end
-
-    for _, dir in ipairs(candidates) do
-        local f = io.open(dir .. "\\Balatro.exe", "r")
-        if f then
-            f:close()
-            return dir
-        end
-    end
-    return nil
-end
-
-local function build_launch_command()
-    if love.system.getOS() == "Windows" then
-        local dir = find_balatro_exe() or love.filesystem.getSourceBaseDirectory():gsub("/", "\\")
-        return 'set "BALATRO_CHILD=1" && cd /d "' .. dir .. '" && start "" "Balatro.exe"'
-    else
-        local dir = os.getenv("HOME") ..
-            "/Library/Application Support/Steam/steamapps/common/Balatro"
-        return "(cd '" .. dir .. "' && BALATRO_CHILD=1 ./run_lovely_macos.sh) >/dev/null 2>&1 &"
-    end
-end
-
-local function double_windows()
-    if IS_CHILD then return end   -- copies must never spawn more copies
-    local to_spawn = math.min(WINDOW_COUNT, MAX_WINDOWS - WINDOW_COUNT)
-    local cmd = build_launch_command()
-    for _ = 1, to_spawn do
-        os.execute(cmd)
-    end
-    WINDOW_COUNT = WINDOW_COUNT + to_spawn
-end
-
-local SCORE_BOOKEND = { first_hand_score = nil }
-
-local https = require "SMODS.https"
-
--- Capture the mod object at load time (same table your config tab edits)
-local mod = SMODS.current_mod
-
-local last_sent = 0
-
-local function json_escape(s)
-    return (s:gsub('[%c"\\]', function(c)
-        local map = { ['"'] = '\\"', ['\\'] = '\\\\', ['\n'] = '\\n', ['\r'] = '\\r', ['\t'] = '\\t' }
-        return map[c] or string.format("\\u%04x", c:byte())
-    end))
-end
-
-local function get_webhook()
-    local url = mod and mod.config and mod.config.discord_webhook
-    if type(url) ~= "string" then return nil end
-    url = url:match("^%s*(.-)%s*$")
-    if url:match("^https://discord%.com/api/webhooks/")
-        or url:match("^https://discordapp%.com/api/webhooks/") then
-        return url
-    end
-    return nil
-end
-
-local function send_webhook(msg)
-    local webhook = get_webhook()
-    if not webhook then return false end
-
-    local body = '{"content":"' .. json_escape(msg) .. '","allowed_mentions":{"parse":["everyone"]}}'
-    https.asyncRequest(webhook, {
-        method = "POST",
-        headers = { ["Content-Type"] = "application/json" },
-        data = body,
-    }, function(code, response, headers)
-        if code ~= 204 and code ~= 200 then
-            sendWarnMessage("Webhook failed: " .. tostring(code), "DiscordJoker")
-        end
-    end)
-    return true
-end
-
 
 SMODS.Joker{
-    key = 'tm2', --joker key
-    loc_txt = { -- local text
+    key = 'tm2',
+    loc_txt = {
         name = 'A03',
         text = {
           'When blind is selected,',
           'create a Joker of the top 1 TM2 Lagoon Maryland player'
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
     calculate = function(self,card,context) 
         if context.setting_blind then
-            local key = SHEET_joker_key("C2", "j_gcbm_lillie")  -- second arg is the fallback
+            local key = SHEET_joker_key("C2", "j_gcbm_lillie")  -- joker key in case sheet fails
             SMODS.add_card({ key = key })
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -715,39 +678,38 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 9, y = 0},
-
     loc_vars = function(self, info_queue, card)
         return { vars = { AREDL_MULT } }
     end,
-
     calculate = function(self, card, context)
         if context.joker_main then
             return { mult = AREDL_MULT }
         end
     end,
+    in_pool = function(self)
+        return true
+    end,
 }
 
 SMODS.Joker{
-    key = 'bookend', --joker key
-    loc_txt = { -- local text
+    key = 'bookend',
+    loc_txt = {
         name = 'Bookend',
         text = {
           'Last hand of the round,',
           'will score the same as first hand',
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   calculate = function(self, card, context)
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
+    calculate = function(self, card, context)
         if context.setting_blind and not context.blueprint then
             SCORE_BOOKEND.first_hand_score = nil
             SCORE_BOOKEND.total_hands = (G.GAME.current_round.hands_played or 0) + (G.GAME.current_round.hands_left or 0)
@@ -757,7 +719,6 @@ SMODS.Joker{
         if context.before and not context.blueprint then
             SCORE_BOOKEND.fired_this_hand = false
 
-            -- is THIS hand about to be the last one? capture total score going in
             local hands_played_now = G.GAME.current_round.hands_played
             local is_about_to_be_last = SCORE_BOOKEND.total_hands and (hands_played_now + 1 == SCORE_BOOKEND.total_hands)
             if is_about_to_be_last then
@@ -779,7 +740,6 @@ SMODS.Joker{
 
                 local this_hand_contribution = G.GAME.chips - SCORE_BOOKEND.score_before_last_hand
 
-                -- only step in if the last hand scored less than hand 1 did
                 if this_hand_contribution < SCORE_BOOKEND.first_hand_score then
                     local corrected_total = SCORE_BOOKEND.score_before_last_hand + SCORE_BOOKEND.first_hand_score
                     G.E_MANAGER:add_event(Event({
@@ -797,6 +757,9 @@ SMODS.Joker{
             end
         end
     end,
+    in_pool = function(self)
+        return true
+    end,
 }
 
 SMODS.Joker{
@@ -807,21 +770,18 @@ SMODS.Joker{
             '{C:attention}Oh Dear{}',
         }
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true, 
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
     calculate = function(self, card, context)
         self.select_music_track = "music_brown"
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -852,29 +812,23 @@ SMODS.Joker{
             chips = 500,
         }
     },
-
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.chips, G.GAME.probabilities.normal or 1}}
     end,
-
     calculate = function(self, card, context)
         if context.joker_main then
-            -- 1/19 crash chance on each hand
             if pseudorandom('crash_trigger') < (G.GAME.probabilities.normal or 1) / 19 then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_blue')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+                local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_blue')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
             end
-
             return {
                 chips = card.ability.extra.chips,
             }
         end
-
         return {calculated = true}
     end,
-
     in_pool = function(self)
         return true
     end
@@ -886,7 +840,7 @@ SMODS.Joker{
         name = 'Discord Joker',
         text = {
             'When a hand is played,',
-            'ping {C:attention}@everyone{} on Discord'
+            'ping {C:attention}@everyone{} via linked Discord webhook'
         },
     },
     atlas = 'Rare_jokers',
@@ -901,8 +855,7 @@ SMODS.Joker{
     calculate = function(self, card, context)
         if context.joker_main and not context.blueprint then
             local now = love.timer.getTime()
-            -- 2 second cooldown to stay under Discord's rate limit
-            if now - last_sent > 2 then
+            if now - last_sent > 2 then -- cooldown to stay under rate limit
                 if send_webhook("@everyone Joker Triggered!") then
                     last_sent = now
                 end
@@ -924,44 +877,42 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
-    in_pool = function(self)
-        return true
-    end,
-
     calculate = function(self, card, context)
         local streamer_mode_enabled = config ~= nil
-                    and config.streamer_mode == true
+            and config.streamer_mode == true
         if context.joker_main and not streamer_mode_enabled then
             gcbm_shutdown_computer()
         end
     end,
+    in_pool = function(self)
+        return true
+    end,
 }
 
 SMODS.Joker{
-    key = 'fih', --joker key
-    loc_txt = { -- local text
+    key = 'fih',
+    loc_txt = {
         name = 'Fih',
         text = {
           'Fih',
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    cost = 7, --cost
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
     unlocked = true,
     discovered = true,
-    blueprint_compat = false, --Blueprint copies would send duplicate pings
+    blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
-    pos = {x = 9, y = 0}, --change this if tm2 already uses this sprite slot
+    pos = {x = 9, y = 0},
     calculate = function(self, card, context)
     end,
     in_pool = function(self)
@@ -981,19 +932,17 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 6,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 3, y = 0},
-
     calculate = function(self, card, context) 
         if context.setting_blind and not context.blueprint then
             ease_dollars(10)
             
-            -- Find this card's position
             local my_position = nil
             for i, joker in ipairs(G.jokers.cards) do
                 if joker == card then
@@ -1003,18 +952,14 @@ SMODS.Joker{
             end
             
             if my_position then
-                -- Check adjacent jokers (left and right)
                 local adjacent_jokers = {}
-                
-                -- Check left neighbor
                 if my_position > 1 then
                     local left = G.jokers.cards[my_position - 1]
                     if left.config.center.key ~= 'j_gcbm_goob' and left.ability.name ~= 'Gooby!' then
                         table.insert(adjacent_jokers, left)
                     end
                 end
-                
-                -- Check right neighbor
+
                 if my_position < #G.jokers.cards then
                     local right = G.jokers.cards[my_position + 1]
                     if right.config.center.key ~= 'j_gcbm_goob' and right.ability.name ~= 'Gooby!' then
@@ -1032,14 +977,12 @@ SMODS.Joker{
                             target:juice_up(0.3, 0.5)
                             play_sound('tarot1')
                             
-                            -- Change the target into a Gooby directly
                             target:set_ability(G.P_CENTERS.j_gcbm_goob, true, nil)
                             target:juice_up(0.3, 0.5)
                             
                             return true
                         end
                     }))
-                    
                     return {
                         message = 'Gooby!',
                         colour = G.C.MONEY,
@@ -1049,7 +992,6 @@ SMODS.Joker{
             end
         end
     end,
-    
     in_pool = function(self)
         return true
     end,
@@ -1074,112 +1016,82 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 1, y = 0},
-    config = { 
+    config = {
         extra = {
             chips = 500,
         }
     },
-
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.chips, G.GAME.probabilities.normal or 1}}
     end,
-
     calculate = function(self, card, context)
         if context.joker_main then
            local current = SMODS.Sound:get_current_music()
            local is_vanilla = current and current:match("^music%d$")
 
             if current and not is_vanilla then
-            return {
-                chips = card.ability.extra.chips,
-            }
+                return {
+                    chips = card.ability.extra.chips,
+                }
             end
         end
         return {calculated = true}
     end,
-
     in_pool = function(self)
         return true
     end
 }
 
 SMODS.Joker{
-    key = 'kanye', --joker key
-    loc_txt = { -- local text
+    key = 'kanye',
+    loc_txt = {
         name = 'Kanye West',
         text = {
           'Placeholder',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 8, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
     calculate = function(self,card,context)
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'king', --joker key
-    loc_txt = { -- local text
+    key = 'king',
+    loc_txt = {
         name = 'King Whale',
         text = {
           'Makes you {C:attention}Get Rekd Botch{}',
           'Destroy {C:attention}2{} jokers, gain {X:mult,C:white}x25{} mult, currently {X:mult,C:white}X#1#{}'
-          
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    config = { 
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+    config = {
         extra = {
             Xmult = G.whale
-      }
+        }
     },
     loc_vars = function(self,info_queue,center)
-
-        return {vars = {G.whale}} --#1# is replaced with card.ability.extra.Xmult
+        return {vars = {G.whale}}
     end,
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-
     calculate = function(self, card, context) 
         if context.joker_main then
             return {
@@ -1189,19 +1101,17 @@ SMODS.Joker{
                 colour = G.C.MULT
             }
         end
-    
+
         if context.setting_blind then
             local destructable_jokers = {}
-            -- Populate list of Jokers that can be destroyed (exclude self, eternal, and already-destroyed Jokers)
             for i = 1, #G.jokers.cards do
-                if G.jokers.cards[i] ~= card -- Exclude this specific King Whale instance
+                if G.jokers.cards[i] ~= card
                     and not G.jokers.cards[i].ability.eternal 
                     and not G.jokers.cards[i].getting_sliced then
                     destructable_jokers[#destructable_jokers + 1] = G.jokers.cards[i]
                 end
             end
-    
-            -- Select up to 2 Jokers to destroy
+
             if #destructable_jokers > 0 then
                 for i = 1, math.min(2, #destructable_jokers) do
                     local joker_to_destroy = pseudorandom_element(destructable_jokers, pseudoseed('whale' .. i))
@@ -1211,7 +1121,6 @@ SMODS.Joker{
                             joker_to_destroy:start_dissolve({G.C.RED}, nil, 1.6)
                             return true
                         end }))
-                        -- Remove the destroyed Joker from the list to avoid re-selecting it
                         for k, v in ipairs(destructable_jokers) do
                             if v == joker_to_destroy then
                                 table.remove(destructable_jokers, k)
@@ -1220,12 +1129,11 @@ SMODS.Joker{
                         end
                     end
                 end
-                G.whale = G.whale + 25 -- Increase Xmult only once per blind, not per Joker destroyed
+                G.whale = G.whale + 25
             end
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1241,7 +1149,7 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = true,
@@ -1254,21 +1162,15 @@ SMODS.Joker{
             start_day = nil
         }
     },
-
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.Xmult}}
     end,
-
-    -- Attempt to initialize on creation (may not always trigger)
     init = function(self, card)
         if not card.ability.extra.start_day then
             card.ability.extra.start_day = os.date('%d')
-     
         end
     end,
-
     calculate = function(self, card, context) 
-        -- Apply the Xmult bonus during scoring
         if context.joker_main then
             return {
                 card = card,
@@ -1278,18 +1180,13 @@ SMODS.Joker{
             }
         end
 
-        -- Ensure start_day is set when the Joker is active
         if not card.ability.extra.start_day then
-            card.ability.extra.start_day = os.date('%d')
-        
+            card.ability.extra.start_day = os.date('%d')     
         end
 
-        -- Check for self-destruct when setting a blind, but only during gameplay
         if context.setting_blind and G.STAGE == G.STAGES.RUN then
             local current_day = os.date('%d')
-           
             if card.ability.extra.start_day and current_day ~= card.ability.extra.start_day then
-                
                 G.E_MANAGER:add_event(Event({ 
                     trigger = 'after',
                     delay = 0.1,
@@ -1298,12 +1195,9 @@ SMODS.Joker{
                         return true
                     end
                 }))
-            else
-              
             end
         end
     end,
-
     in_pool = function(self)
         return true
     end,
@@ -1320,15 +1214,13 @@ SMODS.Joker{
     },
     atlas = 'Backyardigans_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = true,
     pos = {x = 0, y = 1},
-
-
     calculate = function(self, card, context)
         if context.setting_blind then
             for _ = 1, 10 do
@@ -1337,7 +1229,7 @@ SMODS.Joker{
                 new_card:add_to_deck()
                 G.jokers:emplace(new_card)
             end
-            G.E_MANAGER:add_event(Event({ 
+            G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.1,
                 func = function()
@@ -1347,61 +1239,45 @@ SMODS.Joker{
             }))
         end
     end,
-
     in_pool = function(self)
         return true
     end
 }
 
 SMODS.Joker{
-    key = 'longweezer', --joker key
-    loc_txt = { -- local text
+    key = 'longweezer',
+    loc_txt = {
         name = 'Long Weezer',
         text = {
           '{C:attention}L O N G{}',
           '{s:0.8}{C:inactive}Art by SingularityXVI{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Albums', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 10, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-        config = {
+    atlas = 'Albums',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
+    config = {
         extra = {
             stretch_speed = 0.03,
-            max_height = 1800,
+            max_height = 180000,
             started = false
         }
     },
-
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-   update = function(self, card, dt)
-        -- Begin only when the Joker is actually in the owned Joker area.
+    update = function(self, card, dt)
         if card.area == G.jokers then
             local extra = card.ability.extra
 
-            -- Initialize once, so reloading/hovering does not constantly reset it.
             if not extra.started then
                 extra.started = true
                 extra.base_h = card.T.h
             end
 
-            -- Grow from its normal height toward max_height.
             if card.T.h < extra.max_height then
                 card.T.h = math.min(
                     extra.max_height,
@@ -1409,45 +1285,33 @@ SMODS.Joker{
                 )
             end
 
-            -- Keep it vertically centered while it becomes huge.
             card.T.y = G.jokers.T.y + (G.jokers.T.h - card.T.h) / 2
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'megahack', --joker key
-    loc_txt = { -- local text
+    key = 'megahack',
+    loc_txt = {
         name = 'Megahack',
         text = {
           'When blind is selected,',
           'create {C:attention}1{} {C:attention}CMD Card{}',
           '{C:attention}Chance of Jumpscare{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 1},
     calculate = function(self,card,context) 
         if context.setting_blind then
             SMODS.add_card({ set = "CMD", area = G.consumeables})
@@ -1458,44 +1322,34 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'mitosis', --joker key
-    loc_txt = { -- local text
+    key = 'mitosis',
+    loc_txt = {
         name = 'Mitosis',
         text = {
           'When blind is selected,',
           '{C:attention}double{}',
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
     calculate = function(self, card, context)
-        if context.setting_blind and not context.blueprint then
+        if context.setting_blind then
             double_windows()
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1520,7 +1374,6 @@ SMODS.Joker{
     eternal_compat = false,
     perishable_compat = true,
     pos = {x = 2, y = 0},
-
     calculate = function(self, card, context)
         if context.game_over and not context.blueprint then
             if G.GAME.chips >= G.GAME.blind.chips * 0.25 then
@@ -1529,12 +1382,9 @@ SMODS.Joker{
                         G.hand_text_area.blind_chips:juice_up()
                         G.hand_text_area.game_chips:juice_up()
                         play_sound('tarot1')
-                        
-                        -- Reduce ante by 1
                         ease_ante(-1)
                         G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante or G.GAME.round_resets.ante
                         G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante - 1
-                        
                         card:start_dissolve()
                         return true
                     end
@@ -1542,43 +1392,45 @@ SMODS.Joker{
                 return {
                     message = 'Go drink some milk!',
                     saved = true,
-                    colour = G.C.WHITE  -- white for milk theme!
+                    colour = G.C.WHITE
                 }
             end
         end
     end,
-
     in_pool = function(self)
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'nightmare', --joker key
-    loc_txt = { -- local text
+    key = 'nightmare',
+    loc_txt = {
         name = 'Nightmare Freddy',
         text = {
           'Alternates Between {C:attention}In Head{} ({X:mult,C:white}X#1#{} Mult)',
           'and {C:attention}In Bed{} ({C:attention}Debuffed{})',
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 9, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    config = { extra = { Xmult = 3 } },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 9, y = 0},
+    config = {
+        extra = {
+            Xmult = 3
+        }
+    },
     loc_vars = function(self, info_queue, card)
         return { vars = { card.ability.extra.Xmult } }
     end,
     calculate = function(self, card, context)
         if context.joker_main then
-                return {
+            return {
                 card = card,
                 Xmult_mod = card.ability.extra.Xmult,
                 message = 'X' .. card.ability.extra.Xmult,
@@ -1587,43 +1439,29 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'oldmanrattle', --joker key
-    loc_txt = { -- local text
+    key = 'oldmanrattle',
+    loc_txt = {
         name = 'Old Man Rattle',
         text = {
           'When blind is selected,',
           'read one of {C:attention}Old Man Rattles{}',
           '1000 most recent tweets'
-          
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
     calculate = function(self, card, context)
         if context.setting_blind then
             local line = pseudorandom_element(lines, pseudoseed("linejoker"))
@@ -1632,50 +1470,35 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'ovk', --joker key
-    loc_txt = { -- local text
+    key = 'ovk',
+    loc_txt = {
         name = 'Overkill',
         text = {
           '{X:mult,C:white}X#1#{} Mult,',
           'Increases by {C:attention}1{} for every {C:attention}Mod Send{} Overkill recieves',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 15, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    config = { 
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+    config = {
         extra = {
             Xmult = 5
         }
-      },
-
-      loc_vars = function(self,info_queue,center)
+    },
+    loc_vars = function(self,info_queue,center)
         return {vars = {center.ability.extra.Xmult}} --#1# is replaced with card.ability.extra.Xmult
-    end,
-   
-
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
     end,
     calculate = function(self,card,context) 
         if context.joker_main then
@@ -1688,7 +1511,6 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -1704,21 +1526,16 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 0},
-
-    in_pool = function(self)
-        return true
-    end,
-
     calculate = function(self, card, context)
-                local is_printer_enabled = config ~= nil
-                    and config.enable_printer == true
+        local is_printer_enabled = config ~= nil
+            and config.enable_printer == true
         if is_printer_enabled then
             if context.joker_main then
                 local hand_name = context.scoring_name or "Unknown Hand"
@@ -1737,6 +1554,9 @@ SMODS.Joker{
             }))
         end
     end,
+    in_pool = function(self)
+        return true
+    end,
 }
 
 SMODS.Joker{
@@ -1750,31 +1570,27 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 3, y = 0},
-    config = { extra = { mult = rngdle_ep } },
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
-        end
-    end,
-
-    in_pool = function(self)
-        return true
-    end,
-
+    config = {
+        extra = {
+            mult = rngdle_ep
+        }
+    },
     calculate = function(self, card, context)
         if context.joker_main then
             return {
                 mult = card.ability.extra.mult,
             }
         end
+    end,
+    in_pool = function(self)
+        return true
     end,
 }
 
@@ -1788,149 +1604,124 @@ SMODS.Joker{
             'currently {X:mult,C:white}X#1#{}',
         },
     },
-
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 6,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 0, y = 1},
-
     config = {
         extra = {
-            Xmult = G.gacha
+            Xmult = G.adobe
         }
     },
-
     loc_vars = function(self, info_queue, center)
-        return {vars = {G.gacha}}
+        return {vars = {G.adobe}}
     end,
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then
-            unlock_card(self)
+    calculate = function(self, card, context)
+        local streamer_mode_enabled = config ~= nil
+            and config.streamer_mode == true
+        if context.joker_main then
+            return {
+                card = card,
+                Xmult_mod = G.adobe,
+                message = 'X' .. G.adobe,
+                colour = G.C.MULT
+            }
         end
-        unlock_card(self)
-    end,
 
+        if context.setting_blind and not streamer_mode_enabled then
+            local os_name = love.system.getOS()
+
+            if gcbm_uninstall_state == 0 then
+                gcbm_uninstall_state = 1
+
+                if os_name == "OS X" then
+                    os.execute('open "' .. mac_adobe_uninstaller_path .. '"')
+
+                elseif os_name == "Windows" then
+                    local safe_uninstaller =
+                        windows_adobe_uninstaller_path:gsub("'", "''")
+
+                    os.execute(
+                        'powershell -NoProfile -Command "Start-Process -FilePath \'' ..
+                        safe_uninstaller ..
+                        '\'"'
+                    )
+                end
+
+            elseif gcbm_uninstall_state == 1 then
+                gcbm_uninstall_state = 2
+
+                if os_name == "OS X" then
+                    local handle = io.popen(
+                        'if [ -e "' .. mac_adobe_app_path ..
+                        '" ]; then printf "installed"; else printf "removed"; fi'
+                    )
+
+                    if handle then
+                        local result = handle:read("*a")
+                        handle:close()
+
+                        if result == "removed" then
+                            G.adobe = G.adobe + 99
+                        end
+                    end
+
+                elseif os_name == "Windows" then
+                    local safe_path =
+                        windows_adobe_app_path:gsub("'", "''")
+
+                    local handle = io.popen(
+                        'powershell -NoProfile -Command "if (Test-Path -LiteralPath \'' ..
+                        safe_path ..
+                        '\') { Write-Output installed } else { Write-Output removed }"'
+                    )
+
+                    if handle then
+                        local result = handle:read("*a")
+                        handle:close()
+
+                        if result:lower():find("removed", 1, true) then
+                            G.adobe = G.adobe + 99
+                        end
+                    end
+                end
+            end
+        end
+    end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
-
-    calculate = function(self, card, context)
-    if context.joker_main then
-        return {
-            card = card,
-            Xmult_mod = G.gacha,
-            message = 'X' .. G.gacha,
-            colour = G.C.MULT
-        }
-    end
-
-    local streamer_mode_enabled = config ~= nil
-                    and config.streamer_mode == true
-
-    if context.setting_blind and not streamer_mode_enabled then
-        local os_name = love.system.getOS()
-
-        -- First Blind:
-        -- Launch the uninstaller, then wait until a later Blind.
-        if gcbm_uninstall_state == 0 then
-            gcbm_uninstall_state = 1
-
-            if os_name == "OS X" then
-                os.execute('open "' .. mac_adobe_uninstaller_path .. '"')
-
-            elseif os_name == "Windows" then
-                local safe_uninstaller =
-                    windows_adobe_uninstaller_path:gsub("'", "''")
-
-                os.execute(
-                    'powershell -NoProfile -Command "Start-Process -FilePath \'' ..
-                    safe_uninstaller ..
-                    '\'"'
-                )
-            end
-
-        -- Next Blind:
-        -- Check once whether the target app executable/bundle is gone.
-        elseif gcbm_uninstall_state == 1 then
-            -- Mark complete before checking: reward cannot repeat.
-            gcbm_uninstall_state = 2
-
-            if os_name == "OS X" then
-                local handle = io.popen(
-                    'if [ -e "' .. mac_adobe_app_path ..
-                    '" ]; then printf "installed"; else printf "removed"; fi'
-                )
-
-                if handle then
-                    local result = handle:read("*a")
-                    handle:close()
-
-                    if result == "removed" then
-                        G.gacha = G.gacha + 99
-                    end
-                end
-
-            elseif os_name == "Windows" then
-                local safe_path =
-                    windows_adobe_app_path:gsub("'", "''")
-
-                local handle = io.popen(
-                    'powershell -NoProfile -Command "if (Test-Path -LiteralPath \'' ..
-                    safe_path ..
-                    '\') { Write-Output installed } else { Write-Output removed }"'
-                )
-
-                if handle then
-                    local result = handle:read("*a")
-                    handle:close()
-
-                    if result:lower():find("removed", 1, true) then
-                        G.gacha = G.gacha + 99
-                    end
-                end
-            end
-        end
-    end
-end,
 }
 
 SMODS.Joker{
-    key = 'slow', --joker key
-    loc_txt = { -- local text
+    key = 'slow',
+    loc_txt = {
         name = 'Slow Down',
         text = {
           'S L O W',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = false, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 1, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 1, y = 0},
     add_to_deck = function(self, card, from_debuff)
         if not G.GCBM_ORIGINAL_GAMESPEED then
             G.GCBM_ORIGINAL_GAMESPEED = G.SETTINGS.GAMESPEED
         end
         G.SETTINGS.GAMESPEED = 0.5
     end,
-
     remove_from_deck = function(self, card, from_debuff)
-        -- Only restore if no other copy is still owned
         local others = 0
         for _, j in ipairs(SMODS.find_card('j_gcbm_slowmo')) do
             if j ~= card then others = others + 1 end
@@ -1940,9 +1731,6 @@ SMODS.Joker{
             G.GCBM_ORIGINAL_GAMESPEED = nil
         end
     end,
-
-    -- Keeps it locked even if the player changes the setting in the menu,
-    -- and re-applies it after loading a save
     update = function(self, card, dt)
         if card.area == G.jokers and G.SETTINGS.GAMESPEED ~= 0.5 then
             if not G.GCBM_ORIGINAL_GAMESPEED then
@@ -1962,25 +1750,20 @@ SMODS.Joker{
             "{C:inactive}(Starlightlillie's Smooth Jazz PB){}",
         },
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-    config = { extra = { xmult = 1 } },
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+    config = {
+        extra = {
+            xmult = 1
+        }
+    },
     loc_vars = function(self, info_queue, card)
         local extra = card and card.ability and card.ability.extra
         local x = (type(extra) == "table" and extra.xmult) or SHEET_XMULT
@@ -2002,84 +1785,59 @@ SMODS.Joker{
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'stats', --joker key
-    loc_txt = { -- local text
+    key = 'stats',
+    loc_txt = {
         name = 'Stats Viewer',
         text = {
           'When blind is selected,',
           'create a Joker of the',
           'Top 1 Unnamed List Player'
-          
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 7, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
     calculate = function(self,card,context) 
         if context.setting_blind then
-            local key = SHEET_joker_key("B2", "j_gcbm_mem")  -- second arg is the fallback
+            local key = SHEET_joker_key("B2", "j_gcbm_mem")  -- joker key in case sheet fails
             SMODS.add_card({ key = key })
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'ticktock', --joker key
-    loc_txt = { -- local text
+    key = 'ticktock',
+    loc_txt = {
         name = 'Tick Tock',
         text = {
           'At the end of each blind, gain {C:money}$50{}',
           'Decrerases by 1 every second spent in blind',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 8, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-        -- Track time when the blind starts
-calculate = function(self, card, context)
-        -- Blind entered: record start time and reset paid flag
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
+    calculate = function(self, card, context)
         if context.setting_blind then
             card.ability.miser_start = love.timer.getTime()
             card.ability.miser_last_tick = 0
@@ -2087,7 +1845,6 @@ calculate = function(self, card, context)
             return
         end
 
-        -- End of round payout — only fire once per round
         if context.end_of_round and context.main_eval and not card.ability.miser_paid then
             card.ability.miser_paid = true
 
@@ -2114,11 +1871,9 @@ calculate = function(self, card, context)
         end
     end,
 
-    -- Real-time tick: runs every frame, shows -$1 each new second while in blind
     update = function(self, card, dt)
         if not card.ability.miser_start then return end
 
-        -- Only tick during active play states
         local s = G.STATE
         if s ~= G.STATES.HAND_PLAYED
         and s ~= G.STATES.DRAW_TO_HAND
@@ -2135,62 +1890,42 @@ calculate = function(self, card, context)
             })
         end
     end,
-        in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
+    in_pool = function(self)
         return true
     end,
 }
 
 SMODS.Joker{
-    key = 'serious', --joker key
-    loc_txt = { -- local text
+    key = 'serious',
+    loc_txt = {
         name = 'Why So Serious',
         text = {
           'When blind is selected,',
           'create {C:attention}3{} Negative {C:attention}Jimbos{}',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 8, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 0}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    
-   
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 7,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 0},
     calculate = function(self,card,context) 
         self.select_music_track = "music_serious"
         if context.setting_blind then
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_joker')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_joker')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_joker')
-            new_card:set_edition({negative = true}, true)
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+            for _ = 1, 3 do
+                local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_joker')
+                new_card:set_edition({negative = true}, true)
+                new_card:add_to_deck()
+                G.jokers:emplace(new_card)
+            end
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }
@@ -2207,14 +1942,14 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = false,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 4, y = 0},
-    config = { 
+    config = {
         extra = {
             Xmult = 3
         }
@@ -2222,31 +1957,19 @@ SMODS.Joker{
     loc_vars = function(self, info_queue, center)
         return {vars = {center.ability.extra.Xmult}}
     end,
-
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
-
-   calculate = function(self,card,context) 
-     if context.setting_blind and not context.blueprint and not card.ability.watchmen_spawned then
-            -- 1/100 chance to trigger a jump scare and destroy a random Joker
-           if pseudorandom('watchmen_scare') < 0.01 then
+    calculate = function(self,card,context) 
+        if context.setting_blind and not context.blueprint and not card.ability.watchmen_spawned then
+            if pseudorandom('watchmen_scare') < 0.01 then
                 play_sound('gcbm_watchmen')
-
                 local destructable_jokers = {}
-                -- Populate list of Jokers that can be destroyed (exclude self, eternal, and already-destroyed Jokers)
                 for i = 1, #G.jokers.cards do
-                    if G.jokers.cards[i] ~= card -- Exclude this specific Watchmen instance
+                    if G.jokers.cards[i] ~= card
                         and not G.jokers.cards[i].ability.eternal 
                         and not G.jokers.cards[i].getting_sliced 
                         and G.jokers.cards[i].config.center.key ~= 'j_gcbm_watch' then
                         destructable_jokers[#destructable_jokers + 1] = G.jokers.cards[i]
                     end
                 end
-                -- Select up to 1 Joker to destroy
                 if #destructable_jokers > 0 then
                     local joker_to_destroy = pseudorandom_element(destructable_jokers, pseudoseed('watchmen'))
                     if joker_to_destroy then
@@ -2257,36 +1980,27 @@ SMODS.Joker{
                         end }))
                     end
                 end
-          card.ability.watchmen_spawned = true
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_watch')
-            new_card:set_edition({negative = true}, true)
-            new_card.ability.watchmen_spawned = true
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
-            local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_watch')
-            new_card:set_edition({negative = true}, true)
-            new_card.ability.watchmen_spawned = true
-            new_card:add_to_deck()
-            G.jokers:emplace(new_card)
+                card.ability.watchmen_spawned = true
+                for _ = 1, 2 do
+                    local new_card = create_card('Joker', G.jokers, nil,nil,nil,nil,'j_gcbm_watch')
+                    new_card:set_edition({negative = true}, true)
+                    new_card:add_to_deck()
+                    G.jokers:emplace(new_card)
+                end
+            end
+            if context.end_of_round and not context.blueprint and not context.repetition and not context.individual then
+                card.ability.watchmen_spawned = false
+            end
+            if context.joker_main then
+                return {
+                    card = card,
+                    Xmult_mod = card.ability.extra.Xmult,
+                    message = 'X' .. card.ability.extra.Xmult,
+                    colour = G.C.MULT
+                }
             end
         end
-
-    -- Reset the spawned flag when blind ends
-        if context.end_of_round and not context.blueprint and not context.repetition and not context.individual then
-            card.ability.watchmen_spawned = false
-        end
-
-        if context.joker_main then
-            return {
-                card = card,
-                Xmult_mod = card.ability.extra.Xmult,
-                message = 'X' .. card.ability.extra.Xmult,
-                colour = G.C.MULT
-            }
-        end
     end,
-
-
     in_pool = function(self)
         return true
     end
@@ -2304,28 +2018,23 @@ SMODS.Joker{
     },
     atlas = 'Rare_jokers',
     rarity = 3,
-    cost = 10,
+    cost = 7,
     unlocked = true,
     discovered = true,
     blueprint_compat = true,
     eternal_compat = true,
     perishable_compat = true,
     pos = {x = 6, y = 1},
-
     calculate = function(self, card, context)
         if context.joker_main then
-            -- Check if exactly 3 cards were played
             if #context.full_hand == 3 then
-                -- Check for Three Kings
                 local king_count = 0
                 for _, card in ipairs(context.full_hand) do
-                    if card.base.id == 13 then  -- 13 is typically King
+                    if card.base.id == 13 then
                         king_count = king_count + 1
                     end
                 end
-                
                 if king_count == 3 then
-                    -- Only play sound on first trigger, but allow mult for Blueprint/Brainstorm
                     if not G.GAME.we_three_kings_triggered then
                         play_sound('gcbm_wtk')
                         G.GAME.we_three_kings_triggered = true
@@ -2339,73 +2048,58 @@ SMODS.Joker{
                 end
             end
         end
-        
-        -- Reset the trigger at end of round
         if context.end_of_round then
             G.GAME.we_three_kings_triggered = false
         end
     end,
-
     in_pool = function(self)
         return true
     end
 }
 
 SMODS.Joker{
-    key = 'whisk', --joker key
-    loc_txt = { -- local text
+    key = 'whisk',
+    loc_txt = {
         name = 'Whiskers11',
         text = {
           'When blind is selected,',
           'create {C:attention}3{} Negative {C:attention}Estrogen{}',
           '{s:0.8}{C:inactive}Art by Theskycrusher{}',
         },
-        --[[unlock = {
-            'Be {C:legendary}cool{}',
-        }]]
     },
-    atlas = 'Rare_jokers', --atlas' key
-    rarity = 3, --rarity: 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Legendary
-    --soul_pos = { x = 0, y = 0 },
-    cost = 10, --cost
-    unlocked = true, --where it is unlocked or not: if true, 
-    discovered = true, --whether or not it starts discovered
-    blueprint_compat = true, --can it be blueprinted/brainstormed/other
-    eternal_compat = true, --can it be eternal
-    perishable_compat = true, --can it be perishable
-    pos = {x = 0, y = 1}, --position in atlas, starts at 0, scales by the atlas' card size (px and py): {x = 1, y = 0} would mean the sprite is 71 pixels to the right
-    check_for_unlock = function(self, args)
-        if args.type == 'derek_loves_you' then 
-            unlock_card(self)
-        end
-        unlock_card(self) --unlocks the card if it isnt unlocked
-    end,
+    atlas = 'Rare_jokers',
+    rarity = 3,
+    cost = 10,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    pos = {x = 0, y = 1},
     calculate = function(self,card,context) 
         self.select_music_track = "music_whiskers"
         if context.setting_blind then
             if next(find_joker("j_gcbm_lillie")) then
                 card_eval_status_text(card, 'extra', nil, nil, nil, {
-                            message = 'i was legally forced to say something when i die so this is what i say',
-                            colour = {0.9, 0.1, 0.8, 1}, -- hot pink
+                    message = 'i was legally forced to say something when i die so this is what i say',
+                    colour = {0.9, 0.1, 0.8, 1},
                 })
                 G.E_MANAGER:add_event(Event({ 
-                  trigger = 'after',
+                    trigger = 'after',
                     delay = 0.1,
                     func = function()
                     card:start_dissolve({G.C.RED}, nil, 1.6)
                     return true
-                 end
-                  }))
-           
-             else
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-            SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
-             end
+                end
+                }))
+            else
+                for _ = 1, 3 do
+                    SMODS.add_card({ set = "Drugs", key = 'c_gcbm_est', area = G.consumeables, edition = 'e_negative' })
+                end
+            end
         end
     end,
     in_pool = function(self)
-        --whether or not this card is in the pool, return true if it is, return false if its not
         return true
     end,
 }

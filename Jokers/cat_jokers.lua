@@ -175,7 +175,6 @@
         end
     end
 
-
 SMODS.Atlas{
     key = 'Cat_jokers',
     path = 'Cat_jokers.png',
